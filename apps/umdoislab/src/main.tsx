@@ -1,0 +1,47 @@
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import './style.css';
+
+async function request(path: string, options?: RequestInit) {
+  const response = await fetch(new URL(path, document.baseURI), options);
+  if (!response.ok) throw new Error('Não foi possível concluir a operação. Verifique os logs do aplicativo.');
+  return response.json();
+}
+function App() {
+  const [health, setHealth] = useState<{status:string;database:string;arch:string;node:string}>();
+  const [text, setText] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+  const [message, setMessage] = useState('Carregando diagnóstico…');
+  const [busy, setBusy] = useState(true);
+  useEffect(() => {
+    Promise.all([request('api/health'), request('api/note')])
+      .then(([h, n]) => { setHealth(h); setText(n.text); setSaved(n.updated_at); setMessage('Ambiente conectado.'); })
+      .catch(e => setMessage(e.message)).finally(() => setBusy(false));
+  }, []);
+  async function save(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true);
+    try {
+      const n = await request('api/note', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text}) });
+      setSaved(n.updated_at); setMessage('Anotação salva. Reinicie o aplicativo e abra esta tela para conferir a persistência.');
+    } catch(e) { setMessage(e instanceof Error ? e.message : 'Falha ao salvar.'); }
+    finally { setBusy(false); }
+  }
+  return <main>
+    <header><span className="brand">Fabricação e Orçamentos</span><span className="badge">Validação da instalação</span></header>
+    <h1>Uma base para começar.</h1>
+    <p>Esta tela verifica interface, servidor e banco. Orçamentos e Fabricação ainda não foram implementados.</p>
+    <section aria-labelledby="diagnostic"><h2 id="diagnostic">Diagnóstico</h2>
+      <dl><div><dt>API</dt><dd>{health?.status ?? 'Não verificada'}</dd></div>
+      <div><dt>SQLite</dt><dd>{health?.database ?? 'Não verificado'}</dd></div>
+      <div><dt>Arquitetura</dt><dd>{health?.arch ?? '—'}</dd></div>
+      <div><dt>Node.js</dt><dd>{health?.node ?? '—'}</dd></div></dl>
+    </section>
+    <section><h2>Teste de persistência</h2><p>Escreva algo sem dados pessoais, salve e reinicie o aplicativo pelo Home Assistant. A anotação deve continuar aqui.</p>
+      <form onSubmit={save}><label htmlFor="note">Anotação de teste</label>
+      <textarea id="note" maxLength={500} value={text} onChange={e => setText(e.target.value)} disabled={busy || !health} />
+      <button disabled={busy || !health}>{busy ? 'Aguarde…' : 'Salvar anotação'}</button></form>
+      <p>Última gravação: {saved ? new Date(saved).toLocaleString('pt-BR') : 'nenhuma'}</p>
+    </section><p role="status">{message}</p>
+  </main>;
+}
+createRoot(document.getElementById('root')!).render(<App />);
