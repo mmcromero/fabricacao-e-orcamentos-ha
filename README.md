@@ -1,6 +1,6 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.3.
+Distribuição experimental para Home Assistant. Versão 0.1.4.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
 Produtos, clientes, fabricação e orçamentos ainda não estão implementados.
 Há um wireframe navegável do cadastro de produto dentro do orçamento, acessível

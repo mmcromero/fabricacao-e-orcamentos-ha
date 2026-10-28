@@ -1,5 +1,5 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.3"
+version: "0.1.4"
 slug: umdoislab
 description: "Teste de interface, API e persistência. Sem funções comerciais."
 arch:

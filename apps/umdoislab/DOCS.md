@@ -7,7 +7,17 @@ permite adicionar/editar produto em modal, preservar dados do orçamento e
 simular catálogo, origem e privacidade. Produtos novos começam privados.
 Recarregar a página descarta os dados da demonstração; ela não acessa o banco.
 O preço de venda é informado; fabricação, frete e publicação no site não foram
-implementados. O subtotal mostra apenas produtos e pode estar incompleto.
+implementados. O subtotal considera os valores informados e pode estar incompleto.
+
+Na revisão atual, as embalagens individuais são escolhas por item do orçamento,
+separadas do produto no catálogo e da embalagem de transporte. Os valores de
+embalagem são informados pelo usuário e acrescentados por unidade utilizada;
+quando já incluídos no preço de venda, não são cobrados novamente. O subtotal
+considera produtos e embalagens informados e não inclui transporte pendente.
+Tipo, peso e compatibilidade de embalagens ainda precisam ser detalhados.
+CPF/CNPJ pode ficar pendente para preparar o envio; o protótipo não o valida.
+Produto de cliente é sempre privado; apenas produto próprio pode receber
+autorização de divulgação futura. Nenhuma publicação no site é feita.
 
 Teste de navegador opcional: com Python Playwright e Chromium instalados,
 iniciar a aplicação em modo local e executar scripts/verify-wireframe.py.

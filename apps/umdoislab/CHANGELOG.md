@@ -1,5 +1,16 @@
 # Histórico
 
+## 0.1.4
+
+- Produto de cliente sempre privado; opções de divulgação aparecem apenas para produto próprio.
+- Trocar origem remove uma autorização anterior de divulgação.
+- Embalagem individual passa para o item do orçamento, sem alterar o produto no catálogo.
+- Permite informar tipo e acréscimo por unidade ou indicar que a embalagem já está incluída no preço.
+- Mostra subtotais separados de produtos e embalagens; transporte permanece pendente.
+- Separa cliente/empresa, contato, telefone, e-mail e CPF/CNPJ; documento pode ficar pendente no orçamento.
+- Reforça a distinção entre embalagem individual e embalagem de transporte obrigatória para preparar frete.
+- Mantém os dados do wireframe apenas em memória, sem alterar o banco.
+
 ## 0.1.3
 
 - Adiciona wireframe navegável do cadastro de produto em modal dentro do orçamento.
