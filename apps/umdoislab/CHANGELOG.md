@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.1.6
+
+- Substitui inclusão imediata pelo seletor por busca, seleção múltipla e botão Adicionar selecionados.
+- Mantém a lista oculta enquanto o catálogo simulado está vazio.
+- Permite modificar a quantidade diretamente em cada item, sem abrir o cadastro do produto.
+- Recalcula produtos e embalagens individuais ao alterar a quantidade, preservando o catálogo.
+- Quantidades inválidas ficam sinalizadas como pendentes e não geram valores incorretos.
+- Amplia o teste de navegador para seleção múltipla, busca e alterações de quantidade.
+
 ## 0.1.5
 
 - Adiciona seleção de clientes existentes e cadastro em modal sem sair do orçamento.

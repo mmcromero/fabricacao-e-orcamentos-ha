@@ -42,6 +42,16 @@ const cents = (value: string): number | null => {
 };
 const packagingCents = (item: Item) => item.individualPackaging === 'none' || (item.individualPackaging === 'with' && item.packagingIncluded)
   ? 0 : item.individualPackaging === 'with' ? cents(item.packagingPrice) : null;
+const quantityNumber = (value: string): number | null => {
+  const number = Number(value);
+  return /^\d+$/.test(value.trim()) && Number.isSafeInteger(number) && number > 0 ? number : null;
+};
+const lineAmount = (unitCents: number | null, quantity: string): number | null => {
+  const number = quantityNumber(quantity);
+  if (unitCents === null || number === null) return null;
+  const amount = unitCents * number;
+  return Number.isSafeInteger(amount) ? amount : null;
+};
 
 export default function QuoteWireframe() {
   const [screen, setScreen] = useState<'editor' | 'list' | 'catalog'>('editor');
@@ -52,6 +62,8 @@ export default function QuoteWireframe() {
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [selectedCatalogIds, setSelectedCatalogIds] = useState<number[]>([]);
   const [draft, setDraft] = useState<ProductForm>(emptyProduct);
   const [editing, setEditing] = useState<number | null>(null);
   const [error, setError] = useState('');
@@ -60,10 +72,9 @@ export default function QuoteWireframe() {
   const dialog = useRef<HTMLDialogElement>(null);
   const nextId = useRef(1);
   const trigger = useRef<HTMLElement | null>(null);
-  const subtotal = items.reduce((sum, p) => sum + (cents(p.price) ?? 0) * Number(p.quantity), 0);
-  const packagingSubtotal = items.reduce((sum, p) => sum + (packagingCents(p) ?? 0) * Number(p.quantity), 0);
-  const packagingPricePending = items.some(p => packagingCents(p) === null);
-  const pricePending = items.some(p => cents(p.price) === null);
+  const subtotal = items.reduce((sum, p) => sum + (lineAmount(cents(p.price), p.quantity) ?? 0), 0);
+  const packagingSubtotal = items.reduce((sum, p) => sum + (lineAmount(packagingCents(p), p.quantity) ?? 0), 0);
+  const totalsPending = items.some(p => lineAmount(cents(p.price), p.quantity) === null || lineAmount(packagingCents(p), p.quantity) === null);
   const physicalPending = items.some(p => !p.length || !p.width || !p.height || !p.weight);
   const packagingSummary = items.length === 0 || items.some(p => !p.individualPackaging)
     ? 'há itens a definir'
@@ -98,15 +109,10 @@ export default function QuoteWireframe() {
     if (draft.price.trim() && cents(draft.price) === null) {
       setError('Informe um preço válido, com até duas casas decimais, ou deixe pendente.'); return;
     }
-    const quantity = Number(draft.quantity);
-    if (!Number.isSafeInteger(quantity) || quantity < 1) { setError('Informe uma quantidade inteira maior que zero.'); return; }
     for (const key of ['length', 'width', 'height', 'weight'] as const) {
       if (draft[key].trim() && (!/^\d+(?:[.,]\d+)?$/.test(draft[key].trim()) || Number(draft[key].replace(',', '.')) <= 0)) {
         setError('Dimensões e peso devem ser maiores que zero. Você também pode deixá-los pendentes.'); return;
       }
-    }
-    if (draft.price.trim() && !Number.isSafeInteger(cents(draft.price)! * quantity)) {
-      setError('O valor calculado excede o limite deste protótipo.'); return;
     }
     const previousItem = items.find(p => p.id === editing);
     const item: Item = { ...emptyPackaging(), ...previousItem, ...productData(draft), quantity: draft.quantity, catalog: draft.catalog, private: draft.origin !== 'own' || draft.private, name: draft.name.trim(), id: editing ?? nextId.current++ };
@@ -125,8 +131,22 @@ export default function QuoteWireframe() {
     setItems(previous => [...previous, { ...productData(product), ...emptyPackaging(), id: nextId.current++, quantity: '1', catalog: false }]);
     setScreen('editor'); setStatus('Produto adicionado do catálogo. Escolha a embalagem individual para este item do orçamento.');
   }
+  function addSelectedFromCatalog() {
+    const selected = catalog.filter(product => selectedCatalogIds.includes(product.id));
+    if (selected.length === 0) return;
+    const additions = selected.map(product => ({ ...productData(product), ...emptyPackaging(), id: nextId.current++, quantity: '1', catalog: false }));
+    setItems(previous => [...previous, ...additions]);
+    setSelectedCatalogIds([]); setCatalogSearch('');
+    setStatus(`${additions.length} ${additions.length === 1 ? 'produto adicionado' : 'produtos adicionados'} do catálogo. Quantidades e embalagens são independentes por item deste orçamento.`);
+  }
+  function toggleCatalogProduct(id: number, checked: boolean) {
+    setSelectedCatalogIds(previous => checked ? [...previous.filter(value => value !== id), id] : previous.filter(value => value !== id));
+  }
   function updatePackaging<K extends 'individualPackaging' | 'packagingType' | 'packagingPrice' | 'packagingIncluded'>(id: number, key: K, value: Item[K]) {
     setItems(previous => previous.map(item => item.id === id ? { ...item, [key]: value } : item));
+  }
+  function updateQuantity(id: number, value: string) {
+    setItems(previous => previous.map(item => item.id === id ? { ...item, quantity: value } : item));
   }
   function packagingControls(item: Item) {
     return <fieldset className="wf-item-packaging"><legend>Embalagem individual neste orçamento</legend>
@@ -139,7 +159,7 @@ export default function QuoteWireframe() {
         <label className="wf-choice"><input type="checkbox" checked={item.packagingIncluded} onChange={e => updatePackaging(item.id, 'packagingIncluded', e.target.checked)} />Embalagem já incluída no preço de venda informado</label>
         {!item.packagingIncluded && <><label htmlFor={`wf-packaging-price-${item.id}`}>Acréscimo por embalagem individual (R$)</label><input id={`wf-packaging-price-${item.id}`} inputMode="decimal" value={item.packagingPrice} placeholder="Valor cobrado por unidade, informado" onChange={e => updatePackaging(item.id, 'packagingPrice', e.target.value)} />
           {item.packagingPrice.trim() && cents(item.packagingPrice) === null && <p className="wf-error" role="alert">Informe um valor válido com até duas casas decimais. A embalagem continua pendente.</p>}</>}
-        <p>{item.packagingIncluded ? 'Sem acréscimo: a embalagem já está no preço informado.' : packagingCents(item) === null ? 'Valor da embalagem pendente.' : `${money(packagingCents(item)!)} × ${item.quantity} unidades = ${money(packagingCents(item)! * Number(item.quantity))} de embalagem.`}</p>
+        <p>{item.packagingIncluded ? 'Sem acréscimo: a embalagem já está no preço informado.' : lineAmount(packagingCents(item), item.quantity) === null ? 'Valor da embalagem ou quantidade pendente.' : `${money(packagingCents(item)!)} × ${item.quantity} ${quantityNumber(item.quantity) === 1 ? 'unidade' : 'unidades'} = ${money(lineAmount(packagingCents(item), item.quantity)!)} de embalagem.`}</p>
         <p className="wf-muted">Cobrança pelas unidades utilizadas neste cenário. Peso e compatibilidade ainda precisam ser conferidos; não houve pesquisa de fornecedor.</p>
       </>}
     </fieldset>;
@@ -157,11 +177,11 @@ export default function QuoteWireframe() {
         <div className="wf-grid"><div>
           <section className="wf-card"><h2><span className="wf-step">1</span>Cliente do orçamento</h2><ClientPicker selected={selectedClient} onSelect={setSelectedClient} /><label htmlFor="wf-notes">Observações do pedido</label><textarea id="wf-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Observações deste pedido, separadas do cadastro do cliente." /></section>
           <section className="wf-card"><div className="wf-row"><h2><span className="wf-step">2</span>Produtos do orçamento</h2><button onClick={() => open()}>+ Novo produto</button></div><p>Informe o preço de venda que você já calculou. Fabricação e precificação serão detalhadas depois.</p>
-            {catalog.length > 0 && <><label htmlFor="wf-catalog-select">Selecionar do catálogo simulado</label><select id="wf-catalog-select" value="" onChange={e => { const p = catalog.find(p => p.id === Number(e.target.value)); if (p) addFromCatalog(p); }}><option value="">Selecione um produto</option>{catalog.map(p => <option key={p.id} value={p.id}>{p.name}{p.private ? ' · privado' : ''}</option>)}</select></>}
-            {items.length === 0 ? <div className="wf-empty"><h3>Uma peça nova também pode entrar aqui.</h3><p>Use “Novo produto” para informar nome, preço e dados físicos sem sair do orçamento.</p></div> : items.map(p => <article className="wf-item" key={p.id}><div className="wf-row"><h3>{p.name}</h3><span className="wf-tag">{p.private ? 'Privado' : 'Divulgação autorizada'}</span></div><p>{p.description || 'Sem descrição'}<br />{p.quantity} unidades × {cents(p.price) === null ? 'preço pendente' : money(cents(p.price)!)}<br />{p.length && p.width && p.height ? `${p.length} × ${p.width} × ${p.height} cm` : 'Dimensões pendentes'} · {p.weight ? `${p.weight} g/unidade` : 'Peso pendente'}</p><p>{packagingLabel(p)}</p><p className="wf-muted">{originLabel(p.origin)} · {p.catalog ? 'Também salvo no catálogo simulado' : 'Somente neste orçamento'} · {p.private ? 'Bloqueado para futura carga no site' : 'Elegível para divulgação futura; ainda não publicado'}</p>{packagingControls(p)}<div className="wf-actions"><button className="wf-secondary" onClick={() => open(p)} aria-label={`Editar ${p.name}`}>Editar produto e quantidade</button><button className="wf-quiet" onClick={() => remove(p)} aria-label={`Remover ${p.name}`}>Remover do orçamento</button></div></article>)}
+            {catalog.length > 0 && <div className="wf-product-picker"><label htmlFor="wf-catalog-search">Buscar produtos no catálogo</label><input id="wf-catalog-search" type="search" value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder="Digite parte do nome" /><p className="wf-muted">Produtos salvos no catálogo desta demonstração. Selecione um ou vários produtos. Para uma peça nova, use Novo produto.</p><fieldset className="wf-catalog-options"><legend>Produtos disponíveis</legend>{catalog.filter(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))).map(p => <label className="wf-choice wf-product-option" key={p.id}><input type="checkbox" checked={selectedCatalogIds.includes(p.id)} onChange={e => toggleCatalogProduct(p.id, e.target.checked)} /><span><strong>{p.name}</strong><small>{cents(p.price) === null ? 'Preço de venda a informar' : `${money(cents(p.price)!)} por unidade`} · {p.private ? 'Privado' : 'Divulgação autorizada'}</small></span></label>)}{!catalog.some(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))) && <p>Nenhum produto encontrado. Você pode cadastrar pelo botão Novo produto.</p>}</fieldset><div className="wf-actions"><button type="button" disabled={selectedCatalogIds.length === 0} onClick={addSelectedFromCatalog}>Adicionar selecionados ao orçamento ({selectedCatalogIds.length})</button>{selectedCatalogIds.length > 0 && <button type="button" className="wf-secondary" onClick={() => setSelectedCatalogIds([])}>Limpar seleção</button>}</div><p className="wf-muted">Após adicionar, ajuste a quantidade de cada item e escolha a embalagem individual para este pedido.</p></div>}
+            {items.length === 0 ? <div className="wf-empty"><h3>Uma peça nova também pode entrar aqui.</h3><p>Use “Novo produto” para informar nome, preço e dados físicos sem sair do orçamento.</p></div> : items.map(p => <article className="wf-item" key={p.id}><div className="wf-row"><h3>{p.name}</h3><span className="wf-tag">{p.private ? 'Privado' : 'Divulgação autorizada'}</span></div><p>{p.description || 'Sem descrição'}<br />{quantityNumber(p.quantity) === null ? 'Quantidade pendente' : `${p.quantity} ${quantityNumber(p.quantity) === 1 ? 'unidade' : 'unidades'}`} × {cents(p.price) === null ? 'preço pendente' : money(cents(p.price)!)}<br />{p.length && p.width && p.height ? `${p.length} × ${p.width} × ${p.height} cm` : 'Dimensões pendentes'} · {p.weight ? `${p.weight} g/unidade` : 'Peso pendente'}</p><div className="wf-inline-quantity"><div><label htmlFor={`wf-quantity-${p.id}`}>Quantidade neste item</label><input id={`wf-quantity-${p.id}`} inputMode="numeric" value={p.quantity} onChange={e => updateQuantity(p.id, e.target.value)} /></div><p>Produtos: {lineAmount(cents(p.price), p.quantity) === null ? 'valor pendente' : money(lineAmount(cents(p.price), p.quantity)!)}</p></div>{quantityNumber(p.quantity) === null && <p className="wf-error" role="alert">Informe uma quantidade inteira maior que zero. Os valores deste item ficam pendentes.</p>}<p>{packagingLabel(p)}</p><p className="wf-muted">{originLabel(p.origin)} · {p.catalog ? 'Também salvo no catálogo simulado' : 'Somente neste orçamento'} · {p.private ? 'Bloqueado para futura carga no site' : 'Elegível para divulgação futura; ainda não publicado'}</p>{packagingControls(p)}<div className="wf-actions"><button className="wf-secondary" onClick={() => open(p)} aria-label={`Editar ${p.name}`}>Editar dados do produto</button><button className="wf-quiet" onClick={() => remove(p)} aria-label={`Remover ${p.name}`}>Remover do orçamento</button></div></article>)}
           </section>
           <section className="wf-card"><h2><span className="wf-step">3</span>Pacote de envio</h2><p>A embalagem individual é escolhida em cada produto. Aqui serão definidas a caixa externa e as proteções para transportar o conjunto de itens.</p><div className="wf-pending">Embalagem de transporte obrigatória para preparar o frete. Caixa, proteções, peso e medidas finais ainda não definidos. Frete não consultado.</div></section>
-        </div><aside><section className="wf-card wf-summary"><small>RESUMO DO RASCUNHO</small><h2>Subtotal do pedido</h2><strong className="wf-total">{money(subtotal + packagingSubtotal)}</strong><p>Produtos: {money(subtotal)}</p><p>Embalagens individuais: {money(packagingSubtotal)}</p><p>{pricePending || packagingPricePending ? 'Soma parcial: há preço de produto ou embalagem pendente.' : 'Produtos e embalagens informados, sem transporte.'}</p><hr /><p>Embalagens individuais: {packagingSummary}</p><p>Caixa de transporte: a definir</p><p>Frete: pendente</p><p>Documento para envio: {taxDocument.trim() ? 'informado, ainda não validado' : 'pendente; não bloqueia cotação'}</p><p>Prazo de fabricação: a definir</p>{!postal && <p className="wf-pending">CEP de entrega pendente.</p>}{physicalPending && <p className="wf-pending">Há dados físicos incompletos para preparar o envio.</p>}<p className="wf-muted">Este subtotal não é o total final do orçamento. Nenhuma cotação, prazo ou publicação foi realizada.</p></section></aside></div>
+        </div><aside><section className="wf-card wf-summary"><small>RESUMO DO RASCUNHO</small><h2>Subtotal do pedido</h2><strong className="wf-total">{money(subtotal + packagingSubtotal)}</strong><p>Produtos: {money(subtotal)}</p><p>Embalagens individuais: {money(packagingSubtotal)}</p><p>{totalsPending ? 'Há valores ou quantidades pendentes; esta soma é parcial.' : 'Produtos e embalagens informados, sem transporte.'}</p><hr /><p>Embalagens individuais: {packagingSummary}</p><p>Caixa de transporte: a definir</p><p>Frete: pendente</p><p>Documento para envio: {taxDocument.trim() ? 'informado, ainda não validado' : 'pendente; não bloqueia cotação'}</p><p>Prazo de fabricação: a definir</p>{!postal && <p className="wf-pending">CEP de entrega pendente.</p>}{physicalPending && <p className="wf-pending">Há dados físicos incompletos para preparar o envio.</p>}<p className="wf-muted">Este subtotal não é o total final do orçamento. Nenhuma cotação, prazo ou publicação foi realizada.</p></section></aside></div>
       </>}
       <p className="wf-status" role="status">{status}</p>
     </main>
@@ -172,7 +192,7 @@ export default function QuoteWireframe() {
           {error && <div className="wf-error" role="alert">{error}</div>}
           <label htmlFor="wf-product-name">Nome do produto <span aria-hidden="true">*</span></label><input autoFocus id="wf-product-name" value={draft.name} onChange={e => update('name', e.target.value)} aria-required="true" />
           <label htmlFor="wf-description">Descrição (opcional)</label><textarea id="wf-description" value={draft.description} onChange={e => update('description', e.target.value)} />
-          <div className="wf-form-grid"><div><label htmlFor="wf-price">Preço de venda por unidade (R$)</label><input id="wf-price" inputMode="decimal" value={draft.price} onChange={e => update('price', e.target.value)} placeholder="Pode ficar pendente no rascunho" /></div><div><label htmlFor="wf-quantity">Quantidade neste orçamento</label><input id="wf-quantity" inputMode="numeric" value={draft.quantity} onChange={e => update('quantity', e.target.value)} /></div></div>
+          <div className="wf-form-grid"><div><label htmlFor="wf-price">Preço de venda por unidade (R$)</label><input id="wf-price" inputMode="decimal" value={draft.price} onChange={e => update('price', e.target.value)} placeholder="Pode ficar pendente no rascunho" /></div></div>
           <label htmlFor="wf-included">O que já está incluído nesse preço?</label><textarea id="wf-included" value={draft.included} onChange={e => update('included', e.target.value)} placeholder="Ex.: custos, trabalho e margem; embalagem, se já incluída." />
           <fieldset><legend>Dados físicos da peça, por unidade</legend><p className="wf-muted">Estas são as medidas da peça, sem a embalagem individual ou a caixa de transporte. Dados ausentes deixam o envio pendente.</p><div className="wf-form-grid">{([
             ['length', 'Comprimento (cm)'], ['width', 'Largura (cm)'], ['height', 'Altura / espessura (cm)'], ['weight', 'Peso (g)']

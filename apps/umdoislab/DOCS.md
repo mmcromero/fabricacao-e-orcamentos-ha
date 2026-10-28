@@ -8,6 +8,12 @@ Ver dados do cliente mostra informações somente para consulta; Editar cadastro
 abre novamente um modal. Produtos, embalagens e observações são preservados.
 A lista de clientes também é temporária e será descartada ao recarregar.
 
+Após cadastrar produtos com Salvar também no catálogo, o seletor permite buscar
+e marcar vários produtos. Eles só entram no orçamento ao clicar em Adicionar
+selecionados. Cada item tem sua quantidade editável na própria tela e sua
+embalagem independente; alterar quantidade recalcula os valores sem modificar
+o produto no catálogo. Quantidades inválidas ficam pendentes no rascunho.
+
 Na tela inicial, use **Abrir wireframe: produto no orçamento**. A demonstração
 permite adicionar/editar produto em modal, preservar dados do orçamento e
 simular catálogo, origem e privacidade. Produtos novos começam privados.
