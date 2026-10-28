@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
+import QuoteWireframe from './QuoteWireframe';
 
 async function request(path: string, options?: RequestInit) {
   const response = await fetch(new URL(path, document.baseURI), options);
@@ -29,6 +30,7 @@ function App() {
   return <main>
     <header><span className="brand">Fabricação e Orçamentos</span><span className="badge">Validação da instalação</span></header>
     <h1>Uma base para começar.</h1>
+    <section><h2>Fluxo em avaliação</h2><p>Experimente cadastrar um produto dentro do orçamento. O wireframe usa dados temporários e não altera a anotação do banco.</p><a href="?view=produto">Abrir wireframe: produto no orçamento</a></section>
     <p>Esta tela verifica interface, servidor e banco. Orçamentos e Fabricação ainda não foram implementados.</p>
     <section aria-labelledby="diagnostic"><h2 id="diagnostic">Diagnóstico</h2>
       <dl><div><dt>API</dt><dd>{health?.status ?? 'Não verificada'}</dd></div>
@@ -44,4 +46,4 @@ function App() {
     </section><p role="status">{message}</p>
   </main>;
 }
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(new URLSearchParams(window.location.search).get('view') === 'produto' ? <QuoteWireframe /> : <App />);

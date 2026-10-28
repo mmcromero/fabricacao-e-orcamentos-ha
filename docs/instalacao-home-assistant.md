@@ -8,6 +8,9 @@ não comprova autenticação nem instalação pelo Supervisor.
 
 A versão inicial teve execução ARM e persistência confirmadas por um usuário.
 A versão desta distribuição ainda requer instalação ARM e Ingress reais.
+O wireframe do produto também foi exercitado em Chromium (desktop e celular),
+incluindo validação, preservação dos campos do orçamento, catálogo opcional,
+privacidade e ausência de chamadas à API. Sua persistência é apenas em memória.
 Não há fluxos comerciais para testar. Backup/restauração pelo Supervisor,
 descoberta do repositório público, transferência dos dados e atualização entre
 versões ainda precisam de verificação no destino.

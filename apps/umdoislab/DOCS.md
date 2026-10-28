@@ -1,5 +1,18 @@
 # Uso
 
+## Wireframe do cadastro de produto
+
+Na tela inicial, use **Abrir wireframe: produto no orçamento**. A demonstração
+permite adicionar/editar produto em modal, preservar dados do orçamento e
+simular catálogo, origem e privacidade. Produtos novos começam privados.
+Recarregar a página descarta os dados da demonstração; ela não acessa o banco.
+O preço de venda é informado; fabricação, frete e publicação no site não foram
+implementados. O subtotal mostra apenas produtos e pode estar incompleto.
+
+Teste de navegador opcional: com Python Playwright e Chromium instalados,
+iniciar a aplicação em modo local e executar scripts/verify-wireframe.py.
+O script usa dados de demonstração e informa explicitamente se o fluxo passou.
+
 Inicie o aplicativo e abra a interface web pelo Home Assistant. Confira API
 e SQLite, salve uma anotação sem dados pessoais e reinicie somente o aplicativo.
 A anotação deve permanecer. O banco é armazenado em `/data/validation.sqlite`.

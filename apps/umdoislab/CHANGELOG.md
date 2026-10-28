@@ -1,5 +1,15 @@
 # Histórico
 
+## 0.1.3
+
+- Adiciona wireframe navegável do cadastro de produto em modal dentro do orçamento.
+- Preserva cliente, CEP e observações ao abrir/fechar o cadastro.
+- Demonstra uso só no orçamento ou também no catálogo, em memória desta página.
+- Separa origem (próprio/de cliente) e autorização de divulgação; privado por padrão.
+- Exibe preço de venda informado, medidas da peça e pendências sem calcular fabricação ou consultar frete.
+- Inclui verificação do fluxo em Chromium, desktop e celular.
+- O wireframe não usa banco nem salva produtos reais; a anotação de teste permanece intacta.
+
 ## 0.1.2
 
 - Separa o controle por Ingress do servidor de aplicação.

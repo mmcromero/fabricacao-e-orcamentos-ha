@@ -1,0 +1,96 @@
+"""Browser check. Requires Python Playwright and a local Chromium installation."""
+import argparse
+import re
+from pathlib import Path
+from playwright.sync_api import sync_playwright, expect
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--base-url', default='http://127.0.0.1:8193/')
+parser.add_argument('--chromium', default='/usr/bin/chromium')
+parser.add_argument('--screenshots', type=Path)
+args = parser.parse_args()
+if args.screenshots:
+    args.screenshots.mkdir(parents=True, exist_ok=True)
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(executable_path=args.chromium, headless=True, args=['--no-sandbox'])
+    page = browser.new_page(viewport={'width': 1440, 'height': 1000})
+    errors = []
+    requests = []
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    page.on('request', lambda request: requests.append(request.url))
+    page.goto(args.base_url + '?view=produto')
+    expect(page.get_by_role('heading', name='Vamos montar o pedido.')).to_be_visible()
+    page.get_by_label('Nome do cliente', exact=True).fill('Cliente do teste visual')
+    page.get_by_label('CEP de entrega', exact=True).fill('20220-410')
+    page.get_by_label('Observações do pedido', exact=True).fill('Preservar este texto ao adicionar o produto.')
+    page.get_by_role('button', name='+ Novo produto', exact=True).click()
+    modal = page.get_by_role('dialog')
+    expect(modal).to_be_visible()
+    expect(page.get_by_role('radio', name='Privado — não incluir em futura carga no site')).to_be_checked()
+    expect(page.get_by_role('checkbox', name='Salvar também no catálogo')).not_to_be_checked()
+    page.get_by_role('button', name='Adicionar ao orçamento', exact=True).click()
+    expect(page.get_by_role('alert')).to_contain_text('Informe o nome')
+    page.get_by_role('button', name='Preencher exemplo histórico', exact=True).click()
+    page.get_by_label('Origem do produto', exact=True).select_option('own')
+    page.get_by_label('Preço de venda por unidade (R$)', exact=True).fill('-1')
+    page.get_by_role('button', name='Adicionar ao orçamento', exact=True).click()
+    expect(page.get_by_role('alert')).to_contain_text('preço válido')
+    expect(page.get_by_label('Nome do produto', exact=False)).to_have_value('Quebra-cabeça deslizante de duas faces')
+    page.get_by_label('Preço de venda por unidade (R$)', exact=True).fill('32,50')
+    if args.screenshots:
+        page.screenshot(path=str(args.screenshots / 'wireframe-produto-modal.png'))
+    page.get_by_role('button', name='Adicionar ao orçamento', exact=True).click()
+    expect(modal).not_to_be_visible()
+    expect(page.get_by_label('Nome do cliente', exact=True)).to_have_value('Cliente do teste visual')
+    expect(page.get_by_label('CEP de entrega', exact=True)).to_have_value('20220-410')
+    expect(page.get_by_label('Observações do pedido', exact=True)).to_have_value('Preservar este texto ao adicionar o produto.')
+    expect(page.locator('.wf-total')).to_have_text('R$ 1.462,50')
+    expect(page.locator('.wf-item')).to_contain_text('Próprio')
+    expect(page.locator('.wf-item')).to_contain_text('Bloqueado para futura carga no site')
+    page.get_by_role('button', name='Catálogo simulado', exact=True).click()
+    expect(page.get_by_role('heading', name='Nenhum produto salvo no catálogo')).to_be_visible()
+    page.get_by_role('button', name='Voltar ao orçamento', exact=True).click()
+    page.get_by_role('button', name=re.compile('^Editar ')).click()
+    page.get_by_role('checkbox', name='Salvar também no catálogo').check()
+    page.get_by_role('button', name='Salvar alterações no item', exact=True).click()
+    page.get_by_role('button', name='Catálogo simulado', exact=True).click()
+    expect(page.get_by_text('Privado · não exportar para site', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Voltar ao orçamento', exact=True).click()
+    page.get_by_role('button', name='+ Novo produto', exact=True).click()
+    expect(page.get_by_role('radio', name='Privado — não incluir em futura carga no site')).to_be_checked()
+    page.get_by_label('Nome do produto', exact=False).fill('Produto pendente')
+    page.once('dialog', lambda dialog: dialog.dismiss())
+    page.get_by_role('button', name='Cancelar', exact=True).click()
+    expect(modal).to_be_visible()
+    expect(page.get_by_label('Nome do produto', exact=False)).to_have_value('Produto pendente')
+    page.once('dialog', lambda dialog: dialog.accept())
+    page.get_by_role('button', name='Cancelar', exact=True).click()
+    expect(modal).not_to_be_visible()
+    page.get_by_role('button', name='+ Novo produto', exact=True).click()
+    page.get_by_label('Nome do produto', exact=False).fill('Peça com dados a definir')
+    page.get_by_label('Origem do produto', exact=True).select_option('client')
+    page.get_by_role('button', name='Adicionar ao orçamento', exact=True).click()
+    expect(page.get_by_text('Soma parcial: há produto com preço pendente.', exact=True)).to_be_visible()
+    expect(page.get_by_text('Há dados físicos incompletos para preparar o envio.', exact=True)).to_be_visible()
+    if args.screenshots:
+        page.screenshot(path=str(args.screenshots / 'wireframe-orcamento-desktop.png'), full_page=True)
+    page.set_viewport_size({'width': 390, 'height': 844})
+    assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'Overflow horizontal no celular'
+    page.get_by_role('button', name='+ Novo produto', exact=True).click()
+    expect(modal).to_be_visible()
+    assert modal.bounding_box()['width'] <= 390
+    page.get_by_label('Nome do produto', exact=False).fill('Produto no celular')
+    page.get_by_label('Preço de venda por unidade (R$)', exact=True).fill('10,00')
+    page.get_by_role('radio', name='Autorizo a elegibilidade para divulgação futura').check()
+    page.get_by_role('button', name='Adicionar ao orçamento', exact=True).click()
+    expect(page.locator('.wf-item').last).to_contain_text('Elegível para divulgação futura; ainda não publicado')
+    expect(page.locator('.wf-item').last).to_contain_text('Somente neste orçamento')
+    if args.screenshots:
+        page.screenshot(path=str(args.screenshots / 'wireframe-orcamento-celular.png'), full_page=True)
+    page.reload()
+    expect(page.get_by_text('Uma peça nova também pode entrar aqui.', exact=True)).to_be_visible()
+    assert not errors, errors
+    assert not any('/api/' in url for url in requests), 'O protótipo não deve chamar a API ou gravar no banco'
+    browser.close()
+    print('PASS: modal, validação, preservação do orçamento, catálogo opcional, privacidade, origem, descarte confirmado, pendências, navegação móvel e ausência de chamadas à API.')
