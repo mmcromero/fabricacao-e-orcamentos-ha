@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.1.5
+
+- Adiciona seleção de clientes existentes e cadastro em modal sem sair do orçamento.
+- Ao salvar cliente, inclui na lista simulada e seleciona automaticamente no pedido.
+- Exibe dados do cliente somente para consulta, com edição em ação separada.
+- Preserva produtos, embalagens e observações ao cadastrar, editar ou trocar cliente.
+- Valida nome/e-mail no modal, preservando os campos; confirma descarte de alterações.
+- A lista continua temporária, sem gravação no banco ou validação fiscal.
+
 ## 0.1.4
 
 - Produto de cliente sempre privado; opções de divulgação aparecem apenas para produto próprio.

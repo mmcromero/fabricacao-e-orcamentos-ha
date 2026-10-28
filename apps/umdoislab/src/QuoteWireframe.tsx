@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import './wireframe.css';
+import ClientPicker, { type Client } from './ClientPicker';
 
 type ProductData = {
   name: string; description: string; price: string; included: string;
@@ -44,12 +45,10 @@ const packagingCents = (item: Item) => item.individualPackaging === 'none' || (i
 
 export default function QuoteWireframe() {
   const [screen, setScreen] = useState<'editor' | 'list' | 'catalog'>('editor');
-  const [client, setClient] = useState('Cliente de demonstração');
-  const [contact, setContact] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [taxDocument, setTaxDocument] = useState('');
-  const [postal, setPostal] = useState('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const client = selectedClient?.name ?? '';
+  const taxDocument = selectedClient?.taxDocument ?? '';
+  const postal = selectedClient?.postal ?? '';
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -156,7 +155,7 @@ export default function QuoteWireframe() {
       {screen === 'editor' && <>
         <div className="wf-title"><div><small>ORÇAMENTOS / NOVO RASCUNHO</small><h1>Vamos montar o pedido.</h1><p>Comece com o cliente e adicione um produto, mesmo que ele ainda não esteja no catálogo.</p></div><span className="wf-tag">Demonstração · não enviado</span></div>
         <div className="wf-grid"><div>
-          <section className="wf-card"><h2><span className="wf-step">1</span>Cliente e contato</h2><label htmlFor="wf-client">Nome do cliente ou empresa</label><input id="wf-client" value={client} onChange={e => setClient(e.target.value)} /><div className="wf-form-grid"><div><label htmlFor="wf-contact">Nome do contato</label><input id="wf-contact" value={contact} onChange={e => setContact(e.target.value)} /></div><div><label htmlFor="wf-phone">Telefone</label><input id="wf-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} /></div><div><label htmlFor="wf-email">E-mail</label><input id="wf-email" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div><div><label htmlFor="wf-tax-document">CPF ou CNPJ</label><input id="wf-tax-document" value={taxDocument} onChange={e => setTaxDocument(e.target.value)} placeholder="Pode ficar pendente até preparar o envio" /></div></div><p className="wf-muted">CPF/CNPJ será necessário para preparar o envio. O rascunho e a cotação de frete podem ser preparados sem esse documento. Neste protótipo, o documento não é validado.</p><label htmlFor="wf-postal">CEP de entrega</label><input id="wf-postal" inputMode="numeric" placeholder="Pode ficar pendente" value={postal} onChange={e => setPostal(e.target.value)} /><label htmlFor="wf-notes">Observações do pedido</label><textarea id="wf-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Estes campos serão preservados ao cadastrar o produto." /></section>
+          <section className="wf-card"><h2><span className="wf-step">1</span>Cliente do orçamento</h2><ClientPicker selected={selectedClient} onSelect={setSelectedClient} /><label htmlFor="wf-notes">Observações do pedido</label><textarea id="wf-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Observações deste pedido, separadas do cadastro do cliente." /></section>
           <section className="wf-card"><div className="wf-row"><h2><span className="wf-step">2</span>Produtos do orçamento</h2><button onClick={() => open()}>+ Novo produto</button></div><p>Informe o preço de venda que você já calculou. Fabricação e precificação serão detalhadas depois.</p>
             {catalog.length > 0 && <><label htmlFor="wf-catalog-select">Selecionar do catálogo simulado</label><select id="wf-catalog-select" value="" onChange={e => { const p = catalog.find(p => p.id === Number(e.target.value)); if (p) addFromCatalog(p); }}><option value="">Selecione um produto</option>{catalog.map(p => <option key={p.id} value={p.id}>{p.name}{p.private ? ' · privado' : ''}</option>)}</select></>}
             {items.length === 0 ? <div className="wf-empty"><h3>Uma peça nova também pode entrar aqui.</h3><p>Use “Novo produto” para informar nome, preço e dados físicos sem sair do orçamento.</p></div> : items.map(p => <article className="wf-item" key={p.id}><div className="wf-row"><h3>{p.name}</h3><span className="wf-tag">{p.private ? 'Privado' : 'Divulgação autorizada'}</span></div><p>{p.description || 'Sem descrição'}<br />{p.quantity} unidades × {cents(p.price) === null ? 'preço pendente' : money(cents(p.price)!)}<br />{p.length && p.width && p.height ? `${p.length} × ${p.width} × ${p.height} cm` : 'Dimensões pendentes'} · {p.weight ? `${p.weight} g/unidade` : 'Peso pendente'}</p><p>{packagingLabel(p)}</p><p className="wf-muted">{originLabel(p.origin)} · {p.catalog ? 'Também salvo no catálogo simulado' : 'Somente neste orçamento'} · {p.private ? 'Bloqueado para futura carga no site' : 'Elegível para divulgação futura; ainda não publicado'}</p>{packagingControls(p)}<div className="wf-actions"><button className="wf-secondary" onClick={() => open(p)} aria-label={`Editar ${p.name}`}>Editar produto e quantidade</button><button className="wf-quiet" onClick={() => remove(p)} aria-label={`Remover ${p.name}`}>Remover do orçamento</button></div></article>)}

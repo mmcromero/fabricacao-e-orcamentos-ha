@@ -2,6 +2,12 @@
 
 ## Wireframe do cadastro de produto
 
+Na área de cliente, selecione um exemplo existente ou use Novo cliente para
+cadastrar em modal. Ao salvar, ele entra na lista simulada e fica selecionado.
+Ver dados do cliente mostra informações somente para consulta; Editar cadastro
+abre novamente um modal. Produtos, embalagens e observações são preservados.
+A lista de clientes também é temporária e será descartada ao recarregar.
+
 Na tela inicial, use **Abrir wireframe: produto no orçamento**. A demonstração
 permite adicionar/editar produto em modal, preservar dados do orçamento e
 simular catálogo, origem e privacidade. Produtos novos começam privados.
