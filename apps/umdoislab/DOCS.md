@@ -14,6 +14,12 @@ selecionados. Cada item tem sua quantidade editável na própria tela e sua
 embalagem independente; alterar quantidade recalcula os valores sem modificar
 o produto no catálogo. Quantidades inválidas ficam pendentes no rascunho.
 
+O seletor agora é uma lista suspensa: ao abrir mostra todos os produtos; o
+campo no topo filtra a lista e é opcional. Origem é obrigatória (Próprio ou De
+cliente) antes de cadastrar ou incluir produto. Concluir Novo produto inclui
+diretamente no orçamento e mostra o item com destaque. Salvar também no catálogo
+continua opcional; não é preciso selecionar novamente um produto recém-criado.
+
 Na tela inicial, use **Abrir wireframe: produto no orçamento**. A demonstração
 permite adicionar/editar produto em modal, preservar dados do orçamento e
 simular catálogo, origem e privacidade. Produtos novos começam privados.

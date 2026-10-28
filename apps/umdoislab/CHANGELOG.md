@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.1.7
+
+- Reorganiza a seleção como dropdown que abre com a lista completa e filtro opcional no topo.
+- Mantém seleção múltipla e confirmação explícita para produtos existentes.
+- Exige origem Próprio ou De cliente antes de cadastrar ou incluir produtos no orçamento.
+- Remove A definir como opção válida de origem, sem escolher uma categoria automaticamente.
+- Destaca e mostra o item recém-criado ao concluir Novo produto, com catálogo opcional e sem segunda seleção.
+- Testa lista/filtro, Escape, confirmação, origem obrigatória e inclusão direta com e sem catálogo.
+
 ## 0.1.6
 
 - Substitui inclusão imediata pelo seletor por busca, seleção múltipla e botão Adicionar selecionados.

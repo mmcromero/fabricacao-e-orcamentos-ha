@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import './wireframe.css';
 import ClientPicker, { type Client } from './ClientPicker';
 
@@ -27,7 +27,8 @@ const emptyProduct = (): ProductForm => ({
   name: '', description: '', price: '', included: '', length: '', width: '',
   height: '', weight: '', quantity: '1', private: true, catalog: false, origin: '',
 });
-const originLabel = (origin: ProductForm['origin']) => origin === 'own' ? 'Próprio' : origin === 'client' ? 'De cliente' : 'Origem a definir';
+const validOrigin = (origin: ProductForm['origin']) => origin === 'own' || origin === 'client';
+const originLabel = (origin: ProductForm['origin']) => origin === 'own' ? 'Próprio' : origin === 'client' ? 'De cliente' : 'Origem não informada';
 const packagingLabel = (product: Item) => product.individualPackaging === 'none'
   ? 'Sem embalagem individual'
   : product.individualPackaging === 'with'
@@ -69,7 +70,23 @@ export default function QuoteWireframe() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [recentlyAddedId, setRecentlyAddedId] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  const catalogDropdown = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      const dropdown = catalogDropdown.current;
+      if (dropdown?.open && !dropdown.contains(event.target as Node)) dropdown.open = false;
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, []);
+  useEffect(() => {
+    if (recentlyAddedId === null) return;
+    const item = document.getElementById(`wf-item-${recentlyAddedId}`);
+    item?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    item?.focus({ preventScroll: true });
+  }, [recentlyAddedId]);
   const nextId = useRef(1);
   const trigger = useRef<HTMLElement | null>(null);
   const subtotal = items.reduce((sum, p) => sum + (lineAmount(cents(p.price), p.quantity) ?? 0), 0);
@@ -106,6 +123,7 @@ export default function QuoteWireframe() {
   function save(event: FormEvent) {
     event.preventDefault();
     if (!draft.name.trim()) { setError('Informe o nome do produto.'); return; }
+    if (!validOrigin(draft.origin)) { setError('Selecione a origem do produto: Próprio ou De cliente.'); return; }
     if (draft.price.trim() && cents(draft.price) === null) {
       setError('Informe um preço válido, com até duas casas decimais, ou deixe pendente.'); return;
     }
@@ -117,6 +135,7 @@ export default function QuoteWireframe() {
     const previousItem = items.find(p => p.id === editing);
     const item: Item = { ...emptyPackaging(), ...previousItem, ...productData(draft), quantity: draft.quantity, catalog: draft.catalog, private: draft.origin !== 'own' || draft.private, name: draft.name.trim(), id: editing ?? nextId.current++ };
     setItems(previous => editing === null ? [...previous, item] : previous.map(p => p.id === editing ? item : p));
+    if (editing === null) setRecentlyAddedId(item.id);
     if (draft.catalog) setCatalog(previous => [...previous.filter(p => p.id !== item.id), { ...productData(item), id: item.id }]);
     else if (editing !== null) setCatalog(previous => previous.filter(p => p.id !== editing));
     setStatus(`${item.name} ${editing === null ? 'adicionado' : 'atualizado'}. ${draft.catalog ? 'Incluído também no catálogo simulado.' : 'Usado somente neste orçamento.'} ${item.private ? 'Privado: bloqueado para divulgação no site.' : 'Elegível para divulgação futura; nada foi publicado.'}`);
@@ -128,15 +147,25 @@ export default function QuoteWireframe() {
     setStatus('Item removido do orçamento. O catálogo simulado foi preservado.');
   }
   function addFromCatalog(product: CatalogProduct) {
+    if (!validOrigin(product.origin)) {
+      setStatus('Produto com origem não informada. Defina Próprio ou De cliente no cadastro antes de adicionar.'); return;
+    }
     setItems(previous => [...previous, { ...productData(product), ...emptyPackaging(), id: nextId.current++, quantity: '1', catalog: false }]);
     setScreen('editor'); setStatus('Produto adicionado do catálogo. Escolha a embalagem individual para este item do orçamento.');
   }
   function addSelectedFromCatalog() {
     const selected = catalog.filter(product => selectedCatalogIds.includes(product.id));
     if (selected.length === 0) return;
+    if (selected.some(product => !validOrigin(product.origin))) {
+      setStatus('Há produto selecionado sem origem. Defina Próprio ou De cliente no cadastro antes de adicionar.'); return;
+    }
     const additions = selected.map(product => ({ ...productData(product), ...emptyPackaging(), id: nextId.current++, quantity: '1', catalog: false }));
     setItems(previous => [...previous, ...additions]);
     setSelectedCatalogIds([]); setCatalogSearch('');
+    if (catalogDropdown.current) {
+      catalogDropdown.current.open = false;
+      catalogDropdown.current.querySelector('summary')?.focus();
+    }
     setStatus(`${additions.length} ${additions.length === 1 ? 'produto adicionado' : 'produtos adicionados'} do catálogo. Quantidades e embalagens são independentes por item deste orçamento.`);
   }
   function toggleCatalogProduct(id: number, checked: boolean) {
@@ -177,8 +206,8 @@ export default function QuoteWireframe() {
         <div className="wf-grid"><div>
           <section className="wf-card"><h2><span className="wf-step">1</span>Cliente do orçamento</h2><ClientPicker selected={selectedClient} onSelect={setSelectedClient} /><label htmlFor="wf-notes">Observações do pedido</label><textarea id="wf-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Observações deste pedido, separadas do cadastro do cliente." /></section>
           <section className="wf-card"><div className="wf-row"><h2><span className="wf-step">2</span>Produtos do orçamento</h2><button onClick={() => open()}>+ Novo produto</button></div><p>Informe o preço de venda que você já calculou. Fabricação e precificação serão detalhadas depois.</p>
-            {catalog.length > 0 && <div className="wf-product-picker"><label htmlFor="wf-catalog-search">Buscar produtos no catálogo</label><input id="wf-catalog-search" type="search" value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder="Digite parte do nome" /><p className="wf-muted">Produtos salvos no catálogo desta demonstração. Selecione um ou vários produtos. Para uma peça nova, use Novo produto.</p><fieldset className="wf-catalog-options"><legend>Produtos disponíveis</legend>{catalog.filter(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))).map(p => <label className="wf-choice wf-product-option" key={p.id}><input type="checkbox" checked={selectedCatalogIds.includes(p.id)} onChange={e => toggleCatalogProduct(p.id, e.target.checked)} /><span><strong>{p.name}</strong><small>{cents(p.price) === null ? 'Preço de venda a informar' : `${money(cents(p.price)!)} por unidade`} · {p.private ? 'Privado' : 'Divulgação autorizada'}</small></span></label>)}{!catalog.some(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))) && <p>Nenhum produto encontrado. Você pode cadastrar pelo botão Novo produto.</p>}</fieldset><div className="wf-actions"><button type="button" disabled={selectedCatalogIds.length === 0} onClick={addSelectedFromCatalog}>Adicionar selecionados ao orçamento ({selectedCatalogIds.length})</button>{selectedCatalogIds.length > 0 && <button type="button" className="wf-secondary" onClick={() => setSelectedCatalogIds([])}>Limpar seleção</button>}</div><p className="wf-muted">Após adicionar, ajuste a quantidade de cada item e escolha a embalagem individual para este pedido.</p></div>}
-            {items.length === 0 ? <div className="wf-empty"><h3>Uma peça nova também pode entrar aqui.</h3><p>Use “Novo produto” para informar nome, preço e dados físicos sem sair do orçamento.</p></div> : items.map(p => <article className="wf-item" key={p.id}><div className="wf-row"><h3>{p.name}</h3><span className="wf-tag">{p.private ? 'Privado' : 'Divulgação autorizada'}</span></div><p>{p.description || 'Sem descrição'}<br />{quantityNumber(p.quantity) === null ? 'Quantidade pendente' : `${p.quantity} ${quantityNumber(p.quantity) === 1 ? 'unidade' : 'unidades'}`} × {cents(p.price) === null ? 'preço pendente' : money(cents(p.price)!)}<br />{p.length && p.width && p.height ? `${p.length} × ${p.width} × ${p.height} cm` : 'Dimensões pendentes'} · {p.weight ? `${p.weight} g/unidade` : 'Peso pendente'}</p><div className="wf-inline-quantity"><div><label htmlFor={`wf-quantity-${p.id}`}>Quantidade neste item</label><input id={`wf-quantity-${p.id}`} inputMode="numeric" value={p.quantity} onChange={e => updateQuantity(p.id, e.target.value)} /></div><p>Produtos: {lineAmount(cents(p.price), p.quantity) === null ? 'valor pendente' : money(lineAmount(cents(p.price), p.quantity)!)}</p></div>{quantityNumber(p.quantity) === null && <p className="wf-error" role="alert">Informe uma quantidade inteira maior que zero. Os valores deste item ficam pendentes.</p>}<p>{packagingLabel(p)}</p><p className="wf-muted">{originLabel(p.origin)} · {p.catalog ? 'Também salvo no catálogo simulado' : 'Somente neste orçamento'} · {p.private ? 'Bloqueado para futura carga no site' : 'Elegível para divulgação futura; ainda não publicado'}</p>{packagingControls(p)}<div className="wf-actions"><button className="wf-secondary" onClick={() => open(p)} aria-label={`Editar ${p.name}`}>Editar dados do produto</button><button className="wf-quiet" onClick={() => remove(p)} aria-label={`Remover ${p.name}`}>Remover do orçamento</button></div></article>)}
+            {catalog.length > 0 && <details ref={catalogDropdown} className="wf-product-picker wf-catalog-dropdown" onToggle={e => { if (e.currentTarget.open) setCatalogSearch(''); }} onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); e.currentTarget.open = false; e.currentTarget.querySelector('summary')?.focus(); } }}><summary id="wf-catalog-toggle">Selecionar produtos do catálogo <span>{selectedCatalogIds.length > 0 ? `— ${selectedCatalogIds.length} selecionado(s)` : '— abrir lista'}</span></summary><label htmlFor="wf-catalog-search">Filtrar lista de produtos (opcional)</label><input id="wf-catalog-search" type="search" value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder="Todos os produtos aparecem abaixo; digite para filtrar" /><p className="wf-muted">A lista mostra os produtos salvos no catálogo desta demonstração. Explore a lista ou use o filtro opcional. Marque um ou vários produtos. Para uma peça nova, use Novo produto.</p><fieldset className="wf-catalog-options"><legend>Produtos disponíveis</legend>{catalog.filter(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))).map(p => <label className="wf-choice wf-product-option" key={p.id}><input type="checkbox" checked={selectedCatalogIds.includes(p.id)} onChange={e => toggleCatalogProduct(p.id, e.target.checked)} /><span><strong>{p.name}</strong><small>{cents(p.price) === null ? 'Preço de venda a informar' : `${money(cents(p.price)!)} por unidade`} · {p.private ? 'Privado' : 'Divulgação autorizada'}</small></span></label>)}{!catalog.some(p => p.name.toLocaleLowerCase('pt-BR').includes(catalogSearch.trim().toLocaleLowerCase('pt-BR'))) && <p>Nenhum produto encontrado. Você pode cadastrar pelo botão Novo produto.</p>}</fieldset><div className="wf-actions"><button type="button" disabled={selectedCatalogIds.length === 0} onClick={addSelectedFromCatalog}>Adicionar selecionados ao orçamento ({selectedCatalogIds.length})</button>{selectedCatalogIds.length > 0 && <button type="button" className="wf-secondary" onClick={() => setSelectedCatalogIds([])}>Limpar seleção</button>}</div><p className="wf-muted">Após adicionar, ajuste a quantidade de cada item e escolha a embalagem individual para este pedido.</p></details>}
+            {items.length === 0 ? <div className="wf-empty"><h3>Uma peça nova também pode entrar aqui.</h3><p>Use “Novo produto” para informar nome, preço e dados físicos sem sair do orçamento.</p></div> : items.map(p => <article id={`wf-item-${p.id}`} tabIndex={-1} className={`wf-item${recentlyAddedId === p.id ? ' wf-item-recent' : ''}`} key={p.id}><div className="wf-row"><h3>{p.name}</h3>{recentlyAddedId === p.id && <span className="wf-tag">Adicionado ao orçamento</span>}<span className="wf-tag">{p.private ? 'Privado' : 'Divulgação autorizada'}</span></div><p>{p.description || 'Sem descrição'}<br />{quantityNumber(p.quantity) === null ? 'Quantidade pendente' : `${p.quantity} ${quantityNumber(p.quantity) === 1 ? 'unidade' : 'unidades'}`} × {cents(p.price) === null ? 'preço pendente' : money(cents(p.price)!)}<br />{p.length && p.width && p.height ? `${p.length} × ${p.width} × ${p.height} cm` : 'Dimensões pendentes'} · {p.weight ? `${p.weight} g/unidade` : 'Peso pendente'}</p><div className="wf-inline-quantity"><div><label htmlFor={`wf-quantity-${p.id}`}>Quantidade neste item</label><input id={`wf-quantity-${p.id}`} inputMode="numeric" value={p.quantity} onChange={e => updateQuantity(p.id, e.target.value)} /></div><p>Produtos: {lineAmount(cents(p.price), p.quantity) === null ? 'valor pendente' : money(lineAmount(cents(p.price), p.quantity)!)}</p></div>{quantityNumber(p.quantity) === null && <p className="wf-error" role="alert">Informe uma quantidade inteira maior que zero. Os valores deste item ficam pendentes.</p>}<p>{packagingLabel(p)}</p><p className="wf-muted">{originLabel(p.origin)} · {p.catalog ? 'Também salvo no catálogo simulado' : 'Somente neste orçamento'} · {p.private ? 'Bloqueado para futura carga no site' : 'Elegível para divulgação futura; ainda não publicado'}</p>{packagingControls(p)}<div className="wf-actions"><button className="wf-secondary" onClick={() => open(p)} aria-label={`Editar ${p.name}`}>Editar dados do produto</button><button className="wf-quiet" onClick={() => remove(p)} aria-label={`Remover ${p.name}`}>Remover do orçamento</button></div></article>)}
           </section>
           <section className="wf-card"><h2><span className="wf-step">3</span>Pacote de envio</h2><p>A embalagem individual é escolhida em cada produto. Aqui serão definidas a caixa externa e as proteções para transportar o conjunto de itens.</p><div className="wf-pending">Embalagem de transporte obrigatória para preparar o frete. Caixa, proteções, peso e medidas finais ainda não definidos. Frete não consultado.</div></section>
         </div><aside><section className="wf-card wf-summary"><small>RESUMO DO RASCUNHO</small><h2>Subtotal do pedido</h2><strong className="wf-total">{money(subtotal + packagingSubtotal)}</strong><p>Produtos: {money(subtotal)}</p><p>Embalagens individuais: {money(packagingSubtotal)}</p><p>{totalsPending ? 'Há valores ou quantidades pendentes; esta soma é parcial.' : 'Produtos e embalagens informados, sem transporte.'}</p><hr /><p>Embalagens individuais: {packagingSummary}</p><p>Caixa de transporte: a definir</p><p>Frete: pendente</p><p>Documento para envio: {taxDocument.trim() ? 'informado, ainda não validado' : 'pendente; não bloqueia cotação'}</p><p>Prazo de fabricação: a definir</p>{!postal && <p className="wf-pending">CEP de entrega pendente.</p>}{physicalPending && <p className="wf-pending">Há dados físicos incompletos para preparar o envio.</p>}<p className="wf-muted">Este subtotal não é o total final do orçamento. Nenhuma cotação, prazo ou publicação foi realizada.</p></section></aside></div>
@@ -198,8 +227,8 @@ export default function QuoteWireframe() {
             ['length', 'Comprimento (cm)'], ['width', 'Largura (cm)'], ['height', 'Altura / espessura (cm)'], ['weight', 'Peso (g)']
           ] as const).map(([key, label]) => <div key={key}><label htmlFor={`wf-${key}`}>{label}</label><input id={`wf-${key}`} inputMode="decimal" value={draft[key]} onChange={e => update(key, e.target.value)} placeholder="A informar" /></div>)}</div></fieldset>
 
-          <label htmlFor="wf-origin">Origem do produto</label><select id="wf-origin" value={draft.origin} onChange={e => update('origin', e.target.value as ProductForm['origin'])}><option value="">A definir</option><option value="own">Próprio</option><option value="client">De cliente</option></select><p className="wf-muted">A origem organiza os produtos. Um produto próprio também pode permanecer privado.</p>
-          {draft.origin === 'own' ? <fieldset><legend>Privacidade e divulgação</legend><label className="wf-choice"><input type="radio" name="wf-visibility" checked={draft.private} onChange={() => update('private', true)} />Privado — não incluir em futura carga no site</label><label className="wf-choice"><input type="radio" name="wf-visibility" checked={!draft.private} onChange={() => update('private', false)} />Autorizo a elegibilidade para divulgação futura</label><p className="wf-muted">Todo produto novo começa privado. Autorizar não publica o produto. A integração com o site ainda não existe.</p></fieldset> : <p className="wf-pending">{draft.origin === 'client' ? 'Produto de cliente: sempre privado e bloqueado para divulgação no site.' : 'Enquanto a origem não for definida, o produto permanece privado.'}</p>}
+          <label htmlFor="wf-origin">Origem do produto *</label><select id="wf-origin" required aria-required="true" value={draft.origin} onChange={e => update('origin', e.target.value as ProductForm['origin'])}><option value="" disabled>Selecione a origem</option><option value="own">Próprio</option><option value="client">De cliente</option></select><p className="wf-muted">A origem organiza os produtos. Um produto próprio também pode permanecer privado.</p>
+          {draft.origin === 'own' ? <fieldset><legend>Privacidade e divulgação</legend><label className="wf-choice"><input type="radio" name="wf-visibility" checked={draft.private} onChange={() => update('private', true)} />Privado — não incluir em futura carga no site</label><label className="wf-choice"><input type="radio" name="wf-visibility" checked={!draft.private} onChange={() => update('private', false)} />Autorizo a elegibilidade para divulgação futura</label><p className="wf-muted">Todo produto novo começa privado. Autorizar não publica o produto. A integração com o site ainda não existe.</p></fieldset> : <p className="wf-pending">{draft.origin === 'client' ? 'Produto de cliente: sempre privado e bloqueado para divulgação no site.' : 'Selecione a origem para continuar. Produtos novos começam privados.'}</p>}
           <fieldset><legend>Onde usar este produto?</legend><label className="wf-choice"><input type="checkbox" checked={draft.catalog} onChange={e => update('catalog', e.target.checked)} />Salvar também no catálogo (simulação)</label><p className="wf-muted">Desmarcado: usar só neste orçamento. Produtos privados também podem ficar no catálogo e continuam bloqueados para divulgação.</p></fieldset>
         </div><div className="wf-modal-footer"><button type="button" className="wf-secondary" onClick={() => close()}>Cancelar</button><button type="submit">{editing === null ? 'Adicionar ao orçamento' : 'Salvar alterações no item'}</button></div>
       </form>
