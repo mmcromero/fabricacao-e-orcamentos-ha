@@ -1,5 +1,5 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.10"
+version: "0.1.11"
 slug: umdoislab
 description: "Clientes, produtos e rascunhos persistentes. Frete e fabricação pendentes."
 arch:

@@ -12,7 +12,7 @@ test('clientes, configurações e rascunhos: persistência, versões e snapshots
  try{
   assert.deepEqual((await app.inject('/api/clients')).json(),[]);
   const client={name:'Cliente fictício',contact:'Contato fictício',phone:'',email:'',taxDocument:'',postal:''};
-  assert.equal((await send('POST','/api/clients',{...client,name:'  '})).statusCode,400);
+  assert.equal((await send('POST','/api/clients',{...client,name:'  ',contact:'  '})).statusCode,400);
   assert.equal((await send('POST','/api/clients',{...client,email:'email inválido'})).statusCode,400);
   const cid=(await send('POST','/api/clients',client)).json().id;
   assert.equal((await send('PUT',`/api/clients/${cid}`,{...client,taxDocument:'A1234567'})).statusCode,200);

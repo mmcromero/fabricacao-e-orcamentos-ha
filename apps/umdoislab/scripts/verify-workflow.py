@@ -13,7 +13,7 @@ with sync_playwright() as p:
     assert page.get_by_role('navigation',name='Áreas').get_by_role('link').all_text_contents()==['Fabricação','Orçamentos','Clientes','Produtos']
     page.get_by_role('button',name='Novo orçamento',exact=True).click()
     page.get_by_role('button',name='+ Novo cliente',exact=True).click()
-    page.get_by_label('Nome do cliente ou empresa *',exact=True).fill('Cliente fictício do fluxo')
+    page.get_by_label('Nome da empresa',exact=True).fill('Cliente fictício do fluxo')
     page.get_by_label('Nome do contato',exact=True).fill('Contato de teste')
     page.get_by_role('button',name='Salvar e selecionar cliente',exact=True).click()
     page.get_by_text('Cliente salvo no cadastro e selecionado neste orçamento.',exact=True).wait_for()

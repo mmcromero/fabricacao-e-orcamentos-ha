@@ -1,3 +1,4 @@
+import {clientSchema} from './client-data.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 const text=(maxLength:number)=>({type:'string',maxLength});
@@ -9,7 +10,7 @@ const item={type:'object',additionalProperties:false,required:['id','name','prod
  lengthCm:{type:['number','null'],exclusiveMinimum:0,maximum:1000000},widthCm:{type:['number','null'],exclusiveMinimum:0,maximum:1000000},heightCm:{type:['number','null'],exclusiveMinimum:0,maximum:1000000},weightGrams:{type:['number','null'],exclusiveMinimum:0,maximum:1000000},
  packaging:{enum:['','none','with']},packagingType:text(200),packagingAmount:{type:'string',maxLength:14},packagingIncluded:{type:'boolean'}
 }};
-const client={anyOf:[{type:'null'},{type:'object',additionalProperties:false,required:['id','name','contact','phone','email','taxDocument','postal'],properties:{id:{type:'integer',minimum:1},name:text(200),contact:text(200),phone:text(50),email:text(254),taxDocument:text(40),postal:text(20)}}]};
+const client={anyOf:[{type:'null'},{...clientSchema,required:[...clientSchema.required,'id'],properties:{...clientSchema.properties,id:{type:'integer',minimum:1}}}]};
 const dataSchema={type:'object',additionalProperties:false,required:['client','items','notes'],properties:{client,notes:text(10000),items:{type:'array',maxItems:200,items:item}}};
 type Line={id:number;name:string;prices:Record<string,number|null>;priceKey:string;quantity:string;packaging:string;packagingAmount:string;packagingIncluded:boolean};
 export function quoteTotals(items:Line[]){

@@ -1,11 +1,23 @@
-# Uso — 0.1.10
+# Uso — 0.1.11
 
 ## Orçamentos
 
 A tela inicial é o fluxo persistente. Clique em Novo orçamento. Selecione um
 cliente ou use Novo cliente em modal: o cadastro será salvo na lista real e
-selecionado no pedido, sem sair da página. CPF/CNPJ e CEP podem ficar pendentes;
-validação fiscal, endereço completo de envio e frete ainda não existem.
+selecionado no pedido, sem sair da página. Nome da empresa e nome do contato são
+campos separados: pelo menos um deve ser preenchido; os dois juntos são opcionais.
+Sem empresa, o contato identifica o cliente nas listas.
+
+Rua/logradouro, número, complemento, bairro, cidade e UF podem ser preenchidos
+manualmente. Buscar endereço pelo CEP consulta o ViaCEP diretamente no navegador,
+com apenas o CEP; não envia nome, documento ou telefone. Se a consulta falhar ou o
+CEP não detalhar a rua/bairro, continue manualmente. Número e complemento não
+são alterados pela consulta. Campos editados enquanto ela carrega são preservados.
+Nenhum campo de endereço é obrigatório para salvar um cadastro ou rascunho.
+Cadastros antigos sem esses campos continuam disponíveis, sem exclusão de dados.
+
+ CPF/CNPJ e CEP podem ficar pendentes;
+o endereço completo pode ser preenchido e salvo, mas validação fiscal, cotação de frete e envio ainda não existem.
 
 Abra Selecionar produtos do catálogo para percorrer a lista, filtrar e selecionar
 vários produtos. Só entram ao confirmar Adicionar selecionados. Um único preço

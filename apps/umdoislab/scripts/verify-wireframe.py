@@ -21,7 +21,7 @@ with sync_playwright() as p:
     page.goto(args.base_url + '?view=produto')
     expect(page.get_by_role('heading', name='Vamos montar o pedido.')).to_be_visible()
     customer = {
-        'Nome do cliente ou empresa': 'Cliente do teste visual',
+        'Nome da empresa': 'Cliente do teste visual',
         'Nome do contato': 'Contato de demonstração',
         'Telefone': 'telefone de teste',
         'E-mail': 'teste@example.com',
@@ -36,11 +36,11 @@ with sync_playwright() as p:
     client_modal.get_by_role('button', name='Salvar e selecionar cliente', exact=True).click()
     expect(client_modal.get_by_role('alert')).to_contain_text('Informe o nome')
     for label, value in customer.items():
-        client_modal.get_by_label(label, exact=label != 'Nome do cliente ou empresa').fill(value)
+        client_modal.get_by_label(label, exact=label != 'Nome da empresa').fill(value)
     client_modal.get_by_label('E-mail', exact=True).fill('email-invalido')
     client_modal.get_by_role('button', name='Salvar e selecionar cliente', exact=True).click()
     expect(client_modal.get_by_role('alert')).to_contain_text('formato do e-mail')
-    expect(client_modal.get_by_label('Nome do cliente ou empresa', exact=False)).to_have_value(customer['Nome do cliente ou empresa'])
+    expect(client_modal.get_by_label('Nome da empresa', exact=False)).to_have_value(customer['Nome da empresa'])
     client_modal.get_by_label('E-mail', exact=True).fill(customer['E-mail'])
     page.once('dialog', lambda dialog: dialog.dismiss())
     client_modal.get_by_role('button', name='Cancelar', exact=True).click()
@@ -50,7 +50,7 @@ with sync_playwright() as p:
     expect(client_modal).not_to_be_visible()
     expect(page.get_by_label('Selecionar cliente', exact=True)).to_have_value('3')
     selected = page.locator('.wf-selected-client')
-    expect(selected).to_contain_text(customer['Nome do cliente ou empresa'])
+    expect(selected).to_contain_text(customer['Nome da empresa'])
     expect(selected.locator('input, textarea, select')).to_have_count(0)
     selected.get_by_text('Ver dados do cliente', exact=True).click()
     for value in customer.values():
@@ -58,7 +58,7 @@ with sync_playwright() as p:
     page.get_by_label('Selecionar cliente', exact=True).select_option('1')
     expect(selected).to_contain_text('Cliente de demonstração')
     page.get_by_label('Selecionar cliente', exact=True).select_option('3')
-    expect(selected).to_contain_text(customer['Nome do cliente ou empresa'])
+    expect(selected).to_contain_text(customer['Nome da empresa'])
     expect(page.get_by_label('Observações do pedido', exact=True)).to_have_value(notes)
     page.get_by_role('button', name='+ Novo produto', exact=True).click()
     modal = page.get_by_role('dialog')
@@ -189,7 +189,7 @@ with sync_playwright() as p:
     mobile_client = page.get_by_role('dialog', name='Novo cliente', exact=True)
     expect(mobile_client).to_be_visible()
     assert mobile_client.bounding_box()['width'] <= 390
-    mobile_client.get_by_label('Nome do cliente ou empresa', exact=False).fill('Cliente no celular')
+    mobile_client.get_by_label('Nome da empresa', exact=False).fill('Cliente no celular')
     mobile_client.get_by_role('button', name='Salvar e selecionar cliente', exact=True).click()
     expect(page.locator('.wf-selected-client')).to_contain_text('Cliente no celular')
     expect(page.locator('.wf-item')).to_have_count(4)

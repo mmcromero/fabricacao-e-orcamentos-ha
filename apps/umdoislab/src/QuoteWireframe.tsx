@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import './wireframe.css';
+import {clientLabel} from './client-model';
 import ClientPicker, { type Client } from './ClientPicker';
 
 type ProductData = {
@@ -57,7 +58,7 @@ const lineAmount = (unitCents: number | null, quantity: string): number | null =
 export default function QuoteWireframe() {
   const [screen, setScreen] = useState<'editor' | 'list' | 'catalog'>('editor');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const client = selectedClient?.name ?? '';
+  const client = selectedClient?clientLabel(selectedClient):'';
   const taxDocument = selectedClient?.taxDocument ?? '';
   const postal = selectedClient?.postal ?? '';
   const [notes, setNotes] = useState('');

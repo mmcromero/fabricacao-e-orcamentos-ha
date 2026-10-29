@@ -1,6 +1,6 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.10.
+Distribuição experimental para Home Assistant. Versão 0.1.11.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
 O catálogo de Produtos possui gravação persistente e importação piloto com conferência.
 Clientes e rascunhos de Orçamentos também são persistentes e usam o catálogo real.

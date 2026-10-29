@@ -1,5 +1,16 @@
 # Histórico
 
+## 0.1.11
+
+- Renomeia o campo para Nome da empresa e aceita empresa ou contato: ao menos um deve ser preenchido.
+- Usa o contato na lista e no orçamento quando a empresa não estiver informada.
+- Adiciona rua/logradouro, número, complemento, bairro, cidade e estado ao cadastro e ao modal do orçamento.
+- Preserva endereço completo no snapshot do orçamento, inclusive para clientes sem empresa.
+- Adiciona consulta opcional ao ViaCEP no navegador; mantém preenchimento manual e não envia nome, documento ou telefone.
+- Consulta não altera número/complemento, não aplica respostas antigas e preserva campos editados durante a espera.
+- Mantém compatibilidade com cadastros e rascunhos anteriores sem campos de endereço.
+
+
 ## 0.1.10
 
 - Importa SKU e URL HTTPS da foto principal, exibindo-os no catálogo e no cadastro.
