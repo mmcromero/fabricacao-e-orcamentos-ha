@@ -1,3 +1,4 @@
+import {normalizedProduct} from './product-category.js';
 import type { FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
 
@@ -16,8 +17,11 @@ function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && !
 export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS product_sources (source_key TEXT PRIMARY KEY, product_id INTEGER NOT NULL REFERENCES products(id));`);
-  const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...JSON.parse(r.data as string),updatedAt:r.updated_at}));
-  const add=(p:Product)=>{
+  const categoryCorrections=db.prepare("SELECT id,data FROM products WHERE json_extract(data,'$.origin')='client'").all().map(row=>({row,product:JSON.parse(row.data as string) as Product})).filter(({product})=>product.category!==normalizedProduct(product).category);
+  if(categoryCorrections.length){db.exec('BEGIN IMMEDIATE');try{for(const {row,product} of categoryCorrections)db.prepare('UPDATE products SET data=? WHERE id=?').run(JSON.stringify(normalizedProduct(product)),row.id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}
+  const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
+  const add=(input:Product)=>{
+    const p=normalizedProduct(input);
     const id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),new Date().toISOString()).lastInsertRowid);
     for(const key of p.sourceKeys) db.prepare('INSERT INTO product_sources VALUES (?,?)').run(key,id);
     return id;
@@ -33,7 +37,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
     if(!row) return reply.code(404).send({message:'Produto não encontrado.'});
     const old=JSON.parse(row.data as string) as Product;
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
-    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(req.body),new Date().toISOString(),req.params.id);
+    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct(req.body)),new Date().toISOString(),req.params.id);
     return {ok:true};
   });
   app.delete<{Params:{id:string}}>('/api/products/:id',(req,reply)=>{
@@ -43,7 +47,8 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   app.post<{Body:{products:Product[];confirm:boolean;fillMissing?:boolean}}>('/api/products/import',{bodyLimit:1024*1024,schema:{body:{type:'object',additionalProperties:false,required:['products','confirm'],properties:{fillMissing:{type:'boolean'},confirm:{type:'boolean'},products:{type:'array',minItems:1,maxItems:500,items:schema}}}}},(req,reply)=>{
     const seen=new Set<string>();
     const pending:Product[]=[];const updates:{id:number;data:Product}[]=[];let skipped=0;
-    for(const p of req.body.products){
+    for(const input of req.body.products){
+      const p=normalizedProduct(input);
       if(!valid(p)||!p.sourceKeys.length) return reply.code(400).send({message:'Carga inválida: confira preços, origem e identificadores.'});
       const matches=new Set<number>();
       for(const key of p.sourceKeys){

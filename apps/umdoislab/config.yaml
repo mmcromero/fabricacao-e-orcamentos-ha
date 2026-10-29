@@ -1,5 +1,5 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.12"
+version: "0.1.13"
 slug: umdoislab
 description: "Cadastros e orçamentos persistentes. Entrega manual; fabricação pendente."
 arch:

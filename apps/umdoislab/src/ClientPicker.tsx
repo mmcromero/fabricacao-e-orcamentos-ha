@@ -18,6 +18,10 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const nextId = useRef(3);
+  const selector=useRef<HTMLSelectElement>(null),card=useRef<HTMLDivElement>(null);
+  const focusSelector=useRef(false),focusCard=useRef(false);
+  useEffect(()=>{if(!selected&&focusSelector.current){selector.current?.focus();focusSelector.current=false;}if(selected&&focusCard.current){card.current?.focus();focusCard.current=false;}},[selected]);
+  function changeClient(){focusSelector.current=true;onSelect(null);setMessage('Selecione outro cliente ou cadastre um novo. Os demais dados do orçamento foram preservados.');}
   const [busy,setBusy]=useState(false);
   const [lookupBusy,setLookupBusy]=useState(false);
   const [openCycle,setOpenCycle]=useState(0);
@@ -50,6 +54,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
         const body={...clientDraft(draft),name:draft.name.trim(),contact:draft.contact.trim()};
         const result=await clientRequest(editing===null?'api/clients':`api/clients/${editing}`,editing===null?'POST':'PUT',body);
         const list:Client[]=await clientRequest('api/clients');setClients(list);
+        if(editing===null)focusCard.current=true;
         onSelect(list.find(c=>c.id===(editing??result.id))??null);
         setMessage('Cliente salvo no cadastro e selecionado neste orçamento.');close(true);
       }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar.');}finally{setBusy(false);}
@@ -57,20 +62,21 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     }
     const client: Client = { ...draft, name: draft.name.trim(), id: editing ?? nextId.current++ };
     setClients(previous => editing === null ? [...previous, client] : previous.map(c => c.id === editing ? client : c));
+    if(editing===null)focusCard.current=true;
     onSelect(client);
     setMessage(editing === null ? 'Cliente adicionado à lista simulada e selecionado neste orçamento.' : 'Cadastro simulado atualizado. Os itens do orçamento foram preservados.');
     close(true);
   }
   return <div className="wf-client-picker">
-    <div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente</label><select id="wf-client-select" value={selected?.id ?? ''} onChange={e => { onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>
-    {selected ? <div className="wf-selected-client"><strong>{clientLabel(selected)}</strong><p>Contato: {selected.contact || 'a informar'} · CEP: {selected.postal || 'pendente'}</p><details><summary>Ver dados do cliente</summary><dl className="wf-client-details">{([
+    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente</label><select ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>}
+    {selected ? <div ref={card} tabIndex={-1} className="wf-selected-client"><strong>{clientLabel(selected)}</strong><p>Contato: {selected.contact || 'a informar'} · CEP: {selected.postal || 'pendente'}</p><details><summary>Ver dados do cliente</summary><dl className="wf-client-details">{([
       ['Nome da empresa', selected.name], ['Nome do contato', selected.contact],
       ['Telefone', selected.phone], ['E-mail', selected.email], ['CPF ou CNPJ', selected.taxDocument], ['CEP de entrega', selected.postal],['Rua / logradouro',selected.street],['Número',selected.number],['Complemento',selected.complement],['Bairro',selected.district],['Cidade',selected.city],['Estado (UF)',selected.state],
-    ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl><p className="wf-muted">Dados para consulta. CPF/CNPJ ainda não validado neste protótipo.</p></details><button type="button" className="wf-quiet" onClick={() => open(selected)}>Editar cadastro do cliente</button></div>
+    ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl><p className="wf-muted">Dados para consulta. CPF/CNPJ ainda não validado neste protótipo.</p></details><button type="button" className="wf-quiet" onClick={() => open(selected)}>Editar cadastro do cliente</button><button type="button" className="wf-secondary" onClick={changeClient}>Trocar cliente</button></div>
       : <p className="wf-pending">Cliente a selecionar. O orçamento pode continuar como rascunho.</p>}
     <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. Salve o orçamento para guardar a seleção.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
     <p role="status">{message}</p>
-    <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-client-modal-title" onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
+    <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-client-modal-title" onCancel={e => { e.preventDefault(); e.stopPropagation(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <form noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><button type="button" className="wf-quiet" onClick={() => close()} aria-label="Fechar cadastro de cliente">Fechar</button></div>
         <div className="wf-modal-body"><p>Os produtos, embalagens e observações do pedido continuam preservados.</p>{error && <div className="wf-error" role="alert">{error}</div>}
           <ClientFields key={openCycle} draft={draft} prefix="wf-client" update={update} busy={busy} onLookupBusy={setLookupBusy}/>

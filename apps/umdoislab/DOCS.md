@@ -1,10 +1,26 @@
-# Uso — 0.1.12
+# Uso — 0.1.13
 
 ## Orçamentos
 
-A tela inicial é o fluxo persistente. Clique em Novo orçamento. Selecione um
+A tela inicial é a lista de Orçamentos, separada do formulário. A lista usa dez
+registros por página. Em Configurações do orçamento, escolha 10, 15, 20 ou Todos.
+A busca pesquisa título, cliente ou número no conjunto completo, não só na página.
+
+Novo orçamento e Abrir orçamento abrem o formulário em modal, sem recarregar a
+página. Cabeçalho, fechamento e ações ficam visíveis enquanto o conteúdo rola.
+No celular, o modal ocupa a tela. Fechar ou Escape retornam à mesma lista, página,
+filtro e posição; se houver alterações não salvas, o descarte exige confirmação.
+Salvar mantém o modal aberto. Finalizados/enviados continuam somente para consulta
+até reabrir como rascunho. Cadastros de cliente e produto podem abrir por cima do
+orçamento e fechar sem descartar o pedido. Essa estrutura será replicada nas
+outras áreas somente depois da aprovação do usuário em Orçamentos.
+
+Clique em Novo orçamento. Selecione um
 cliente ou use Novo cliente em modal: o cadastro será salvo na lista real e
-selecionado no pedido, sem sair da página. Nome da empresa e nome do contato são
+selecionado no pedido, sem sair da página. Com cliente selecionado, o seletor e
+Novo cliente ficam ocultos. Trocar cliente retira apenas a seleção atual e mostra
+novamente a lista e o cadastro. Não exclui o cliente nem altera os outros dados do
+pedido; a nova seleção é gravada ao salvar o orçamento. Nome da empresa e nome do contato são
 campos separados: pelo menos um deve ser preenchido; os dois juntos são opcionais.
 Sem empresa, o contato identifica o cliente nas listas.
 
@@ -32,7 +48,9 @@ Novo produto abre cadastro rápido em modal: nome, origem, ao menos um dos três
 preços e medidas/peso opcionais. Quando houver mais de um preço, escolha o que será
 usado no pedido. Ao concluir, já entra no orçamento. Salvar também no catálogo é
 opcional; quando marcado, cria cadastro real. Informações extras do site ficam
-para depois na área Produtos.
+para depois na área Produtos. Para origem De cliente, Atacado fica visível e Exibir
+mais preços revela Loja de fábrica e Varejo. Recolher os campos não apaga valores;
+a regra de escolher a modalidade continua valendo quando houver vários preços.
 
 A quantidade é editável na linha. Embalagem individual vale por item do pedido,
 não altera o produto, e seu acréscimo é cobrado por unidade. Se estiver incluída no
@@ -81,7 +99,13 @@ interno preserva registros e snapshots, mas não é acionável por esses botões
 Não há sincronização automática com WooCommerce nem importação de clientes nesta
 versão. Os cadastros de clientes começam vazios, sem exemplos reais ou fictícios.
 
-Na área Produtos há Categoria, três preços e dados físicos. SKU, descrição e URL
+Na área Produtos há Categoria, três preços e dados físicos. Produtos de cliente
+recebem automaticamente a categoria Produtos de cliente; o campo não aparece
+para edição. Para produtos próprios, Categoria é opcional. Sem ela, o cadastro
+fica marcado Categoria pendente. Os filtros separam próprios, personalizados de
+cliente e categoria pendente. Essa organização não publica nem exporta catálogos;
+produtos de cliente continuam privados. O vínculo financeiro e os snapshots dos
+orçamentos permanecem preservados. SKU, descrição e URL
 da foto ficam em Informações para o site, recolhidas por padrão e acessíveis por
 botão. Autorizar divulgação abre a seção, sem exigir preenchimento nem publicar.
 Produto de cliente permanece privado. A autorização não garante prontidão para o

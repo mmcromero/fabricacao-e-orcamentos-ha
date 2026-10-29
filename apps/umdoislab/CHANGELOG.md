@@ -1,5 +1,25 @@
 # Histórico
 
+## 0.1.13
+
+- Mostra a lista de orçamentos separada do formulário e abre criação/edição em modal amplo, sem recarregar a página.
+- Mantém cabeçalho/ações visíveis, preserva posição/filtro/página ao fechar e confirma descarte de alterações.
+- Pagina a lista no servidor, com 10 por página como padrão e configuração de 10, 15, 20 ou Todos.
+- Carrega o orçamento completo apenas ao abrir; mantém busca por título, cliente e número, inclusive com acentos.
+- Para produtos de cliente, recolhe Loja de fábrica e Varejo no cadastro rápido sem apagar preços preenchidos.
+- Determina automaticamente a categoria Produtos de cliente e oculta seu campo no cadastro/edição.
+- Permite categoria em branco para próprios, sinalizando Categoria pendente e oferecendo filtros por origem e pendência.
+- Normaliza categorias de cliente anteriores sem modificar preços; preserva cadastros e orçamentos na migração.
+- Mantém a replicação da nova navegação nas outras áreas para depois da aprovação em Orçamentos.
+
+
+- Oculta Selecionar cliente e Novo cliente quando há cliente selecionado no orçamento.
+- Adiciona Trocar cliente para limpar somente a seleção atual e reabrir as opções de seleção/cadastro.
+- Preserva produtos, quantidades, preços, embalagens, entrega e observações ao trocar cliente.
+- Volta ao cartão de consulta após selecionar/cadastrar e gerencia foco por teclado.
+- Mantém o bloqueio de troca em orçamentos finalizados/enviados até reabrir como rascunho.
+
+
 ## 0.1.12
 
 - Adiciona situações Rascunho, Finalizado e Enviado, com marcação manual do envio do orçamento.

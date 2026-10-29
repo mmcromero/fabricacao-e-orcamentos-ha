@@ -72,6 +72,7 @@ try {
   async function checkBusinessData(){
     assert.equal((await (await fetch(base+'api/clients')).json())[0].name,client.name);
     assert.equal((await (await fetch(base+'api/quotes/1')).json()).data.notes,'Rascunho para restauração');
+    assert.equal((await (await fetch(base+'api/quotes?pageSize=10&search=ficticio')).json()).total,1);
     assert.equal((await (await fetch(base+'api/settings/fabricacao')).json()).data.dailyCapacity,'Capacidade de teste');
   }
   await stop();

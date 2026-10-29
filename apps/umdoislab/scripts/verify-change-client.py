@@ -1,0 +1,62 @@
+"""Disposable loopback server only. Verify client replacement preserves the order."""
+import json,urllib.request
+from playwright.sync_api import sync_playwright,expect
+base='http://127.0.0.1:8196/'
+def post(path,data):
+ req=urllib.request.Request(base+path,data=json.dumps(data).encode(),headers={'Content-Type':'application/json'})
+ with urllib.request.urlopen(req) as r:assert r.status==200;return json.load(r)
+with urllib.request.urlopen(base+'api/clients') as r:assert json.load(r)==[]
+with urllib.request.urlopen(base+'api/quotes') as r:assert json.load(r)==[]
+blank={'name':'','contact':'','phone':'','email':'','taxDocument':'','postal':''}
+post('api/clients',{**blank,'name':'Empresa fictícia A'})
+post('api/clients',{**blank,'contact':'Pessoa fictícia B'})
+post('api/products',{'name':'Peça de teste','origin':'own','publicAllowed':False,'prices':{'wholesale':None,'factory':None,'retail':1000},'lengthCm':None,'widthCm':None,'heightCm':None,'weightGrams':None,'colors':[],'sourceKeys':[],'family':'','description':''})
+with sync_playwright() as p:
+ browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ page=browser.new_page(viewport={'width':1280,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ page.goto(base)
+ page.get_by_role('button',name='Novo orçamento',exact=True).click()
+ page.get_by_label('Título do orçamento',exact=True).fill('Pedido preservado')
+ page.get_by_label('Selecionar cliente',exact=True).select_option(label='Empresa fictícia A')
+ expect(page.get_by_label('Selecionar cliente',exact=True)).not_to_be_visible()
+ expect(page.get_by_role('button',name='+ Novo cliente',exact=True)).not_to_be_visible()
+ expect(page.get_by_role('button',name='Trocar cliente',exact=True)).to_be_visible()
+ page.get_by_label('Observações do pedido',exact=True).fill('Cores e observações preservadas')
+ page.get_by_role('button',name='Selecionar produtos do catálogo',exact=True).click()
+ page.get_by_label('Peça de teste',exact=True).check()
+ page.get_by_role('button',name='Adicionar selecionados (1)',exact=True).click()
+ page.get_by_label('Quantidade de Peça de teste',exact=True).fill('7')
+ page.get_by_label('Embalar cada unidade de Peça de teste?',exact=True).select_option('none')
+ page.get_by_label('Forma de entrega',exact=True).select_option('pickup')
+ page.get_by_role('button',name='Trocar cliente',exact=True).click()
+ expect(page.get_by_label('Selecionar cliente',exact=True)).to_be_visible()
+ expect(page.get_by_label('Selecionar cliente',exact=True)).to_be_focused()
+ expect(page.get_by_role('button',name='+ Novo cliente',exact=True)).to_be_visible()
+ expect(page.locator('.wf-selected-client')).to_have_count(0)
+ expect(page.get_by_label('Quantidade de Peça de teste',exact=True)).to_have_value('7')
+ expect(page.get_by_label('Observações do pedido',exact=True)).to_have_value('Cores e observações preservadas')
+ expect(page.get_by_label('Forma de entrega',exact=True)).to_have_value('pickup')
+ page.get_by_label('Selecionar cliente',exact=True).select_option(label='Pessoa fictícia B')
+ expect(page.get_by_label('Selecionar cliente',exact=True)).not_to_be_visible()
+ expect(page.locator('.wf-selected-client')).to_contain_text('Pessoa fictícia B')
+ page.get_by_role('button',name='Salvar rascunho',exact=True).first.click()
+ page.get_by_role('status').filter(has_text='Rascunho salvo.').wait_for()
+ page.reload()
+ page.get_by_role('button',name='Abrir orçamento 1',exact=True).click()
+ expect(page.locator('.wf-selected-client')).to_contain_text('Pessoa fictícia B')
+ expect(page.get_by_label('Selecionar cliente',exact=True)).not_to_be_visible()
+ page.get_by_role('button',name='Trocar cliente',exact=True).click()
+ page.get_by_role('button',name='+ Novo cliente',exact=True).click()
+ modal=page.get_by_role('dialog',name='Novo cliente',exact=True)
+ modal.get_by_label('Nome do contato',exact=True).fill('Pessoa fictícia C')
+ modal.get_by_role('button',name='Salvar e selecionar cliente',exact=True).click()
+ expect(page.locator('.wf-selected-client')).to_contain_text('Pessoa fictícia C')
+ expect(page.get_by_role('button',name='+ Novo cliente',exact=True)).not_to_be_visible()
+ expect(page.get_by_label('Quantidade de Peça de teste',exact=True)).to_have_value('7')
+ page.get_by_role('button',name='Finalizar orçamento',exact=True).click()
+ page.get_by_role('status').filter(has_text='Orçamento finalizado.').wait_for()
+ expect(page.get_by_role('button',name='Trocar cliente',exact=True)).to_be_disabled()
+ assert not errors,errors
+ browser.close()
+with urllib.request.urlopen(base+'api/clients') as r:assert len(json.load(r))==3
+print('Cliente selecionado compacto, troca, novo cliente, foco, persistência e preservação do pedido: OK.')

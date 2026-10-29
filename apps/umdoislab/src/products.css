@@ -13,8 +13,8 @@
 .archive-unavailable:disabled{cursor:not-allowed}
 .quote-catalog{position:relative;width:100%;max-width:640px;margin-top:12px}
 .products-screen .quote-catalog-toggle{width:100%;display:flex;justify-content:space-between;gap:12px;text-align:left;background:white;color:#20352e;border:1px solid #789483;margin:0}
-.quote-catalog-panel{position:absolute;z-index:20;top:calc(100% + 6px);left:0;width:100%;display:flex;flex-direction:column;background:white;border:1px solid #789483;border-radius:10px;box-shadow:0 8px 28px #10291e30;overflow:hidden}
-.quote-catalog-panel.quote-catalog-above{top:auto;bottom:calc(100% + 6px)}
+.quote-catalog-panel{position:fixed;z-index:20;top:calc(100% + 6px);left:0;width:100%;display:flex;flex-direction:column;background:white;border:1px solid #789483;border-radius:10px;box-shadow:0 8px 28px #10291e30;overflow:hidden}
+.quote-catalog-panel.quote-catalog-above{transform:translateY(-100%)}
 .quote-catalog-filter{flex:none;padding:12px;border-bottom:1px solid #dce3db}
 .products-screen .quote-catalog-filter label{margin-top:0}
 .quote-catalog-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 12px}
@@ -25,3 +25,18 @@
 .products-screen .quote-catalog-footer button{margin:0}
 .quote-content-fields{border:0;padding:0;margin:0;min-width:0}
 .quote-content-fields:disabled{opacity:.85}
+.products-screen .quote-editor-modal{position:fixed;inset:0;margin:auto;width:min(1120px,calc(100vw - 32px));height:min(94dvh,1040px);max-width:none;max-height:none;padding:0;overflow:hidden}
+.quote-editor-modal[open]{display:flex;flex-direction:column}
+.quote-modal-header,.quote-modal-footer{flex:none;padding:14px 20px;background:#fff;gap:10px;align-items:center}
+.quote-modal-header{display:flex;justify-content:space-between;border-bottom:1px solid #dce3db}
+.quote-modal-header h2{margin:0;overflow-wrap:anywhere}
+.products-screen .quote-modal-header button{margin:0;flex:none}
+.quote-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 20px;background:#f3f5f1}
+.quote-modal-footer{display:flex;flex-wrap:wrap;border-top:1px solid #dce3db}
+.quote-modal-footer p{flex-basis:100%;margin:0}
+.products-screen .quote-modal-footer button{margin:0}
+.quote-pagination{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.quote-pagination small{flex-basis:100%}
+@media(max-width:600px){.products-screen .quote-editor-modal{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}.quote-modal-header,.quote-modal-footer{padding:10px 12px}.quote-modal-body{padding:0 12px 12px}.quote-modal-header h2{font-size:19px}}
+.category-pending{color:#795000;font-size:14px}
+.products-screen .more-prices{font-size:14px;padding:6px 10px;background:#eef4ef;color:#205e47;border:1px solid #a7bcb0}
