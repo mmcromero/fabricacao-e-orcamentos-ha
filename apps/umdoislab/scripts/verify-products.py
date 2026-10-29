@@ -7,6 +7,8 @@ with sync_playwright() as p:
     errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto('http://127.0.0.1:8196/?view=produtos')
     page.get_by_role('button',name='Novo produto',exact=True).click()
+    assert page.get_by_label('Família',exact=True).count()==0
+    page.get_by_label('Categoria',exact=True).fill('Categoria de teste')
     page.get_by_label('Nome',exact=True).fill('Teste cadastro')
     page.get_by_label('Origem',exact=True).select_option('client')
     assert page.get_by_label('Autorizar divulgação futura no site').count()==0
@@ -18,6 +20,7 @@ with sync_playwright() as p:
     page.reload()
     page.get_by_role('button',name='Editar Teste cadastro',exact=True).click()
     assert page.get_by_label('Valor atacado (R$)',exact=True).input_value()=='12.34'
+    assert page.get_by_label('Categoria',exact=True).input_value()=='Categoria de teste'
     page.get_by_label('Nome',exact=True).fill('Teste editado')
     page.get_by_role('button',name='Salvar produto',exact=True).click()
     page.get_by_role('heading',name='Teste editado',exact=True).wait_for()

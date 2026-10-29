@@ -1,5 +1,5 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.8"
+version: "0.1.9"
 slug: umdoislab
 description: "Catálogo de produtos persistente e orçamento demonstrativo."
 arch:

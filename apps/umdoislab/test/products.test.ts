@@ -14,7 +14,7 @@ test('catálogo: validação, persistência, importação atômica, repetição 
  try{
   for(const body of [{...product(),name:'  '},{...product(),origin:''},{...product(),prices:{wholesale:null,factory:null,retail:null}},{...product(),prices:{wholesale:null,factory:null,retail:1.5}},{...product(),origin:'client',publicAllowed:true}])assert.equal((await send(body)).statusCode,400);
   assert.equal((await send({...product(),prices:{wholesale:1200,factory:null,retail:null}})).statusCode,200);
-  const a={...product('Importado'),sourceKeys:['site:1','site:2']};
+  const a={...product('Importado'),category:'Capas para Isqueiros',sourceKeys:['site:1','site:2']};
   assert.equal((await batch([a])).json().toCreate,1);
   assert.equal((await app.inject('/api/products')).json().length,1);
   assert.equal((await batch([a,{...product(),sourceKeys:['site:3'],name:''}],true)).statusCode,400);
@@ -24,6 +24,7 @@ test('catálogo: validação, persistência, importação atômica, repetição 
   const saved=(await app.inject('/api/products')).json()[0];
   const {id,updatedAt,...body}=saved;
   assert.equal((await app.inject({method:'PUT',url:`/api/products/${id}`,payload:{...body,prices:{...body.prices,retail:9999}}})).statusCode,200);
+  assert.equal((await app.inject('/api/products')).json()[0].category,'Capas para Isqueiros');
   assert.equal((await batch([a],true)).json().skipped,1);
   assert.equal((await app.inject('/api/products')).json()[0].prices.retail,9999);
   await app.close();app=await createApp({dataDir:dir,staticDir:loadConfig({}).staticDir,mode:'local'});

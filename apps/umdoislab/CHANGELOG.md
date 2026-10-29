@@ -1,5 +1,13 @@
 # Histórico
 
+## 0.1.9
+
+- Substitui Família por Categoria opcional no formulário de Produtos.
+- Mantém os vínculos de família internos e os cadastros existentes.
+- Preenche Categoria na preparação da carga piloto.
+- Não altera produtos já importados nem sobrescreve suas edições ao repetir a carga.
+
+
 ## 0.1.8
 
 - Adiciona área Produtos com SQLite: cadastro, edição e arquivamento.

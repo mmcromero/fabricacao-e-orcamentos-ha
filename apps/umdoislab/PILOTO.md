@@ -1,12 +1,13 @@
 # Catálogo persistente — piloto
 
-Versão 0.1.8 — catálogo experimental. A tela `?view=produtos` grava no mesmo
+Versão 0.1.9 — catálogo experimental. A tela `?view=produtos` grava no mesmo
 arquivo SQLite da instalação, sem substituir a tabela de anotações. O orçamento
 em `?view=produto` continua sendo uma demonstração temporária, sem ligação ao
 catálogo real. Fabricação e Clientes ainda não possuem páginas persistentes.
 
 ## Regras
 
+- Categoria opcional no formulário; família e vínculo entre versões ficam internos.
 - Nome e origem obrigatórios, com escolha explícita da origem no formulário.
 - Três preços de venda independentes: atacado, loja de fábrica e varejo.
   Pelo menos um preenchido. Valores monetários armazenados em centavos inteiros.

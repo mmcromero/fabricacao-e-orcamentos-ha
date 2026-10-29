@@ -9,9 +9,9 @@ const schema = {type:'object', additionalProperties:false, required:['name','ori
   weightGrams:measure,lengthCm:measure,widthCm:measure,heightCm:measure,
   colors:{type:'array',maxItems:100,uniqueItems:true,items:{type:'string',maxLength:100}},
   sourceKeys:{type:'array',maxItems:200,uniqueItems:true,items:{type:'string',minLength:1,maxLength:250}},
-  sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
+  category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
 }};
-export type Product = {sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
+export type Product = {category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && !(p.origin==='client' && p.publicAllowed);}
 export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);

@@ -46,7 +46,7 @@ def prepare(path, site_url, category):
                     if 'cor' in (r.get(f'Nome do atributo {i}') or '').casefold():
                         for color in split(r.get(f'Valores do atributo {i}') or b.get(f'Valores do atributo {i}')):
                             if color not in colors:colors.append(color)
-            products.append(dict(name=b['Nome']+(' — '+', '.join(v for _,v in attrs) if attrs else ''),origin='own',publicAllowed=True,prices=dict(wholesale=None,factory=None,retail=int(cents)),family=b['Nome'],description=b['Descrição curta'] or b['Descrição'],colors=colors,sourceFamily=site_url+'#woocommerce:'+b['ID'],sourceKeys=[site_url+'#woocommerce:'+r['ID'] for r in variants],**physical))
+            products.append(dict(name=b['Nome']+(' — '+', '.join(v for _,v in attrs) if attrs else ''),origin='own',publicAllowed=True,prices=dict(wholesale=None,factory=None,retail=int(cents)),family=b['Nome'],category=category.rsplit(' > ',1)[-1],description=b['Descrição curta'] or b['Descrição'],colors=colors,sourceFamily=site_url+'#woocommerce:'+b['ID'],sourceKeys=[site_url+'#woocommerce:'+r['ID'] for r in variants],**physical))
     return dict(formatVersion=1,sourceSha256=hashlib.sha256(raw).hexdigest(),category=category,baseCount=len(bases),products=products)
 
 if __name__=='__main__':
