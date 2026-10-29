@@ -1,4 +1,7 @@
 import Fastify from 'fastify';
+import { registerQuotes } from './quotes.js';
+import { registerSettings } from './settings.js';
+import { registerClients } from './clients.js';
 import { registerProducts } from './products.js';
 import staticFiles from '@fastify/static';
 import { DatabaseSync } from 'node:sqlite';
@@ -32,6 +35,9 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     return { text: request.body.text, updated_at: updatedAt };
   });
   registerProducts(app, db);
+  registerClients(app, db);
+  registerSettings(app, db);
+  registerQuotes(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;

@@ -1,5 +1,20 @@
 # Histórico
 
+## 0.1.10
+
+- Importa SKU e URL HTTPS da foto principal, exibindo-os no catálogo e no cadastro.
+- Permite completar apenas SKU, descrição e foto vazios em produtos existentes, sem duplicar ou substituir preços e campos preenchidos.
+- Separa informações do site em seção recolhível; autorizar divulgação abre os campos sem publicar nada.
+- Adiciona clientes persistentes, com cadastro/edição em modal, consulta e arquivamento.
+- Adiciona Orçamentos persistentes: cliente real, catálogo real, novo produto em modal, quantidade e embalagem por item, seleção de preço e rascunhos retomáveis.
+- Usa automaticamente o único preço disponível; exige escolha quando há mais de um.
+- Guarda snapshots de cliente, produtos e preços; mudanças no cadastro não reescrevem o orçamento salvo.
+- Protege rascunhos e configurações contra sobrescrita de versões desatualizadas.
+- Mostra quatro áreas na ordem Fabricação, Orçamentos, Clientes e Produtos, com Configurações próprias.
+- Salva CEP de origem e anotações de planejamento da fabricação. Configurações específicas não definidas ficam sem opções inventadas.
+- Fabricação, frete e envio permanecem pendentes. A demonstração antiga continua separada do fluxo real.
+
+
 ## 0.1.9
 
 - Substitui Família por Categoria opcional no formulário de Produtos.

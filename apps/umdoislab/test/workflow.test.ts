@@ -1,0 +1,44 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createApp} from '../server/app.js';
+import {loadConfig} from '../server/config.js';
+import {quoteTotals} from '../server/quotes.js';
+test('clientes, configurações e rascunhos: persistência, versões e snapshots',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'workflow-'));const options={dataDir:dir,staticDir:loadConfig({}).staticDir,mode:'local' as const};let app=await createApp(options);
+ const send=(method:'POST'|'PUT'|'DELETE',url:string,payload?:object)=>app.inject({method,url,payload});
+ try{
+  assert.deepEqual((await app.inject('/api/clients')).json(),[]);
+  const client={name:'Cliente fictício',contact:'Contato fictício',phone:'',email:'',taxDocument:'',postal:''};
+  assert.equal((await send('POST','/api/clients',{...client,name:'  '})).statusCode,400);
+  assert.equal((await send('POST','/api/clients',{...client,email:'email inválido'})).statusCode,400);
+  const cid=(await send('POST','/api/clients',client)).json().id;
+  assert.equal((await send('PUT',`/api/clients/${cid}`,{...client,taxDocument:'A1234567'})).statusCode,200);
+  const config={data:{originPostal:'12345-678'},expectedRevision:0};
+  assert.equal((await send('PUT','/api/settings/orcamentos',config)).json().revision,1);
+  assert.equal((await send('PUT','/api/settings/orcamentos',config)).statusCode,409);
+  assert.equal((await send('PUT','/api/settings/clientes',config)).statusCode,400);
+  assert.equal((await app.inject('/api/settings/inexistente')).statusCode,400);
+  const item={id:1,name:'Produto fictício',productId:null,origin:'own',prices:{wholesale:1000,factory:null,retail:2000},priceKey:'wholesale',quantity:'3',lengthCm:null,widthCm:null,heightCm:null,weightGrams:null,packaging:'with',packagingType:'Saquinho',packagingAmount:'0,30',packagingIncluded:false};
+  const data={client:{id:cid,...client},items:[item],notes:'Cores em observações'};
+  const result=await send('POST','/api/quotes',{data,expectedRevision:0});assert.equal(result.statusCode,200);const id=result.json().id;
+  let saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.totals.productCents,3000);assert.equal(saved.totals.packagingCents,90);assert.equal(saved.totals.subtotalCents,3090);assert.equal(saved.totals.freightPending,true);
+  await send('PUT',`/api/clients/${cid}`,{...client,name:'Cliente alterado'});
+  assert.equal((await app.inject(`/api/quotes/${id}`)).json().data.client.name,client.name);
+  assert.equal((await send('PUT',`/api/quotes/${id}`,{data:{...data,notes:'Revisado'},expectedRevision:1})).json().revision,2);
+  assert.equal((await send('PUT',`/api/quotes/${id}`,{data,expectedRevision:1})).statusCode,409);
+  assert.equal((await send('POST','/api/quotes',{data:{...data,items:[item,item]},expectedRevision:0})).statusCode,400);
+  await app.close();app=await createApp(options);
+  assert.equal((await app.inject('/api/clients')).json()[0].name,'Cliente alterado');
+  assert.equal((await app.inject('/api/settings/orcamentos')).json().data.originPostal,'12345-678');
+  saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.revision,2);assert.equal(saved.data.notes,'Revisado');assert.equal(saved.data.items[0].prices.wholesale,1000);
+  assert.equal((await send('DELETE',`/api/clients/${cid}`)).statusCode,200);
+  assert.equal((await app.inject('/api/clients')).json().length,0);
+  assert.equal((await app.inject(`/api/quotes/${id}`)).json().data.client.name,client.name);
+  assert.equal((await send('PUT',`/api/clients/${cid}`,client)).statusCode,404);
+  assert.equal(quoteTotals([{...item,packagingIncluded:true}]).packagingCents,0);
+  assert.equal(quoteTotals([{...item,quantity:''}]).pending,true);
+ }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});

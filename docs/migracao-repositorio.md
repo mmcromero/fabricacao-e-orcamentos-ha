@@ -8,9 +8,10 @@
 
 O prefixo do identificador difere: o Supervisor cria outro volume. Não há
 remapeamento automático de backup ou sincronização entre as duas instalações.
-Neste estágio só existe uma anotação de teste. Transferência exata de texto/data
-exige exportação/importação validada; essa função ainda não está implementada.
-Não chamar a digitação manual do texto de migração integral dos dados.
+O volume pode conter cadastros, configurações e orçamentos reais. Não há migração
+automática entre instalações local e de repositório. Uma nova instalação não
+herda os dados da anterior; planejar backup e restauração validados antes de trocar.
+Não chamar a digitação manual de uma anotação de migração integral dos dados.
 
 Não remover o original. Para retornar, parar o novo e iniciar o local. Dados
 novos não retornam automaticamente. Testar restauração separadamente antes de

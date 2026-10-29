@@ -6,3 +6,6 @@
 .products-screen dialog{border:1px solid #789483;border-radius:12px;padding:24px;color:inherit}
 .products-screen dialog::backdrop{background:#10291eb3}
 .products-screen nav{margin-top:24px}
+.products-screen nav{display:flex;flex-wrap:wrap;gap:8px 16px}
+.products-screen h1{overflow-wrap:anywhere}
+.area-settings-link{display:inline-block;margin-bottom:12px;padding:8px 16px;border:1px solid #789483;border-radius:8px;text-decoration:none;color:inherit}

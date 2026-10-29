@@ -1,53 +1,49 @@
-# Catálogo persistente — piloto
+# Carga piloto — 0.1.10
 
-Versão 0.1.9 — catálogo experimental. A tela `?view=produtos` grava no mesmo
-arquivo SQLite da instalação, sem substituir a tabela de anotações. O orçamento
-em `?view=produto` continua sendo uma demonstração temporária, sem ligação ao
-catálogo real. Fabricação e Clientes ainda não possuem páginas persistentes.
+O piloto inclui somente produtos publicados na categoria selecionada do CSV,
+com preços normais em varejo, atacado/fábrica vazios, origem própria e autorização
+de divulgação. Isso não publica no site. Tamanhos e atributos diferentes de cor
+separam cadastros; cores são agrupadas somente com preço e medidas compatíveis.
+Conflitos abortam a preparação. Herança das medidas da base ocorre por campo.
 
-## Regras
+Execute `scripts/prepare-pilot.py entrada.csv saida.json --site-url https://sua-loja.example`.
+A categoria padrão é `Headshop > Capas para Isqueiros`. O script não acessa site
+nem banco e exige arquivo de saída novo. Não versionar CSV, JSON ou bancos reais.
 
-- Categoria opcional no formulário; família e vínculo entre versões ficam internos.
-- Nome e origem obrigatórios, com escolha explícita da origem no formulário.
-- Três preços de venda independentes: atacado, loja de fábrica e varejo.
-  Pelo menos um preenchido. Valores monetários armazenados em centavos inteiros.
-- Peso em gramas, dimensões em centímetros; podem ficar pendentes no cadastro.
-- Produto de cliente obrigatoriamente privado. Autorização não publica no site.
-- Arquivar remove da lista ativa, preservando os identificadores externos.
-  Não há exclusão física nem histórico de orçamentos implementado nesta etapa.
+O SKU vem da variação, quando presente, ou do produto-base. Conflitos de SKU no
+grupo ou na carga interrompem a preparação. O código não é a identidade usada
+para evitar duplicação: os identificadores externos são preservados separadamente.
+A descrição vem da base; campos ausentes no CSV não são inventados. O preparador
+seleciona a foto principal HTTPS da base. Galeria e foto por cor ficam para depois.
+As fotos são carregadas pelo navegador a partir do site, sem download para o
+servidor do aplicativo. Se o site impedir ou deixar de servir a imagem, será
+exibido um aviso; a disponibilidade real exige conferência na instalação.
 
-## Preparar e carregar
+## Produtos já importados
 
-`scripts/prepare-pilot.py entrada.csv saida.json --site-url https://sua-loja.example` prepara somente produtos
-publicados na categoria `Headshop > Capas para Isqueiros`, incluindo suas
-variações publicadas. O arquivo de saída deve ser novo. O script não acessa banco
-nem site. Dados reais de entrada/saída não devem ser versionados ou distribuídos
-junto do aplicativo.
+Não apague nem importe como novos. Antes de selecionar o arquivo novo, marque
+**Completar SKU, descrições e fotos vazias dos produtos existentes**. A conferência
+informa quantos cadastros serão completados, sem gravar. Confirme só depois de
+conferir. Isso preenche apenas esses campos vazios: preços, categoria, nomes,
+descrições/fotos/SKUs já preenchidos e produtos arquivados são preservados.
 
-Tamanhos e atributos que não são cores separam cadastros. Cores são agrupadas
-somente se preço normal e medidas efetivas forem compatíveis; conflitos abortam a
-preparação. Campos físicos ausentes herdam individualmente do produto-base.
-Preço normal preenche varejo; promoções são ignoradas. Atacado e fábrica vazios.
+Sem essa opção, produtos reconhecidos são ignorados. A carga inteira é validada
+antes de uma transação. Mudanças no agrupamento das variações geram conflito e
+exigem revisão. Repetir a carga não duplica nem sobrescreve edições.
 
-Na tela Produtos, selecionar o JSON apenas confere; a gravação requer Confirmar
-importação. A API valida o lote inteiro, limita tamanho e grava em transação.
-Identificadores do site reconhecem cargas repetidas, inclusive produtos arquivados.
-Repetir não sobrescreve edições. Mudanças de agrupamento exigem revisão e causam
-conflito; não há atualização automática do catálogo nem integração com WooCommerce.
-O arquivo JSON preparado é confiável somente após a conferência da sua origem;
-a API valida o formato, não comprova a autenticidade de uma exportação do site.
-
-O piloto conserva nome, família, descrição, preços, cores, medidas e identificadores
-das variações. Não é um espelho completo do WooCommerce: imagens, estoque,
-tributação e os demais campos aguardam a etapa de cadastro completo. Mantenha o
-CSV original como fonte para essa etapa e para os demais campos. O vínculo do produto-base é preservado em sourceFamily.
-
-Antes de atualizar uma instalação real, conclua um backup com o app parado e
-verifique que a cópia está fora do Raspberry. Não copie SQLite aberto como backup.
+O catálogo não é um espelho completo do WooCommerce: imagens adicionais, estoque,
+tributação e demais campos aguardam o cadastro completo. Mantenha o CSV original.
+A API valida formato e regras locais, não autentica a procedência do arquivo.
 
 ## Verificações
 
-- `npm run build` e `npm test`: tipos, API, regras e persistência.
-- `python scripts/verify-products.py arquivo-piloto.json`: Chromium contra servidor
-  descartável local na porta 8196; cria um cadastro de teste e importa o lote real.
-  Nunca apontar esse teste para uma instalação com dados a preservar.
+`npm run build`, `npm test` e `npm run verify:runtime` verificam tipos, API,
+persistência, conflito de versões e backup/restauração fria com dados fictícios.
+O Chromium verifica fluxo persistente de ponta a ponta. Os scripts
+`verify-products.py arquivo-antigo.json arquivo-complementar.json` e
+`verify-workflow.py arquivo-complementar.json` usam servidor descartável na porta
+local 8196. Nunca executar esses scripts em uma instalação com dados a preservar.
+As imagens são simuladas no teste; isso não comprova a disponibilidade do site.
+
+Esta versão ainda requer validação no Raspberry e no Ingress real. Não houve
+nova construção Docker/ARM para esta revisão no ambiente de desenvolvimento.

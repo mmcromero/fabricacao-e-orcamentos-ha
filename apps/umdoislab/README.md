@@ -1,17 +1,14 @@
 # Fabricação e Orçamentos — Validação
 
-Aplicativo experimental para testar interface, API e persistência SQLite.
-Não contém funcionalidades comerciais.
+Aplicativo experimental com React, TypeScript, Fastify e SQLite no Node.js 24.
+A tela inicial é Orçamentos. Clientes, Produtos, rascunhos e configurações são
+persistentes na instalação. Fabricação possui uma área de planejamento; cálculos
+de custo, prazo, frete, envio e publicação no site ainda não estão implementados.
 
-- [Instalação e verificações](../../docs/instalacao-home-assistant.md)
+- [Uso e limites](DOCS.md)
+- [Carga piloto e preenchimento complementar](PILOTO.md)
 - [Arquitetura e execução independente](../../docs/arquitetura.md)
-- [Instalação pelo repositório e preservação dos dados](../../docs/migracao-repositorio.md)
 
-Novas versões são oferecidas pelo Home Assistant; a instalação é manual.
-Não habilitar atualização automática.
-
-
-## Catálogo experimental — 0.1.8
-
-A tela Produtos grava no SQLite. O orçamento demonstrativo permanece temporário
-e separado desse catálogo. Consulte [PILOTO.md](PILOTO.md) antes de carregar dados.
+No Home Assistant a instalação das novas versões é manual. Não habilitar
+atualização automática. Faça backup incluindo o aplicativo e guarde cópia externa
+antes de atualizar. O modo independente é local, sem login, restrito a loopback.

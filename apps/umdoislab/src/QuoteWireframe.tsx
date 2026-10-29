@@ -196,7 +196,7 @@ export default function QuoteWireframe() {
 
   return <div className="wf-shell">
     <div className="wf-banner"><strong>Wireframe navegável</strong><span>Dados de demonstração nesta página. Recarregar descarta as alterações. O banco não é usado.</span></div>
-    <header className="wf-header"><div><strong>Fabricação e Orçamentos</strong><small>Seu trabalho comercial, em um só lugar.</small></div><a href="?">Voltar ao diagnóstico</a></header>
+    <header className="wf-header"><div><strong>Fabricação e Orçamentos</strong><small>Seu trabalho comercial, em um só lugar.</small></div><a href="?view=diagnostico">Voltar ao diagnóstico</a></header>
     <nav className="wf-nav" aria-label="Áreas"><button onClick={() => setScreen('list')} aria-current={screen !== 'catalog' ? 'page' : undefined}>Orçamentos</button><button onClick={() => setScreen('catalog')} aria-current={screen === 'catalog' ? 'page' : undefined}>Catálogo simulado</button><span>Fabricação: a detalhar</span></nav>
     <main className="wf-main">
       {screen === 'list' && <><div className="wf-title"><div><small>ORÇAMENTOS</small><h1>Rascunhos da demonstração</h1></div><button onClick={() => setScreen('editor')}>Abrir orçamento</button></div><section className="wf-card"><h2>Orçamento em preparação</h2><p>{client || 'Cliente a definir'} · {items.length} {items.length === 1 ? 'item' : 'itens'}</p><p>Não salvo no banco, não enviado. Todos os dados são desta demonstração.</p><button onClick={() => setScreen('editor')}>Continuar preenchendo</button></section></>}

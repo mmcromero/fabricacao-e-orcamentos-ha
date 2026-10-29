@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
+import Quotes from './Quotes';
+import Settings from './Settings';
+import Manufacturing from './Manufacturing';
+import AreaNav,{areaNames,type Area} from './AreaNav';
+import Clients from './Clients';
 import Products from './Products';
 import QuoteWireframe from './QuoteWireframe';
 
@@ -30,9 +35,9 @@ function App() {
   }
   return <main>
     <header><span className="brand">Fabricação e Orçamentos</span><span className="badge">Validação da instalação</span></header>
-    <h1>Uma base para começar.</h1><section><h2>Catálogo persistente</h2><a href="?view=produtos">Abrir Produtos</a></section>
+    <AreaNav/><h1>Diagnóstico da instalação</h1><section><h2>Catálogo persistente</h2><a href="?view=orcamentos">Abrir Orçamentos</a> · <a href="?view=produtos">Abrir Produtos</a> · <a href="?view=clientes">Abrir Clientes</a></section>
     <section><h2>Fluxo em avaliação</h2><p>Experimente cadastrar um produto dentro do orçamento. O wireframe usa dados temporários e não altera a anotação do banco.</p><a href="?view=produto">Abrir wireframe: produto no orçamento</a></section>
-    <p>Esta tela verifica interface, servidor e banco. Orçamentos e Fabricação ainda não foram implementados.</p>
+    <p>Esta tela verifica interface, servidor e banco. Orçamentos salvam rascunhos; frete, envio e cálculos de fabricação ainda estão pendentes.</p>
     <section aria-labelledby="diagnostic"><h2 id="diagnostic">Diagnóstico</h2>
       <dl><div><dt>API</dt><dd>{health?.status ?? 'Não verificada'}</dd></div>
       <div><dt>SQLite</dt><dd>{health?.database ?? 'Não verificado'}</dd></div>
@@ -47,4 +52,7 @@ function App() {
     </section><p role="status">{message}</p>
   </main>;
 }
-createRoot(document.getElementById('root')!).render(new URLSearchParams(window.location.search).get('view') === 'produto' ? <QuoteWireframe /> : new URLSearchParams(window.location.search).get('view') === 'produtos' ? <Products /> : <App />);
+const query=new URLSearchParams(window.location.search);
+const view=query.get('view');
+const area=query.get('area');
+createRoot(document.getElementById('root')!).render(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);

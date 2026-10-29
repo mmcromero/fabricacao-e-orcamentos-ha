@@ -10,7 +10,7 @@ test('catálogo: validação, persistência, importação atômica, repetição 
  const dir=mkdtempSync(join(tmpdir(),'catalog-'));
  let app=await createApp({dataDir:dir,staticDir:loadConfig({}).staticDir,mode:'local'});
  const send=(body:unknown)=>app.inject({method:'POST',url:'/api/products',payload:body as object});
- const batch=(products:unknown[],confirm=false)=>app.inject({method:'POST',url:'/api/products/import',payload:{products,confirm}});
+ const batch=(products:unknown[],confirm=false,fillMissing=false)=>app.inject({method:'POST',url:'/api/products/import',payload:{products,confirm,fillMissing}});
  try{
   for(const body of [{...product(),name:'  '},{...product(),origin:''},{...product(),prices:{wholesale:null,factory:null,retail:null}},{...product(),prices:{wholesale:null,factory:null,retail:1.5}},{...product(),origin:'client',publicAllowed:true}])assert.equal((await send(body)).statusCode,400);
   assert.equal((await send({...product(),prices:{wholesale:1200,factory:null,retail:null}})).statusCode,200);
@@ -27,6 +27,18 @@ test('catálogo: validação, persistência, importação atômica, repetição 
   assert.equal((await app.inject('/api/products')).json()[0].category,'Capas para Isqueiros');
   assert.equal((await batch([a],true)).json().skipped,1);
   assert.equal((await app.inject('/api/products')).json()[0].prices.retail,9999);
+  const enriched={...a,sku:'TEST-001',description:'Descrição do site',imageUrl:'https://example.com/photo.jpg'};
+  const preview=(await batch([enriched],false,true)).json();
+  assert.equal(preview.toUpdate,1);
+  assert.equal((await app.inject('/api/products')).json()[0].description,'');
+  assert.equal((await batch([enriched],true,true)).json().updated,1);
+  const completed=(await app.inject('/api/products')).json()[0];
+  assert.equal(completed.sku,'TEST-001');assert.equal(completed.description,'Descrição do site');assert.equal(completed.imageUrl,enriched.imageUrl);
+  assert.equal(completed.prices.retail,9999);
+  assert.equal((await batch([{...enriched,sku:'OUTRO',description:'Não substituir',imageUrl:'https://example.com/other.jpg'}],true,true)).json().updated,0);
+  assert.equal((await app.inject('/api/products')).json()[0].description,'Descrição do site');
+  assert.equal((await app.inject('/api/products')).json()[0].sku,'TEST-001');
+  assert.equal((await send({...product(),imageUrl:'javascript:alert(1)'})).statusCode,400);
   await app.close();app=await createApp({dataDir:dir,staticDir:loadConfig({}).staticDir,mode:'local'});
   assert.equal((await app.inject('/api/products')).json().length,2);
   assert.equal((await app.inject({method:'DELETE',url:`/api/products/${id}`})).statusCode,200);

@@ -1,66 +1,69 @@
-# Uso
+# Uso — 0.1.10
 
-## Wireframe do cadastro de produto
+## Orçamentos
 
-Na área de cliente, selecione um exemplo existente ou use Novo cliente para
-cadastrar em modal. Ao salvar, ele entra na lista simulada e fica selecionado.
-Ver dados do cliente mostra informações somente para consulta; Editar cadastro
-abre novamente um modal. Produtos, embalagens e observações são preservados.
-A lista de clientes também é temporária e será descartada ao recarregar.
+A tela inicial é o fluxo persistente. Clique em Novo orçamento. Selecione um
+cliente ou use Novo cliente em modal: o cadastro será salvo na lista real e
+selecionado no pedido, sem sair da página. CPF/CNPJ e CEP podem ficar pendentes;
+validação fiscal, endereço completo de envio e frete ainda não existem.
 
-Após cadastrar produtos com Salvar também no catálogo, o seletor permite buscar
-e marcar vários produtos. Eles só entram no orçamento ao clicar em Adicionar
-selecionados. Cada item tem sua quantidade editável na própria tela e sua
-embalagem independente; alterar quantidade recalcula os valores sem modificar
-o produto no catálogo. Quantidades inválidas ficam pendentes no rascunho.
+Abra Selecionar produtos do catálogo para percorrer a lista, filtrar e selecionar
+vários produtos. Só entram ao confirmar Adicionar selecionados. Um único preço
+cadastrado é escolhido automaticamente; havendo vários, escolha a modalidade
+por produto antes da inclusão. Preços são de venda, informados; não há fórmulas do
+Excel, cálculo de custos ou margem nesta etapa.
 
-O seletor agora é uma lista suspensa: ao abrir mostra todos os produtos; o
-campo no topo filtra a lista e é opcional. Origem é obrigatória (Próprio ou De
-cliente) antes de cadastrar ou incluir produto. Concluir Novo produto inclui
-diretamente no orçamento e mostra o item com destaque. Salvar também no catálogo
-continua opcional; não é preciso selecionar novamente um produto recém-criado.
+Novo produto abre cadastro rápido em modal: nome, origem, ao menos um dos três
+preços e medidas/peso opcionais. Quando houver mais de um preço, escolha o que será
+usado no pedido. Ao concluir, já entra no orçamento. Salvar também no catálogo é
+opcional; quando marcado, cria cadastro real. Informações extras do site ficam
+para depois na área Produtos.
 
-Na tela inicial, use **Abrir wireframe: produto no orçamento**. A demonstração
-permite adicionar/editar produto em modal, preservar dados do orçamento e
-simular catálogo, origem e privacidade. Produtos novos começam privados.
-Recarregar a página descarta os dados da demonstração; ela não acessa o banco.
-O preço de venda é informado; fabricação, frete e publicação no site não foram
-implementados. O subtotal considera os valores informados e pode estar incompleto.
+A quantidade é editável na linha. Embalagem individual vale por item do pedido,
+não altera o produto, e seu acréscimo é cobrado por unidade. Se estiver incluída no
+preço de venda, não é cobrada novamente. Tipo/valor/quantidade ausentes são
+pendências. Os totais são parciais, sem caixa de transporte ou frete. Cores podem
+ser descritas nas observações, com quantidade total por item.
 
-Na revisão atual, as embalagens individuais são escolhas por item do orçamento,
-separadas do produto no catálogo e da embalagem de transporte. Os valores de
-embalagem são informados pelo usuário e acrescentados por unidade utilizada;
-quando já incluídos no preço de venda, não são cobrados novamente. O subtotal
-considera produtos e embalagens informados e não inclui transporte pendente.
-Tipo, peso e compatibilidade de embalagens ainda precisam ser detalhados.
-CPF/CNPJ pode ficar pendente para preparar o envio; o protótipo não o valida.
-Produto de cliente é sempre privado; apenas produto próprio pode receber
-autorização de divulgação futura. Nenhuma publicação no site é feita.
+Clique em Salvar rascunho e aguarde a confirmação antes de sair. O rascunho aparece
+na lista e pode ser reaberto. Não há salvamento automático. Os dados de cliente,
+produto e preços usados ficam em snapshots; editar os cadastros não reescreve o
+histórico salvo. Uma edição antiga em outra janela é rejeitada para evitar perda
+da versão mais recente. Ainda não há emissão final, cotação de frete, postagem,
+PDF, envio de mensagens ou cálculo de prazo de fabricação.
 
-Teste de navegador opcional: com Python Playwright e Chromium instalados,
-iniciar a aplicação em modo local e executar scripts/verify-wireframe.py.
-O script usa dados de demonstração e informa explicitamente se o fluxo passou.
+## Clientes e Produtos
 
-Inicie o aplicativo e abra a interface web pelo Home Assistant. Confira API
-e SQLite, salve uma anotação sem dados pessoais e reinicie somente o aplicativo.
-A anotação deve permanecer. O banco é armazenado em `/data/validation.sqlite`.
+As páginas possuem lista e cadastro/edição em modal. Arquivar retira da lista ativa
+sem apagar fisicamente o registro; dados já copiados a orçamentos são preservados.
+Não há sincronização automática com WooCommerce nem importação de clientes nesta
+versão. Os cadastros de clientes começam vazios, sem exemplos reais ou fictícios.
 
-Esta versão é experimental e não contém Orçamentos ou Fabricação.
-Não exige configuração, tokens, portas externas ou permissões administrativas.
+Na área Produtos há Categoria, três preços e dados físicos. SKU, descrição e URL
+da foto ficam em Informações para o site, recolhidas por padrão e acessíveis por
+botão. Autorizar divulgação abre a seção, sem exigir preenchimento nem publicar.
+Produto de cliente permanece privado. A autorização não garante prontidão para o
+site: os requisitos finais de publicação ainda serão definidos.
 
-## Execução fora do Home Assistant
+## Configurações por área
 
-Com Node.js 24: executar npm ci, npm run build e APP_MODE=local npm start na
-pasta do aplicativo. Esse modo não tem login e fica restrito a loopback.
-PORT e DATA_DIR podem ser configurados; não expor na internet.
-Para diagnóstico, backups e restauração, consultar docs/arquitetura.md na raiz
-do repositório. Não há migração de esquema nesta versão.
+A navegação mostra Fabricação, Orçamentos, Clientes e Produtos. Cada página tem
+Configurações e caminho de retorno. Orçamentos permite salvar CEP de origem para
+integração futura; não consulta frete. Fabricação guarda anotações de capacidade,
+dias, máquinas, fila e imprevistos, sem converter em prazos ou cálculos. Dados não
+definidos ficam em branco. Clientes e Produtos não possuem opções específicas
+inventadas; suas telas estão preparadas para decisões futuras.
 
-## Instalação pelo repositório
+## Instalação, diagnóstico e backup
 
-Consultar docs/migracao-repositorio.md antes de trocar a instalação local.
-A instalação pelo repositório recebe outro volume: os dados locais não são
-transferidos automaticamente. Não desinstalar o aplicativo antigo.
-O manifesto solicita backup frio ao Supervisor. A opção de atualização
-automática deve permanecer desativada. O usuário decide quando instalar cada
-nova versão oferecida pelo Home Assistant.
+As atualizações preservam o banco da mesma instalação. Faça um backup atual do
+aplicativo no HA e guarde cópia externa antes de instalar. Não reinstale nem apague
+os produtos para completar SKU/fotos; use a carga complementar descrita em PILOTO.md.
+
+O diagnóstico e a anotação inicial continuam em `?view=diagnostico`. A demonstração
+antiga em `?view=produto` é separada: seus dados continuam temporários. Para dados
+reais, use Orçamentos, Clientes e Produtos na navegação principal.
+
+A execução independente exige Node.js 24: npm ci, npm run build e APP_MODE=local
+npm start. Sem login, restringe acesso a loopback; não expor na internet. No HA,
+Ingress fornece o ponto de entrada e o banco fica no volume de dados do aplicativo.

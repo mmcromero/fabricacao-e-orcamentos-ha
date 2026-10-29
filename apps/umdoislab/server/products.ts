@@ -9,9 +9,9 @@ const schema = {type:'object', additionalProperties:false, required:['name','ori
   weightGrams:measure,lengthCm:measure,widthCm:measure,heightCm:measure,
   colors:{type:'array',maxItems:100,uniqueItems:true,items:{type:'string',maxLength:100}},
   sourceKeys:{type:'array',maxItems:200,uniqueItems:true,items:{type:'string',minLength:1,maxLength:250}},
-  category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
+  sku:{type:'string',maxLength:100},imageUrl:{type:'string',maxLength:2048,pattern:'^(https://[^\\s]+|)$'},category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
 }};
-export type Product = {category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
+export type Product = {sku?:string;imageUrl?:string;category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && !(p.origin==='client' && p.publicAllowed);}
 export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
@@ -40,9 +40,9 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
     const result=db.prepare('UPDATE products SET archived=1 WHERE id=? AND archived=0').run(req.params.id);
     return result.changes?{ok:true}:reply.code(404).send({message:'Produto não encontrado.'});
   });
-  app.post<{Body:{products:Product[];confirm:boolean}}>('/api/products/import',{bodyLimit:1024*1024,schema:{body:{type:'object',additionalProperties:false,required:['products','confirm'],properties:{confirm:{type:'boolean'},products:{type:'array',minItems:1,maxItems:500,items:schema}}}}},(req,reply)=>{
+  app.post<{Body:{products:Product[];confirm:boolean;fillMissing?:boolean}}>('/api/products/import',{bodyLimit:1024*1024,schema:{body:{type:'object',additionalProperties:false,required:['products','confirm'],properties:{fillMissing:{type:'boolean'},confirm:{type:'boolean'},products:{type:'array',minItems:1,maxItems:500,items:schema}}}}},(req,reply)=>{
     const seen=new Set<string>();
-    const pending:Product[]=[];let skipped=0;
+    const pending:Product[]=[];const updates:{id:number;data:Product}[]=[];let skipped=0;
     for(const p of req.body.products){
       if(!valid(p)||!p.sourceKeys.length) return reply.code(400).send({message:'Carga inválida: confira preços, origem e identificadores.'});
       const matches=new Set<number>();
@@ -56,13 +56,22 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
       if(matches.size){
         const existing=db.prepare('SELECT source_key FROM product_sources WHERE product_id=?').all([...matches][0]).map(r=>r.source_key as string);
         if(existing.length!==p.sourceKeys.length || existing.some(k=>!p.sourceKeys.includes(k))) return reply.code(409).send({message:'O agrupamento das variações mudou. Revise antes de importar; nenhum produto foi gravado.'});
-        skipped++;
+        const id=[...matches][0];
+        const row=db.prepare('SELECT data,archived FROM products WHERE id=?').get(id)!;
+        const stored=JSON.parse(row.data as string) as Product;
+        let changed=false;
+        if(req.body.fillMissing && !row.archived){
+          if(!stored.sku?.trim() && p.sku?.trim()){stored.sku=p.sku;changed=true;}
+          if(!stored.description.trim() && p.description.trim()){stored.description=p.description;changed=true;}
+          if(!stored.imageUrl?.trim() && p.imageUrl?.trim()){stored.imageUrl=p.imageUrl;changed=true;}
+        }
+        if(changed)updates.push({id,data:stored});else skipped++;
       }else pending.push(p);
     }
     if(req.body.confirm){
       db.exec('BEGIN IMMEDIATE');
-      try{for(const p of pending)add(p);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
+      try{for(const p of pending)add(p);for(const update of updates)db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(update.data),new Date().toISOString(),update.id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
     }
-    return {created:req.body.confirm?pending.length:0,toCreate:pending.length,skipped,confirmed:req.body.confirm};
+    return {updated:req.body.confirm?updates.length:0,toUpdate:updates.length,created:req.body.confirm?pending.length:0,toCreate:pending.length,skipped,confirmed:req.body.confirm};
   });
 }

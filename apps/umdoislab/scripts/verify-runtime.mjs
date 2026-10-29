@@ -64,16 +64,28 @@ try {
     body: JSON.stringify({ text: 'Persistência independente' }),
   });
   assert.equal(save.status, 200);
+  const send=async(path,method,payload)=>{const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});assert.equal(r.status,200);return r.json();};
+  const client={name:'Cliente fictício para restauração',contact:'',phone:'',email:'',taxDocument:'',postal:''};
+  const savedClient=await send('api/clients','POST',client);
+  await send('api/quotes','POST',{data:{client:{id:savedClient.id,...client},items:[],notes:'Rascunho para restauração'},expectedRevision:0});
+  await send('api/settings/fabricacao','PUT',{data:{dailyCapacity:'Capacidade de teste'},expectedRevision:0});
+  async function checkBusinessData(){
+    assert.equal((await (await fetch(base+'api/clients')).json())[0].name,client.name);
+    assert.equal((await (await fetch(base+'api/quotes/1')).json()).data.notes,'Rascunho para restauração');
+    assert.equal((await (await fetch(base+'api/settings/fabricacao')).json()).data.dailyCapacity,'Capacidade de teste');
+  }
   await stop();
   const backup = join(temp, 'backup');
   await cp(dataDir, backup, { recursive: true, errorOnExist: true, force: false });
   base = await start(dataDir);
   assert.equal((await (await fetch(base + 'api/note')).json()).text, 'Persistência independente');
+  await checkBusinessData();
   await stop();
   const restored = join(temp, 'restored');
   await cp(backup, restored, { recursive: true, errorOnExist: true, force: false });
   base = await start(restored);
   assert.equal((await (await fetch(base + 'api/note')).json()).text, 'Persistência independente');
+  await checkBusinessData();
   const prefix = '/api/hassio_ingress/test-session/';
   proxy = createServer(async (req, res) => {
     try {
