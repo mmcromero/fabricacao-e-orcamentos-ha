@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.1.16
+
+- Mostra peso e volume conhecidos dos produtos no orçamento, considerando quantidades.
+- Considera pesos informados de embalagens individuais, caixa e proteção, sem alterar preços.
+- Salva peso e dimensões reais do pacote separadamente, com pendências para dados ausentes.
+- Não deduz dimensões externas por soma de volumes e não consulta frete automaticamente.
+- Mantém pacote opcional, bloqueio de finalizados e reabertura de orçamentos anteriores.
+- Normaliza privacidade de produtos de cliente anteriores sem alterar seus preços.
+
 ## 0.1.15
 
 - Cadastra e edita categorias persistentes com hierarquia, preservando produtos e preços na migração.

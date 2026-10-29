@@ -1,4 +1,4 @@
-# Uso — 0.1.15
+# Uso — 0.1.16
 
 ## Orçamentos
 
@@ -145,3 +145,9 @@ Acessibilidade verificada em fluxos específicos de teclado e larguras móveis; 
 Em Configurações de Produtos, cadastre caminhos como Pai > Subcategoria. A alteração de uma categoria atualiza seus descendentes e os produtos associados; os dados históricos dos orçamentos permanecem preservados. Produtos de cliente é reservada, automática e não editável. Produtos próprios podem ficar sem categoria.
 
 Importar dados saiu da tela principal de Produtos. O conteúdo do arquivo determina o tipo: CSV WooCommerce importa somente categorias; JSON preparado importa produtos ou categorias. A prévia informa o tipo e as quantidades antes de gravar. Confirme somente após conferir. Importar categorias não importa produtos. Repetir a mesma carga não duplica categorias nem produtos reconhecidos. Possíveis duplicatas de nome/SKU com vínculos diferentes exigem conciliação. Não envie dados comerciais ao repositório.
+
+## Pacote para cotação manual
+
+Próximo dos totais, o orçamento mostra peso e volume conhecidos dos produtos pelas quantidades. A estimativa de peso soma apenas embalagens individuais, caixa e proteção informadas; dados ausentes aparecem como pendências. Informe zero para caixa/proteção inexistentes. O peso da embalagem não acrescenta cobrança ao orçamento.
+
+Peso e dimensões reais do pacote fechado são campos separados e opcionais. Volume dos produtos não determina as dimensões externas da caixa; meça o pacote antes de cotar. CEP de origem vem das Configurações de Orçamentos e destino do cliente. Estes dados apoiam cotação manual no Melhor Envio; não há consulta nem postagem automática.
