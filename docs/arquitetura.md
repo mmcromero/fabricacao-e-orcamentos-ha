@@ -23,8 +23,8 @@ No HA, só o IP do gateway Ingress é aceito; cabeçalhos de IP não são confia
 
 ## Persistência e backup
 
-O arquivo validation.sqlite contém só a tabela notes (id, text, updated_at).
-Não há migração de esquema nesta versão. Para backup independente, parar o
+O arquivo validation.sqlite contém notes, products e product_sources.
+As tabelas do catálogo são criadas sem substituir as anotações existentes. Para backup independente, parar o
 serviço e copiar o DATA_DIR completo para uma pasta nova fora da aplicação.
 Para restaurar, copiar o backup para outra pasta nova e iniciar a mesma versão
 com DATA_DIR apontando para ela; conferir os dados antes de trocar o original.

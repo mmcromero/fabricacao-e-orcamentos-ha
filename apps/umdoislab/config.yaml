@@ -1,7 +1,7 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.7"
+version: "0.1.8"
 slug: umdoislab
-description: "Teste de interface, API e persistência. Sem funções comerciais."
+description: "Catálogo de produtos persistente e orçamento demonstrativo."
 arch:
   - aarch64
   - amd64

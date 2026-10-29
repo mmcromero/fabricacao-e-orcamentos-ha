@@ -9,3 +9,9 @@ Não contém funcionalidades comerciais.
 
 Novas versões são oferecidas pelo Home Assistant; a instalação é manual.
 Não habilitar atualização automática.
+
+
+## Catálogo experimental — 0.1.8
+
+A tela Produtos grava no SQLite. O orçamento demonstrativo permanece temporário
+e separado desse catálogo. Consulte [PILOTO.md](PILOTO.md) antes de carregar dados.

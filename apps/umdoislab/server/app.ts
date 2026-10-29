@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { registerProducts } from './products.js';
 import staticFiles from '@fastify/static';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
@@ -30,6 +31,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     db.prepare('INSERT INTO notes (id, text, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET text=excluded.text, updated_at=excluded.updated_at').run(request.body.text, updatedAt);
     return { text: request.body.text, updated_at: updatedAt };
   });
+  registerProducts(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;

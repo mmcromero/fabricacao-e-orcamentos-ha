@@ -11,7 +11,10 @@ A versão desta distribuição ainda requer instalação ARM e Ingress reais.
 O wireframe do produto também foi exercitado em Chromium (desktop e celular),
 incluindo validação, preservação dos campos do orçamento, catálogo opcional,
 privacidade e ausência de chamadas à API. Sua persistência é apenas em memória.
-Não há fluxos comerciais para testar. Backup/restauração pelo Supervisor,
+O catálogo persistente foi verificado em banco descartável e no Chromium, incluindo
+validação, edição, conferência/importação e repetição sem duplicações. O orçamento
+não utiliza esse catálogo nesta etapa. Esta versão não teve nova construção Docker
+ou execução ARM neste ambiente. Backup/restauração pelo Supervisor,
 descoberta do repositório público, transferência dos dados e atualização entre
 versões ainda precisam de verificação no destino.
 

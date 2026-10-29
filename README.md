@@ -1,10 +1,12 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.7.
+Distribuição experimental para Home Assistant. Versão 0.1.8.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
-Produtos, clientes, fabricação e orçamentos ainda não estão implementados.
+O catálogo de Produtos possui gravação persistente e importação piloto com conferência.
+Clientes, fabricação e orçamentos persistentes ainda não estão implementados.
 Há um wireframe navegável do cadastro de produto dentro do orçamento, acessível
-pela tela inicial. Usa dados temporários e não grava produtos reais no banco.
+pela tela inicial. O wireframe usa dados temporários e não consome o catálogo real.
+A área Produtos é separada e grava no banco; consulte apps/umdoislab/PILOTO.md.
 
 ## Instalar
 

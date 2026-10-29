@@ -1,0 +1,8 @@
+.products-screen article{border-top:1px solid #dce3db;padding:16px 0;overflow-wrap:anywhere}
+.products-screen button{margin-right:8px}
+.products-screen label{margin-top:16px}
+.products-screen input:not([type=checkbox]),.products-screen select{display:block;width:100%;max-width:100%;padding:10px;border:1px solid #789483;border-radius:8px;font:inherit;background:white;color:inherit}
+.products-screen input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-right:8px}
+.products-screen dialog{border:1px solid #789483;border-radius:12px;padding:24px;color:inherit}
+.products-screen dialog::backdrop{background:#10291eb3}
+.products-screen nav{margin-top:24px}

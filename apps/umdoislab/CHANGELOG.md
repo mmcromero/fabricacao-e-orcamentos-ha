@@ -1,5 +1,16 @@
 # Histórico
 
+## 0.1.8
+
+- Adiciona área Produtos com SQLite: cadastro, edição e arquivamento.
+- Exige nome, origem e pelo menos um dos preços: atacado, loja de fábrica ou varejo.
+- Adiciona conferência e confirmação de importação JSON com transação e controle de duplicação por vínculo externo.
+- Preserva preços editados e vínculos de produtos arquivados ao repetir a carga.
+- Inclui preparador CSV para carga piloto, com separação de tamanhos e agrupamento compatível de cores.
+- Não inclui dados comerciais na distribuição nem publica produtos no site.
+- O wireframe do orçamento continua temporário e separado do catálogo persistente.
+
+
 ## 0.1.7
 
 - Reorganiza a seleção como dropdown que abre com a lista completa e filtro opcional no topo.
