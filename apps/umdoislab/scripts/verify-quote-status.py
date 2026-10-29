@@ -33,7 +33,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='Marcar como enviado',exact=True).click()
  page.get_by_role('status').filter(has_text='Orçamento enviado.').wait_for()
  page.reload()
- page.get_by_role('button',name='Abrir orçamento 1',exact=True).click()
+ page.locator('.quote-record[data-record-id="1"]').get_by_role('button',name='Editar',exact=True).click()
  expect(page.get_by_label('Forma de entrega',exact=True)).to_have_value('pickup')
  expect(page.get_by_label('Título do orçamento',exact=True)).to_have_value('Retirada de teste')
  page.once('dialog',lambda d:d.accept())

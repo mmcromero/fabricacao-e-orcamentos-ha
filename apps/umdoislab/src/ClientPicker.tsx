@@ -1,3 +1,4 @@
+import ModalClose from './ModalClose';
 import ClientFields from './ClientFields';
 import {clientDraft,clientLabel,emptyClient,type Client,type ClientDraft} from './client-model';
 export type {Client} from './client-model';
@@ -17,6 +18,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
   const [message, setMessage] = useState('');
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
+  const initial=useRef(JSON.stringify(emptyClient()));
   const nextId = useRef(3);
   const selector=useRef<HTMLSelectElement>(null),card=useRef<HTMLDivElement>(null);
   const focusSelector=useRef(false),focusCard=useRef(false);
@@ -31,14 +33,14 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
   function open(client?: Client) {
     setOpenCycle(n=>n+1);setLookupBusy(false);
     trigger.current = document.activeElement as HTMLElement;
-    setDraft(client ? clientDraft(client) : emptyClient());
+    const value=client ? clientDraft(client) : emptyClient();initial.current=JSON.stringify(value);setDraft(value);
     setEditing(client?.id ?? null); setDirty(false); setError('');
     dialog.current?.showModal();
   }
   function close(force = false) {
     if(!force&&busy)return;
-    if (!force && dirty && !window.confirm('Descartar as alterações não salvas deste cliente?')) return;
-    dialog.current?.close(); trigger.current?.focus();
+    if (!force && dirty && JSON.stringify(draft)!==initial.current && !window.confirm('Descartar as alterações não salvas deste cliente?')) return;
+    dialog.current?.close(); trigger.current?.focus({preventScroll:true});
   }
   function update(key: keyof ClientDraft, value: string) {
     setDraft(previous => ({ ...previous, [key]: value })); setDirty(true);
@@ -77,7 +79,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. Salve o orçamento para guardar a seleção.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
     <p role="status">{message}</p>
     <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-client-modal-title" onCancel={e => { e.preventDefault(); e.stopPropagation(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <form noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><button type="button" className="wf-quiet" onClick={() => close()} aria-label="Fechar cadastro de cliente">Fechar</button></div>
+      <form noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><ModalClose onClose={()=>close()} disabled={busy}/></div>
         <div className="wf-modal-body"><p>Os produtos, embalagens e observações do pedido continuam preservados.</p>{error && <div className="wf-error" role="alert">{error}</div>}
           <ClientFields key={openCycle} draft={draft} prefix="wf-client" update={update} busy={busy} onLookupBusy={setLookupBusy}/>
           <p className="wf-muted">CPF/CNPJ será necessário para preparar o envio, sem bloquear o rascunho ou a cotação. Validação fiscal e consulta de frete ainda não implementadas.</p>

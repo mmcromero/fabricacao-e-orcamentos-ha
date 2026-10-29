@@ -40,14 +40,14 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Salvar rascunho',exact=True).first.click()
     page.get_by_role('status').filter(has_text='Rascunho salvo.').wait_for()
     page.reload()
-    page.get_by_role('button',name='Abrir orçamento 1',exact=True).click()
+    page.locator('.quote-record[data-record-id="1"]').get_by_role('button',name='Editar',exact=True).click()
     assert page.get_by_label('Observações do pedido',exact=True).input_value()=='Três unidades; cores nas observações.'
     assert page.get_by_label('Quantidade de '+name,exact=True).input_value()=='3'
     assert page.get_by_label('Preço de Peça avulsa de teste',exact=True).input_value()=='wholesale'
     page.get_by_text(expected_text,exact=False).wait_for()
     page.get_by_role('navigation',name='Áreas').get_by_role('link',name='Clientes',exact=True).click()
     page.get_by_role('heading',name='Cliente fictício do fluxo',exact=True).wait_for()
-    page.get_by_role('button',name='Editar Cliente fictício do fluxo',exact=True).click()
+    page.locator('.client-record').filter(has=page.get_by_role('heading',name='Cliente fictício do fluxo',exact=True)).get_by_role('button',name='Editar',exact=True).click()
     page.get_by_label('Nome do contato',exact=True).fill('Contato revisado')
     page.get_by_role('button',name='Salvar cliente',exact=True).click()
     page.get_by_role('status').filter(has_text='Cliente salvo.').wait_for()

@@ -129,7 +129,7 @@ with sync_playwright() as p:
     expect(editing_client).not_to_be_visible()
     expect(first.get_by_label('Acréscimo por embalagem individual (R$)', exact=True)).to_have_value('0,30')
     expect(page.get_by_label('Observações do pedido', exact=True)).to_have_value(notes)
-    first.get_by_role('button', name=re.compile('^Editar ')).click()
+    first.get_by_role('button', name='Editar', exact=True).click()
     expect(modal.get_by_label('Embalar cada unidade deste item?', exact=True)).to_have_count(0)
     page.get_by_role('checkbox', name='Salvar também no catálogo').check()
     page.get_by_role('button', name='Salvar alterações no item', exact=True).click()

@@ -1,12 +1,12 @@
-# Uso — 0.1.13
+# Uso — 0.1.14
 
 ## Orçamentos
 
 A tela inicial é a lista de Orçamentos, separada do formulário. A lista usa dez
-registros por página. Em Configurações do orçamento, escolha 10, 15, 20 ou Todos.
+registros por página. Em Configurações da respectiva área, escolha 10, 20, 30, 40, 50 ou Todos. Clientes e Produtos também têm listas paginadas; cada preferência fica salva separadamente no banco. Uma preferência antiga de 15 orçamentos continua sendo respeitada até ser alterada.
 A busca pesquisa título, cliente ou número no conjunto completo, não só na página.
 
-Novo orçamento e Abrir orçamento abrem o formulário em modal, sem recarregar a
+Novo orçamento e Editar abrem o formulário em modal, sem recarregar a
 página. Cabeçalho, fechamento e ações ficam visíveis enquanto o conteúdo rola.
 No celular, o modal ocupa a tela. Fechar ou Escape retornam à mesma lista, página,
 filtro e posição; se houver alterações não salvas, o descarte exige confirmação.
@@ -133,3 +133,9 @@ reais, use Orçamentos, Clientes e Produtos na navegação principal.
 A execução independente exige Node.js 24: npm ci, npm run build e APP_MODE=local
 npm start. Sem login, restringe acesso a loopback; não expor na internet. No HA,
 Ingress fornece o ponto de entrada e o banco fica no volume de dados do aplicativo.
+
+## Listas e teclado
+
+Clientes permite buscar por empresa ou contato; Produtos pesquisa nome e SKU juntos e prioriza um código exato. Os filtros de origem e categoria pendente combinam com a busca. Alterar busca/filtro retorna à primeira página. Editar abre o mesmo modal e preserva a posição e página ao fechar. Em telas estreitas o botão mostra um lápis com nome acessível Editar. O × dos modais tem nome acessível Fechar; Escape fecha somente o modal ativo. Alterações pendentes exigem confirmação antes de descartar. Finalizados/enviados permanecem bloqueados até Reabrir como rascunho.
+
+Acessibilidade verificada em fluxos específicos de teclado e larguras móveis; isto não declara conformidade integral WCAG AA.

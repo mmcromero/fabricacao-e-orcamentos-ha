@@ -1,3 +1,4 @@
+import ModalClose from './ModalClose';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import './wireframe.css';
 import {clientLabel} from './client-model';
@@ -217,7 +218,7 @@ export default function QuoteWireframe() {
     </main>
     <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-dialog-title" onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
       <form noValidate onSubmit={save}>
-        <div className="wf-modal-header"><div><small>CADASTRO DIRETO NO ORÇAMENTO</small><h2 id="wf-dialog-title">{editing === null ? 'Novo produto' : 'Editar produto'}</h2></div><button type="button" className="wf-quiet" aria-label="Fechar cadastro de produto" onClick={() => close()}>Fechar</button></div>
+        <div className="wf-modal-header"><div><small>CADASTRO DIRETO NO ORÇAMENTO</small><h2 id="wf-dialog-title">{editing === null ? 'Novo produto' : 'Editar produto'}</h2></div><ModalClose onClose={()=>close()}/></div>
         <div className="wf-modal-body"><p>Use o preço de venda final. Os dados do orçamento continuam guardados enquanto você preenche.</p><button type="button" className="wf-secondary" onClick={example}>Preencher exemplo histórico</button><p className="wf-muted">O exemplo é uma referência antiga; não consulta frete nem define preços atuais.</p>
           {error && <div className="wf-error" role="alert">{error}</div>}
           <label htmlFor="wf-product-name">Nome do produto <span aria-hidden="true">*</span></label><input autoFocus id="wf-product-name" value={draft.name} onChange={e => update('name', e.target.value)} aria-required="true" />

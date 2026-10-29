@@ -42,7 +42,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='Salvar rascunho',exact=True).first.click()
  page.get_by_role('status').filter(has_text='Rascunho salvo.').wait_for()
  page.reload()
- page.get_by_role('button',name='Abrir orçamento 1',exact=True).click()
+ page.locator('.quote-record[data-record-id="1"]').get_by_role('button',name='Editar',exact=True).click()
  expect(page.locator('.wf-selected-client')).to_contain_text('Pessoa fictícia B')
  expect(page.get_by_label('Selecionar cliente',exact=True)).not_to_be_visible()
  page.get_by_role('button',name='Trocar cliente',exact=True).click()

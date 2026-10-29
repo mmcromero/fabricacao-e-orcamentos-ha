@@ -1,11 +1,11 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.13.
+Distribuição experimental para Home Assistant. Versão 0.1.14.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
 O catálogo de Produtos possui gravação persistente e importação piloto com conferência.
 Clientes e Orçamentos são persistentes e usam o catálogo real. Há títulos, busca,
 rascunhos, finalização e marcação manual de envio. A lista é paginada e o
-formulário abre em modal. A paginação padrão é dez, ajustável nas Configurações do orçamento. Entrega/frete são informados
+formulário abre em modal. As três listas têm busca, ação Editar responsiva e paginação padrão de dez, ajustável nas Configurações de cada área. Entrega/frete são informados
 manualmente ou escolhidos como retirada/cortesia sem cobrança.
 Fabricação possui planejamento salvo em configurações; cálculos e cotação automática
 de frete estão pendentes. Marcar Enviado não envia mensagens nem faz postagem.

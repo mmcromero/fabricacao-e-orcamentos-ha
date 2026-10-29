@@ -27,7 +27,7 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Salvar produto',exact=True).click()
     page.get_by_role('heading',name='Teste cadastro',exact=True).wait_for()
     page.reload()
-    page.get_by_role('button',name='Editar Teste cadastro',exact=True).click()
+    page.locator('.product-record').filter(has=page.get_by_role('heading',name='Teste cadastro',exact=True)).get_by_role('button',name='Editar',exact=True).click()
     assert page.get_by_label('Valor atacado (R$)',exact=True).input_value()=='12.34'
     assert page.get_by_label('Categoria',exact=True).input_value()=='Categoria de teste'
     page.get_by_role('button',name='Editar informações para o site',exact=True).click()
@@ -53,7 +53,7 @@ with sync_playwright() as p:
         assert page.get_by_role('heading',name='Catálogo (33)',exact=True).count()==1
         data=json.load(open(sys.argv[2]))['products']
         sample=data[0]
-        page.get_by_role('button',name='Editar '+sample['name'],exact=True).click()
+        page.locator('.product-record').filter(has=page.get_by_role('heading',name=sample['name'],exact=True)).get_by_role('button',name='Editar',exact=True).click()
         expect(page.get_by_label('SKU',exact=True)).to_be_visible()
         assert page.get_by_label('SKU',exact=True).input_value()==sample['sku']
         expected=sample['imageUrl']

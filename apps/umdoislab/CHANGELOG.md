@@ -1,5 +1,14 @@
 # Histórico
 
+## 0.1.14
+
+- Padroniza listas compactas com Editar à direita e lápis acessível em telas estreitas.
+- Busca clientes por empresa/contato e produtos por nome/SKU, priorizando código exato e combinando filtros.
+- Pagina Clientes e Produtos; salva a preferência separada por área, com 10, 20, 30, 40, 50 ou Todos nas Configurações.
+- Preserva preferências anteriores e cadastros; não altera preços nem orçamentos.
+- Adiciona fechamento × acessível aos modais e corrige retorno do foco e descarte de cadastros sem alterações.
+- Preserva bloqueio de finalizados/enviados e fechamento independente dos modais secundários.
+
 ## 0.1.13
 
 - Mostra a lista de orçamentos separada do formulário e abre criação/edição em modal amplo, sem recarregar a página.

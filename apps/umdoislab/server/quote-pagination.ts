@@ -5,8 +5,8 @@ export function ensureQuoteSearch(db:DatabaseSync){
  db.exec('BEGIN IMMEDIATE');
  try{db.exec("ALTER TABLE quotes ADD COLUMN search_text TEXT NOT NULL DEFAULT ''");const update=db.prepare('UPDATE quotes SET search_text=? WHERE id=?');for(const row of db.prepare('SELECT id,data FROM quotes').all())update.run(quoteSearchText(JSON.parse(row.data as string)),row.id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
 }
-export const quoteListQuerySchema={type:'object',additionalProperties:false,properties:{page:{type:'integer',minimum:1,maximum:1000000000},pageSize:{enum:['10','15','20','all']},search:{type:'string',maxLength:200}}};
-export type QuoteListQuery={page?:number;pageSize?:'10'|'15'|'20'|'all';search?:string};
+export const quoteListQuerySchema={type:'object',additionalProperties:false,properties:{page:{type:'integer',minimum:1,maximum:1000000000},pageSize:{enum:['10','15','20','30','40','50','all']},search:{type:'string',maxLength:200}}};
+export type QuoteListQuery={page?:number;pageSize?:'10'|'15'|'20'|'30'|'40'|'50'|'all';search?:string};
 export function pagedQuotes(db:DatabaseSync,query:QuoteListQuery){
  const term=(query.search??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase().replace(/[\\%_]/g,'\\$&');
  const pattern=`%${term}%`;
