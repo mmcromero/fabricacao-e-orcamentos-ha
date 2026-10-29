@@ -39,10 +39,13 @@ A API valida formato e regras locais, não autentica a procedência do arquivo.
 
 `npm run build`, `npm test` e `npm run verify:runtime` verificam tipos, API,
 persistência, conflito de versões e backup/restauração fria com dados fictícios.
-O Chromium verifica fluxo persistente de ponta a ponta. Os scripts
-`verify-products.py arquivo-antigo.json arquivo-complementar.json` e
-`verify-workflow.py arquivo-complementar.json` usam servidor descartável na porta
-local 8196. Nunca executar esses scripts em uma instalação com dados a preservar.
+O Chromium verifica fluxos persistentes com dados fictícios. A rodada atual usa
+`verify-reconciliation.py`, `verify-package.py`, `verify-manufacturing.py` e
+`verify-accessibility.py`, seguindo os pré-requisitos documentados em cada roteiro.
+Use bancos descartáveis novos conforme o roteiro, na porta local 8198. Os roteiros
+mais antigos permanecem como referências de rodadas anteriores e não foram todos
+reexecutados nesta versão. Nunca executar esses testes em uma instalação com dados
+a preservar.
 As imagens são simuladas no teste; isso não comprova a disponibilidade do site.
 
 Esta versão ainda requer validação no Raspberry e no Ingress real. Não houve

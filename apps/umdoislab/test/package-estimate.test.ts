@@ -6,10 +6,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createApp} from '../server/app.js';
 import {loadConfig} from '../server/config.js';
-const physical={quantity:'2',weightGrams:100,lengthCm:2,widthCm:3,heightCm:4,packaging:'with',packagingWeightGrams:5};
+const physical={quantity:'2',weightGrams:100,lengthCm:2,widthCm:3,heightCm:4,packaging:'with',packagingWeightGrams:5,packagingLengthCm:3,packagingWidthCm:4,packagingHeightCm:5};
 test('soma pesos e volumes conhecidos, não inventa dimensões, distingue medidas reais e pendências',()=>{
  const result=estimatePackage([physical],{...emptyPackage(),boxWeightGrams:'20',protectionWeightGrams:'10',weightGrams:'250',lengthCm:'10',widthCm:'8',heightCm:'6'});
- assert.equal(result.productGrams,200);assert.equal(result.productVolumeCm3,48);assert.equal(result.estimatedGrams,240);assert.equal(result.actualWeight,250);assert.deepEqual(result.actualDimensions,[10,8,6]);assert.equal(result.pending.length,0);
+ assert.equal(result.productGrams,200);assert.equal(result.productVolumeCm3,48);assert.equal(result.occupiedVolumeCm3,120);assert.equal(result.estimatedGrams,240);assert.equal(result.actualWeight,250);assert.deepEqual(result.actualDimensions,[10,8,6]);assert.equal(result.pending.length,0);
  const incomplete=estimatePackage([{...physical,weightGrams:null,heightCm:null,packagingWeightGrams:null}],emptyPackage());assert.equal(incomplete.productGrams,0);assert.equal(incomplete.productVolumeCm3,0);assert.equal(incomplete.actualDimensions,null);assert.ok(incomplete.pending.includes('Peso de produto pendente'));assert.ok(incomplete.pending.includes('Peso da embalagem individual pendente'));
  assert.ok(estimatePackage([{...physical,quantity:'1.5'}],emptyPackage()).pending.includes('Quantidade de produto pendente'));
 });

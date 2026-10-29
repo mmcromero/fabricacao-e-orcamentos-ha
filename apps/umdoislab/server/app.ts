@@ -1,3 +1,4 @@
+import {registerReconciliation} from './reconciliation.js';
 import {registerManufacturing} from './manufacturing.js';
 import {registerCategories} from './categories.js';
 import Fastify from 'fastify';
@@ -42,6 +43,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerSettings(app, db);
   registerManufacturing(app, db);
   registerQuotes(app, db);
+  registerReconciliation(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;

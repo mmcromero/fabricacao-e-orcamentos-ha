@@ -1,5 +1,17 @@
 # Histórico
 
+## 0.1.18
+
+- Adiciona conciliação de cargas preparadas da planilha com o catálogo da instalação, por vínculos, SKU e nome/categoria.
+- Permite vincular, criar ou ignorar cada linha; mostra preços, dados de fabricação e categorias antes de gravar.
+- Preserva preços e fabricação preenchida por padrão; substituições e aplicação de parâmetros exigem escolhas explícitas.
+- Invalida confirmações quando o catálogo ou as configurações mudam depois da prévia; grava a carga revisada em transação.
+- Exporta catálogo ativo/arquivado e parâmetros para conferência privada, sem tabelas de clientes ou orçamentos.
+- Preserva os vínculos do piloto e sua complementação WooCommerce ao adicionar vínculos da planilha.
+- Corrige durações apagadas e protege a edição básica de produtos contra alterações concorrentes.
+- Considera dimensões opcionais da unidade embalada sem deduzir dimensões externas de caixa.
+- Melhora semântica de paginação e controles do catálogo; inclui auditoria automatizada WCAG A/AA em cenários selecionados.
+
 ## 0.1.17
 
 - Liga Fabricação ao mesmo cadastro de Produtos, sem lista independente.

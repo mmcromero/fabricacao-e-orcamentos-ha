@@ -1,4 +1,4 @@
-# Uso — 0.1.17
+# Uso — 0.1.18
 
 ## Orçamentos
 
@@ -162,3 +162,23 @@ Custo sem lucro soma material, máquina (energia, desgaste e operação), trabal
 Salvar fabricação em produto existente preserva seus preços. Para aplicar os três preços calculados, revise os resultados e marque a opção explícita; alterar dados de produção desmarca essa opção. Para criar um produto novo por este formulário é necessário ter cálculo completo e confirmar a aplicação dos preços. Revisões do produto e dos parâmetros são conferidas antes de gravar. Orçamentos já salvos preservam os preços históricos.
 
 Embalagem de fabricação faz parte do custo. No orçamento, se a embalagem individual já estiver no preço de venda, marque Embalagem já incluída no preço para evitar cobrança adicional. Não há importação automática de planilha nem carga real executada.
+
+## Conciliação da carga final
+
+Configurações de Produtos → Importar dados também reconhece uma carga de fabricação preparada a partir da planilha. O aplicativo confere as linhas contra os produtos desta instalação, sem exigir enviar seu banco ou catálogo a terceiros. O arquivo preparado é comercial e deve permanecer privado. Arquivos Excel brutos não são interpretados diretamente pelo aplicativo.
+
+Confira cada linha: vincular a um cadastro existente, criar um novo ou ignorar. Vínculos externos têm prioridade, seguidos de SKU e nome/categoria. Nomes iguais em categorias diferentes não são automaticamente o mesmo produto. Registros sem código exigem atenção. Produtos arquivados não são reativados.
+
+O padrão preserva nomes, origem, preços e campos preenchidos dos produtos existentes. Pode completar dados vazios, inclusive fabricação e dados físicos quando conhecidos. Aplicar preços ou substituir fabricação exige escolha por linha; os dados atuais e os do arquivo podem ser conferidos. A categoria após a carga pode ser escolhida por dropdown. Parâmetros de Configuração/Operação são apresentados separadamente e só se aplicam se a opção específica for marcada; anotações de planejamento ficam preservadas.
+
+Qualquer mudança de escolha exige Revisar vínculos e alterações. Confirmar carga revisada só fica disponível após uma prévia válida. Se outra janela alterar o catálogo ou os parâmetros, gere nova prévia: a confirmação antiga é recusada sem gravar dados. Uma confirmação válida grava o conjunto em uma transação. A repetição reconhece os vínculos existentes e evita novos cadastros duplicados. Orçamentos salvos preservam seus preços históricos.
+
+Baixar catálogo para conferência exporta produtos ativos/arquivados, vínculos, preços, fabricação, categorias e parâmetros. Não inclui tabelas de clientes ou orçamentos. O arquivo não é uma carga importável e não substitui backup integral. Não o coloque em repositório público.
+
+## Dimensões da unidade embalada
+
+Em cada item com embalagem individual, peso e dimensões da unidade embalada são opcionais. O resumo mostra o volume mínimo conhecido para acondicionar, usando essas dimensões quando fornecidas e o volume do produto nos demais casos. Dados ausentes permanecem pendentes; esse volume não determina o tamanho externo da caixa. As medidas reais do pacote fechado continuam separadas.
+
+## Verificações de acessibilidade
+
+O script verify-accessibility.py executa axe-core em páginas, modais e conciliação com critérios automáticos WCAG A/AA em larguras de computador e celular. Use somente servidor descartável de loopback, Chromium e um arquivo local axe.min.js de instalação confiável. Relatórios são gravados fora do checkout por padrão. As verificações automáticas e os testes de teclado/foco não comprovam conformidade integral ou experiência com todos os leitores de tela.

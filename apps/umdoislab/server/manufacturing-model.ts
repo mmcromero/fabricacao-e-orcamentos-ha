@@ -26,3 +26,12 @@ export function calculateManufacturing(production:Production,settings:Record<str
  return {pending,operatingTotal,operatingHour,cost:total,prices,rawPrices};
 }
 export function durationParts(seconds:number|null){const n=seconds??0;return {hours:Math.floor(n/3600),minutes:Math.floor(n%3600/60),seconds:n%60};}
+
+export type DurationInput={hours:string;minutes:string;seconds:string};
+export function durationSeconds(parts:DurationInput):number|null{
+ if(Object.values(parts).every(value=>value===''))return null;
+ if(Object.values(parts).some(value=>value!==''&&!/^\d+$/.test(value)))return null;
+ const hours=Number(parts.hours),minutes=Number(parts.minutes),seconds=Number(parts.seconds);
+ if(hours>999999||minutes>59||seconds>59)return null;
+ const total=hours*3600+minutes*60+seconds;return Number.isSafeInteger(total)?total:null;
+}

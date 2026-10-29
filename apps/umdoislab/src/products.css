@@ -79,3 +79,5 @@
 
 .category-list{list-style:none;padding:0}.category-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #dce3db;overflow-wrap:anywhere}.category-list li span{min-width:0}.category-list button{flex:none;margin:0;padding:8px;min-height:44px;font-size:14px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .duration-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:1px solid #789483;margin-top:16px;padding:12px;min-width:0}.duration-fields p{grid-column:1 / -1}.products-screen .duration-fields label{margin-top:0}.duration-fields legend{font-weight:650}
+
+.reconciliation-record{min-width:0}.reconciliation-record select{max-width:100%}.reconciliation-record p{overflow-wrap:anywhere}.reconciliation-panel dl{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}

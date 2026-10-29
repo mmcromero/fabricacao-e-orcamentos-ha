@@ -8,6 +8,7 @@ with sync_playwright() as p:
  for width in [1280,390]:
   page.set_viewport_size(dict(width=width,height=900));page.goto(base+'?view=fabricacao');page.get_by_role('button',name='Novo produto com fabricação',exact=True).click()
   page.get_by_label('Nome',exact=True).fill(f'Fabricação fictícia {width}');page.get_by_label('Código/SKU',exact=True).fill(f'FAKE-{width}')
+  time=page.locator('#main-machineSeconds-hours');time.fill('25');time.fill('');expect(time).to_have_value('')
   for key,h,m,s in [('machineSeconds','25','0','0'),('humanSeconds','0','10','0')]:
    for part,value in [('hours',h),('minutes',m),('seconds',s)]:page.locator(f'#main-{key}-{part}').fill(value)
   assert page.locator('#main-machineSeconds-hours').evaluate('(el)=>el.checkValidity()')

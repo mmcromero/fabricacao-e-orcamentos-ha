@@ -5,12 +5,13 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createApp} from '../server/app.js';
 import {loadConfig} from '../server/config.js';
-import {calculateManufacturing,durationParts,type Production} from '../server/manufacturing-model.js';
+import {calculateManufacturing,durationParts,durationSeconds,type Production} from '../server/manufacturing-model.js';
 const settings={filamentKgPrice:'100',energyHour:'1',wearHour:'2',humanHour:'30',productiveHours:'100',wholesaleMarkup:'2',factoryMarkup:'3',retailMarkup:'4',internetCost:'100'};
 const production:Production={machineSeconds:3600,humanSeconds:600,materialGrams:50,extras:1,packaging:2,label:1};
 test('cálculo mantém precisão, usa operação/hora e etapa adicional, sem limitar a 24h',()=>{
  const result=calculateManufacturing(production,settings);assert.equal(result.cost,18);assert.deepEqual(result.prices,{wholesale:3600,factory:5400,retail:7200});
  assert.equal(calculateManufacturing({...production,base:production},settings).cost,36);
+ assert.equal(durationSeconds({hours:'',minutes:'',seconds:''}),null);assert.equal(durationSeconds({hours:'25',minutes:'1',seconds:'1'}),90061);assert.equal(durationSeconds({hours:'1',minutes:'7',seconds:''}),4020);assert.equal(durationSeconds({hours:'0',minutes:'60',seconds:'0'}),null);assert.equal(durationSeconds({hours:'1.5',minutes:'0',seconds:'0'}),null);
  assert.deepEqual(durationParts(90061),{hours:25,minutes:1,seconds:1});assert.ok(Math.abs(calculateManufacturing({...production,machineSeconds:4020},settings).cost!-(18+4*7/60))<1e-10);
  assert.ok(calculateManufacturing(production,{...settings,productiveHours:'0'}).pending.length);assert.ok(calculateManufacturing({...production,materialGrams:null},settings).pending.length);
 });
