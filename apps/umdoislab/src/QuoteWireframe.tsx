@@ -71,6 +71,7 @@ export default function QuoteWireframe() {
   const [editing, setEditing] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const initial=useRef('');
   const [dirty, setDirty] = useState(false);
   const [recentlyAddedId, setRecentlyAddedId] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -103,14 +104,14 @@ export default function QuoteWireframe() {
 
   function open(item?: Item) {
     trigger.current = document.activeElement as HTMLElement;
-    setDraft(item ? { ...productData(item), quantity: item.quantity, catalog: item.catalog, private: item.origin !== 'own' || item.private } : emptyProduct());
+    const value=item ? { ...productData(item), quantity: item.quantity, catalog: item.catalog, private: item.origin !== 'own' || item.private } : emptyProduct();initial.current=JSON.stringify(value);setDraft(value);
     setEditing(item?.id ?? null); setError(''); setDirty(false);
     dialog.current?.showModal();
   }
   function close(force = false) {
-    if (!force && dirty && !window.confirm('Descartar as alterações não salvas deste produto?')) return;
+    if (!force && dirty && JSON.stringify(draft)!==initial.current && !window.confirm('Descartar as alterações não salvas deste produto?')) return;
     dialog.current?.close();
-    trigger.current?.focus();
+    trigger.current?.focus({preventScroll:true});
   }
   function update<K extends keyof ProductForm>(key: K, value: ProductForm[K]) {
     setDraft(previous => ({ ...previous, [key]: value, ...(key === 'origin' ? { private: true } : {}) })); setDirty(true);

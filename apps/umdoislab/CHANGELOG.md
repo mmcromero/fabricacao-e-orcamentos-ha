@@ -1,5 +1,15 @@
 # Histórico
 
+## 0.1.17
+
+- Liga Fabricação ao mesmo cadastro de Produtos, sem lista independente.
+- Separa parâmetros de Configuração e despesas de Operação; calcula custo por hora sem arredondamento antecipado.
+- Adiciona formulário de produção com duração em horas/minutos/segundos acima de 24h, material, extras, embalagem e etiqueta.
+- Mostra custo sem lucro e três preços calculados; aplicação ao catálogo exige revisão e opção explícita.
+- Preserva fabricação ao editar o cadastro básico e protege revisão do produto e dos parâmetros.
+- Permite etapa adicional para fórmulas de produtos compostos; não carrega dados comerciais automaticamente.
+- Valida o motor contra resultados da planilha fornecida, sem publicar o arquivo ou valores comerciais.
+
 ## 0.1.16
 
 - Mostra peso e volume conhecidos dos produtos no orçamento, considerando quantidades.

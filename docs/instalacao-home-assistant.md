@@ -2,8 +2,8 @@
 
 Na base de desenvolvimento, passaram build TypeScript/Vite, testes da API,
 configuração, filtro Ingress, execução HTTP independente, persistência após
-reinício e backup/restauração com dados temporários. A imagem foi construída
-e testada em amd64. Um proxy de teste verificou os caminhos com prefixo; isso
+reinício e backup/restauração com dados temporários. Uma imagem anterior foi construída
+e testada em amd64; isso não comprova a imagem desta versão. Um proxy de teste verificou os caminhos com prefixo; isso
 não comprova autenticação nem instalação pelo Supervisor.
 
 A versão inicial teve execução ARM e persistência confirmadas por um usuário.

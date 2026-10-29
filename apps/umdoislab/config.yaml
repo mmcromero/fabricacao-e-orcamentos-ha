@@ -1,7 +1,7 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.16"
+version: "0.1.17"
 slug: umdoislab
-description: "Cadastros e orçamentos persistentes. Entrega manual; fabricação pendente."
+description: "Cadastros, orçamentos e custos de fabricação. Cotação manual de frete."
 arch:
   - aarch64
   - amd64

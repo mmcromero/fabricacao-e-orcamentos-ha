@@ -1,4 +1,4 @@
-# Uso — 0.1.16
+# Uso — 0.1.17
 
 ## Orçamentos
 
@@ -41,8 +41,7 @@ interna; o filtro e o botão de confirmar ficam fora da região que rola. Escape
 clique externo fecham sem adicionar, preservando a seleção. Só entram ao confirmar
 Adicionar selecionados. Um único preço
 cadastrado é escolhido automaticamente; havendo vários, escolha a modalidade
-por produto antes da inclusão. Preços são de venda, informados; não há fórmulas do
-Excel, cálculo de custos ou margem nesta etapa.
+por produto antes da inclusão. Na área Orçamentos, os preços são os valores salvos no catálogo; cálculos de fabricação são feitos separadamente na área Fabricação.
 
 Novo produto abre cadastro rápido em modal: nome, origem, ao menos um dos três
 preços e medidas/peso opcionais. Quando houver mais de um preço, escolha o que será
@@ -116,9 +115,7 @@ site: os requisitos finais de publicação ainda serão definidos.
 A navegação mostra Fabricação, Orçamentos, Clientes e Produtos. Cada página tem
 Configurações e caminho de retorno. Orçamentos permite salvar CEP de origem para
 integração futura; não consulta frete. Fabricação guarda anotações de capacidade,
-dias, máquinas, fila e imprevistos, sem converter em prazos ou cálculos. Dados não
-definidos ficam em branco. Clientes e Produtos não possuem opções específicas
-inventadas; suas telas estão preparadas para decisões futuras.
+dias, máquinas, fila e imprevistos, sem converter em prazos. Também separa Configuração e Operação para os cálculos de custo. Clientes e Produtos têm paginação persistente; Produtos inclui categorias e Importar dados. Dados não definidos ficam em branco.
 
 ## Instalação, diagnóstico e backup
 
@@ -151,3 +148,17 @@ Importar dados saiu da tela principal de Produtos. O conteúdo do arquivo determ
 Próximo dos totais, o orçamento mostra peso e volume conhecidos dos produtos pelas quantidades. A estimativa de peso soma apenas embalagens individuais, caixa e proteção informadas; dados ausentes aparecem como pendências. Informe zero para caixa/proteção inexistentes. O peso da embalagem não acrescenta cobrança ao orçamento.
 
 Peso e dimensões reais do pacote fechado são campos separados e opcionais. Volume dos produtos não determina as dimensões externas da caixa; meça o pacote antes de cotar. CEP de origem vem das Configurações de Orçamentos e destino do cliente. Estes dados apoiam cotação manual no Melhor Envio; não há consulta nem postagem automática.
+
+## Fabricação e cadastro único
+
+Escolha o mesmo produto de Produtos ou use Novo produto com fabricação. O cadastro básico pode existir sem dados de produção. Identificação, código e categoria pertencem ao mesmo registro; dados de fabricação são opcionais. Produtos de cliente permanecem privados e com categoria automática.
+
+Em Configurações de Fabricação, preencha preço do quilo de filamento, energia/desgaste por hora de máquina, hora humana, horas produtivas mensais e multiplicadores dos três preços. Operação reúne as despesas mensais: total dividido pelas horas produtivas. Campos operacionais vazios equivalem a zero; parâmetros de custo e multiplicadores ausentes mantêm o cálculo pendente.
+
+O formulário aceita horas, minutos e segundos, inclusive mais de 24 horas, convertidos internamente sem arredondamento antecipado. Material é informado em gramas, separado do peso físico cadastrado para transporte. Extras, embalagem de fabricação e etiqueta entram no custo. Uma etapa adicional opcional permite reproduzir produtos compostos cuja fórmula soma um componente-base.
+
+Custo sem lucro soma material, máquina (energia, desgaste e operação), trabalho humano, extras, embalagem e etiqueta. Atacado, Loja de fábrica e Varejo usam seus multiplicadores. “Preço loja” corresponde a Loja de fábrica e “preço site” a Varejo. Os preços antigos da planilha não são aplicados. A exibição monetária arredonda ao final.
+
+Salvar fabricação em produto existente preserva seus preços. Para aplicar os três preços calculados, revise os resultados e marque a opção explícita; alterar dados de produção desmarca essa opção. Para criar um produto novo por este formulário é necessário ter cálculo completo e confirmar a aplicação dos preços. Revisões do produto e dos parâmetros são conferidas antes de gravar. Orçamentos já salvos preservam os preços históricos.
+
+Embalagem de fabricação faz parte do custo. No orçamento, se a embalagem individual já estiver no preço de venda, marque Embalagem já incluída no preço para evitar cobrança adicional. Não há importação automática de planilha nem carga real executada.

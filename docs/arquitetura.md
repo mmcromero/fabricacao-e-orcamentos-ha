@@ -2,7 +2,7 @@
 
 Base única em TypeScript, React/Vite e Fastify, com SQLite via node:sqlite no
 Node.js 24. Essa API do SQLite deve ser reavaliada antes da produção.
-Há regras mínimas de preço por modalidade e embalagem por item. Custos de fabricação e frete ainda não são calculados. O controle Ingress fica separado no
+Há regras mínimas de preço por modalidade e embalagem por item. Fabricação calcula custos e preços configurados; aplicar preços ao catálogo exige escolha explícita. O pacote informa estimativas parciais e medidas reais; o frete é cotado manualmente. O controle Ingress fica separado no
 adaptador do Home Assistant; não há chamadas ao Supervisor ou tokens do HA.
 
 ## Execução independente para testes
@@ -23,7 +23,7 @@ No HA, só o IP do gateway Ingress é aceito; cabeçalhos de IP não são confia
 
 ## Persistência e backup
 
-O arquivo validation.sqlite contém notes, products, product_sources, clients, quotes, quote_versions e area_settings.
+O arquivo validation.sqlite contém notes, products, product_sources, clients, quotes, quote_versions, area_settings e categories.
 As tabelas novas são criadas sem substituir dados existentes; fotos usam URLs externas. Para backup independente, parar o
 serviço e copiar o DATA_DIR completo para uma pasta nova fora da aplicação.
 Para restaurar, copiar o backup para outra pasta nova e iniciar a mesma versão

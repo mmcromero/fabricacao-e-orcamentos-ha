@@ -40,9 +40,9 @@ export function registerCategories(app:FastifyInstance,db:DatabaseSync){
    for(const c of changes)db.prepare('UPDATE categories SET category_key=? WHERE id=?').run(`__moving_${c.id}`,c.id);
    for(const c of changes)db.prepare('UPDATE categories SET path=?,category_key=?,revision=revision+1 WHERE id=?').run(c.next,key(c.next),c.id);
    add(path);
-   for(const product of db.prepare("SELECT id,data FROM products WHERE json_extract(data,'$.origin')='own'").all()){
+   for(const product of db.prepare("SELECT id,data,updated_at FROM products WHERE json_extract(data,'$.origin')='own'").all()){
     const data=JSON.parse(product.data as string);const match=changes.find(c=>key(c.path as string)===key(clean(data.category??'')));
-    if(match){data.category=match.next;db.prepare('UPDATE products SET data=? WHERE id=?').run(JSON.stringify(data),product.id);}
+    if(match){data.category=match.next;db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(data),new Date(Math.max(Date.now(),(Date.parse(String(product.updated_at))||0)+1)).toISOString(),product.id);}
    }
    db.exec('COMMIT');
   }catch(e){db.exec('ROLLBACK');throw e;}return {categories:list()};

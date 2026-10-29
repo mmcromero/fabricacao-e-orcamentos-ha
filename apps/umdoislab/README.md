@@ -2,9 +2,10 @@
 
 Aplicativo experimental com React, TypeScript, Fastify e SQLite no Node.js 24.
 A tela inicial é Orçamentos. Clientes, Produtos, orçamentos e configurações são
-persistentes na instalação. Fabricação possui uma área de planejamento; cálculos
-de custo e prazo, cotação automática de frete, envio de mensagens e publicação
-no site ainda não estão implementados. Entrega e frete podem ser informados
+persistentes na instalação. Fabricação usa o mesmo cadastro de Produtos, com
+custos e preços calculados a partir de parâmetros configurados. Aplicar preços
+exige escolha explícita. Prazo, cotação automática de frete, envio de mensagens
+e publicação no site ainda não estão implementados. Entrega e frete podem ser informados
 manualmente; o orçamento pode ser finalizado e marcado como enviado pelo usuário.
 
 - [Uso e limites](DOCS.md)

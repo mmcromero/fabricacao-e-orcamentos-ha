@@ -1,14 +1,13 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.16.
+Distribuição experimental para Home Assistant. Versão 0.1.17.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
 O catálogo possui categorias persistentes e importação com prévia nas Configurações de Produtos. CSV WooCommerce importa somente categorias; JSON preparado importa produtos sem sobrescrever preços.
 Clientes e Orçamentos são persistentes e usam o catálogo real. Há títulos, busca,
 rascunhos, finalização e marcação manual de envio. A lista é paginada e o
 formulário abre em modal. As três listas têm busca, ação Editar responsiva e paginação padrão de dez, ajustável nas Configurações de cada área. Entrega/frete são informados
 manualmente ou escolhidos como retirada/cortesia sem cobrança.
-Fabricação possui planejamento salvo em configurações; cálculos e cotação automática
-de frete estão pendentes. Marcar Enviado não envia mensagens nem faz postagem.
+Fabricação usa o cadastro único de Produtos, com parâmetros e cálculos de custo. Aplicar preços exige revisão e escolha explícita. Cotação de frete permanece manual. Marcar Enviado não envia mensagens nem faz postagem.
 Há um wireframe navegável do cadastro de produto dentro do orçamento, acessível
 pela tela inicial. O wireframe usa dados temporários e não consome o catálogo real.
 O fluxo real é a tela inicial. Consulte apps/umdoislab/DOCS.md e PILOTO.md.
