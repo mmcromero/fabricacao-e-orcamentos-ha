@@ -21,7 +21,7 @@ exibido um aviso; a disponibilidade real exige conferência na instalação.
 
 ## Produtos já importados
 
-Não apague nem importe como novos. Antes de selecionar o arquivo novo, marque
+Não apague nem importe como novos. Em Configurações de Produtos → Importar dados, antes de selecionar o arquivo novo, marque
 **Completar SKU, descrições e fotos vazias dos produtos existentes**. A conferência
 informa quantos cadastros serão completados, sem gravar. Confirme só depois de
 conferir. Isso preenche apenas esses campos vazios: preços, categoria, nomes,

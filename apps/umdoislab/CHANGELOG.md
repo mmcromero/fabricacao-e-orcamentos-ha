@@ -1,5 +1,15 @@
 # Histórico
 
+## 0.1.15
+
+- Cadastra e edita categorias persistentes com hierarquia, preservando produtos e preços na migração.
+- Reserva Produtos de cliente à origem de cliente e usa dropdown nos formulários reais de produtos.
+- Transfere a carga piloto para Configurações de Produtos → Importar dados.
+- Reconhece JSON preparado e CSV WooCommerce; o CSV importa somente categorias, sempre com prévia e confirmação.
+- Impede possíveis duplicatas de produtos por nome/SKU quando os vínculos externos diferem.
+- Mantém complementação somente de campos vazios e preserva preços e registros arquivados.
+- Informa que a importação de clientes aguarda amostra; não presume o formato do site.
+
 ## 0.1.14
 
 - Padroniza listas compactas com Editar à direita e lápis acessível em telas estreitas.

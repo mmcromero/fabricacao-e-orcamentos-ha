@@ -1,3 +1,4 @@
+import {registerCategories} from './categories.js';
 import Fastify from 'fastify';
 import { registerQuotes } from './quotes.js';
 import { registerSettings } from './settings.js';
@@ -35,6 +36,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     return { text: request.body.text, updated_at: updatedAt };
   });
   registerProducts(app, db);
+  registerCategories(app, db);
   registerClients(app, db);
   registerSettings(app, db);
   registerQuotes(app, db);

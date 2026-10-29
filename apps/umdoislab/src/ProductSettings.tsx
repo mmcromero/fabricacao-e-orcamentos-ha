@@ -1,0 +1,39 @@
+import {useEffect,useState,type FormEvent} from 'react';
+import type {Category} from './CategorySelect';
+async function api(path:string,method='GET',body?:unknown){const response=await fetch(new URL(path,document.baseURI),{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.message||'Não foi possível concluir.');return data;}
+// WooCommerce CSV: quoted fields may contain commas, newlines and escaped quotes.
+export function csvRows(text:string){
+ const rows:string[][]=[];let row:string[]=[],field='',quoted=false;
+ for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else if(quoted||!field)quoted=!quoted;else throw Error('Aspas inválidas no CSV.');}else if(c===','&&!quoted){row.push(field);field='';}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(Boolean))rows.push(row);row=[];field='';}else field+=c;}
+ if(quoted)throw Error('CSV com campo entre aspas não concluído.');row.push(field);if(row.some(Boolean))rows.push(row);return rows;
+}
+export function importPayload(text:string):{type:'categories';categories:string[]}|{type:'products';products:unknown[]}{
+ const input=text.replace(/^\uFEFF/,'').trim();
+ if(input.startsWith('{')){let data;try{data=JSON.parse(input);}catch{throw Error('JSON inválido.');}
+  if(data.type==='categories'&&Array.isArray(data.categories)&&data.categories.every((c:unknown)=>typeof c==='string'))return {type:'categories',categories:data.categories};
+  if((!data.type||data.type==='products')&&Array.isArray(data.products))return {type:'products',products:data.products};
+  throw Error('Formato JSON não reconhecido. Use categorias identificadas ou uma carga de produtos preparada.');
+ }
+ const rows=csvRows(input),header=rows.shift()??[];
+ if(!['ID','Tipo','Nome','Categorias','Publicado'].every(c=>header.includes(c)))throw Error('Formato não reconhecido. Aceitos: CSV de produtos WooCommerce (somente categorias) ou JSON preparado de produtos/categorias.');
+ const requiredColumns=Math.max(...['ID','Tipo','Nome','Categorias','Publicado'].map(name=>header.indexOf(name)))+1;
+ if(rows.some(row=>row.length<requiredColumns||row.length>header.length))throw Error('O CSV contém linhas com quantidade incorreta de colunas.');
+ // WooCommerce may omit trailing, empty attribute columns on some product types.
+ const categories=[...new Set(rows.flatMap(row=>row[header.indexOf('Categorias')].split(/(?<!\\),/).map(c=>c.replace(/\\,/g,',').trim()).filter(Boolean)))];
+ if(!categories.length)throw Error('Nenhuma categoria encontrada no CSV.');
+ return {type:'categories',categories};
+}
+type Payload=ReturnType<typeof importPayload>;
+type Preview={toCreate:number;toUpdate?:number;skipped:number;paths?:string[]};
+export default function ProductSettings(){
+ const [categories,setCategories]=useState<Category[]>([]),[editing,setEditing]=useState<Category|null>(null),[path,setPath]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[fillMissing,setFillMissing]=useState(false),[payload,setPayload]=useState<Payload|null>(null),[preview,setPreview]=useState<Preview|null>(null);
+ const load=async()=>setCategories(await api('api/categories'));
+ useEffect(()=>{void load().catch(e=>setMessage(e.message));},[]);
+ async function run(work:()=>Promise<void>){setBusy(true);try{await work();}catch(e){setMessage(e instanceof Error?e.message:'Falha na operação.');}finally{setBusy(false);}}
+ async function save(event:FormEvent){event.preventDefault();await run(async()=>{await api(editing?`api/categories/${editing.id}`:'api/categories',editing?'PUT':'POST',{path,...(editing?{expectedRevision:editing.revision}:{})});await load();setEditing(null);setPath('');setMessage('Categoria salva. Produtos e subcategorias associados foram preservados.');});}
+ async function read(file:File){setPayload(null);setPreview(null);await run(async()=>{if(file.size>1024*1024)throw Error('O arquivo deve ter até 1 MB.');const data=importPayload(await file.text());const result=await api(`api/${data.type}/import`,'POST',data.type==='categories'?{categories:data.categories,confirm:false}:{products:data.products,fillMissing,confirm:false});setPayload(data);setPreview(result);setMessage('Prévia concluída. Nenhum dado foi gravado.');});}
+ return <><section><h2>Categorias de produtos</h2><p>Use “Pai &gt; Subcategoria” para preservar a hierarquia. Renomear uma categoria atualiza os produtos associados e suas subcategorias; orçamentos já salvos conservam seus dados históricos.</p><ul className="category-list">{categories.map(category=><li key={category.id}><span>{category.path}{category.reserved?' — reservada, automática para produtos de cliente':''}</span>{!category.reserved&&<button type="button" disabled={busy} onClick={()=>{setEditing(category);setPath(category.path);}}>Editar categoria <span className="sr-only">{category.path}</span></button>}</li>)}</ul><form onSubmit={save}><h3>{editing?'Editar categoria':'Adicionar categoria'}</h3><label>Caminho da categoria<input required maxLength={200} value={path} onChange={e=>setPath(e.target.value)} placeholder="Ex.: Headshop > Capas para Isqueiros"/></label><button disabled={busy}>{editing?'Salvar categoria':'Adicionar categoria'}</button>{editing&&<button type="button" disabled={busy} onClick={()=>{setEditing(null);setPath('');}}>Cancelar edição</button>}</form></section>
+ <section><h2>Importar dados</h2><p>CSV WooCommerce importa somente categorias, sem cadastrar produtos. Cargas JSON preparadas são reconhecidas como produtos ou categorias. Nenhum dado é gravado antes da confirmação.</p><p>Na carga de produtos, registros reconhecidos e preços existentes são preservados. Mudanças nos vínculos das variações interrompem a importação.</p><label><input type="checkbox" disabled={busy||!!preview} checked={fillMissing} onChange={e=>setFillMissing(e.target.checked)}/>Completar somente SKU, descrições e fotos vazias de produtos existentes</label><label>Arquivo para importar<input type="file" accept=".json,.csv,application/json,text/csv" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)void read(file);e.target.value='';}}/></label>
+ {preview&&payload&&<div aria-label="Prévia da importação"><h3>Importação de {payload.type==='categories'?'categorias':'produtos'}</h3><p>{preview.toCreate} novos registros; {preview.toUpdate??0} registros com campos vazios a completar; {preview.skipped} já existentes preservados.</p>{payload.type==='categories'&&<p>Somente categorias e seus pais serão cadastrados. Nenhum produto será importado ou alterado.</p>}{preview.paths&&<ul>{preview.paths.map(value=><li key={value}>{value}</li>)}</ul>}<button type="button" disabled={busy||(!preview.toCreate&&!preview.toUpdate)} onClick={()=>void run(async()=>{const result=await api(`api/${payload.type}/import`,'POST',payload.type==='categories'?{categories:payload.categories,confirm:true}:{products:payload.products,confirm:true,fillMissing});await load();setPreview(null);setPayload(null);setMessage(`${result.created} registros importados; ${result.updated??0} completados; ${result.skipped} preservados.`);})}>Confirmar importação</button><button type="button" disabled={busy} onClick={()=>{setPreview(null);setPayload(null);setMessage('Importação cancelada. Nada foi gravado.');}}>Cancelar importação</button></div>}
+ <p role="status">{message}</p></section></>;
+}

@@ -1,3 +1,4 @@
+import {storeCategory} from './categories.js';
 import {normalizedProduct} from './product-category.js';
 import type { FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
@@ -22,6 +23,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
   const add=(input:Product)=>{
     const p=normalizedProduct(input);
+    if(p.origin==='own'&&p.category)storeCategory(db,p.category);
     const id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),new Date().toISOString()).lastInsertRowid);
     for(const key of p.sourceKeys) db.prepare('INSERT INTO product_sources VALUES (?,?)').run(key,id);
     return id;
@@ -37,6 +39,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
     if(!row) return reply.code(404).send({message:'Produto não encontrado.'});
     const old=JSON.parse(row.data as string) as Product;
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
+    if(req.body.origin==='own'&&req.body.category)storeCategory(db,req.body.category);
     db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct(req.body)),new Date().toISOString(),req.params.id);
     return {ok:true};
   });
@@ -71,7 +74,12 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
           if(!stored.imageUrl?.trim() && p.imageUrl?.trim()){stored.imageUrl=p.imageUrl;changed=true;}
         }
         if(changed)updates.push({id,data:stored});else skipped++;
-      }else pending.push(p);
+      }else {
+        const normalized=(value:string)=>value.trim().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase();
+        const duplicates=[...db.prepare('SELECT data FROM products').all().map(row=>JSON.parse(row.data as string) as Product),...pending];
+        if(duplicates.some(old=>(p.sku?.trim()&&old.sku?.trim()&&normalized(p.sku)===normalized(old.sku))||(p.origin===old.origin&&normalized(p.name)===normalized(old.name))))return reply.code(409).send({message:'Possível duplicata por nome ou SKU com vínculos diferentes. Revise a conciliação; nenhum produto foi importado.'});
+        pending.push(p);
+      }
     }
     if(req.body.confirm){
       db.exec('BEGIN IMMEDIATE');

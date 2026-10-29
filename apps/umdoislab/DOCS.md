@@ -1,4 +1,4 @@
-# Uso — 0.1.14
+# Uso — 0.1.15
 
 ## Orçamentos
 
@@ -139,3 +139,9 @@ Ingress fornece o ponto de entrada e o banco fica no volume de dados do aplicati
 Clientes permite buscar por empresa ou contato; Produtos pesquisa nome e SKU juntos e prioriza um código exato. Os filtros de origem e categoria pendente combinam com a busca. Alterar busca/filtro retorna à primeira página. Editar abre o mesmo modal e preserva a posição e página ao fechar. Em telas estreitas o botão mostra um lápis com nome acessível Editar. O × dos modais tem nome acessível Fechar; Escape fecha somente o modal ativo. Alterações pendentes exigem confirmação antes de descartar. Finalizados/enviados permanecem bloqueados até Reabrir como rascunho.
 
 Acessibilidade verificada em fluxos específicos de teclado e larguras móveis; isto não declara conformidade integral WCAG AA.
+
+## Categorias e importação
+
+Em Configurações de Produtos, cadastre caminhos como Pai > Subcategoria. A alteração de uma categoria atualiza seus descendentes e os produtos associados; os dados históricos dos orçamentos permanecem preservados. Produtos de cliente é reservada, automática e não editável. Produtos próprios podem ficar sem categoria.
+
+Importar dados saiu da tela principal de Produtos. O conteúdo do arquivo determina o tipo: CSV WooCommerce importa somente categorias; JSON preparado importa produtos ou categorias. A prévia informa o tipo e as quantidades antes de gravar. Confirme somente após conferir. Importar categorias não importa produtos. Repetir a mesma carga não duplica categorias nem produtos reconhecidos. Possíveis duplicatas de nome/SKU com vínculos diferentes exigem conciliação. Não envie dados comerciais ao repositório.

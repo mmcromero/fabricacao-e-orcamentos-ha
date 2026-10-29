@@ -1,8 +1,8 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.14.
+Distribuição experimental para Home Assistant. Versão 0.1.15.
 A interface atual valida API, SQLite e persistência de uma anotação de teste.
-O catálogo de Produtos possui gravação persistente e importação piloto com conferência.
+O catálogo possui categorias persistentes e importação com prévia nas Configurações de Produtos. CSV WooCommerce importa somente categorias; JSON preparado importa produtos sem sobrescrever preços.
 Clientes e Orçamentos são persistentes e usam o catálogo real. Há títulos, busca,
 rascunhos, finalização e marcação manual de envio. A lista é paginada e o
 formulário abre em modal. As três listas têm busca, ação Editar responsiva e paginação padrão de dez, ajustável nas Configurações de cada área. Entrega/frete são informados
