@@ -17,7 +17,7 @@ with sync_playwright() as p:
     page.get_by_label('Nome do contato',exact=True).fill('Contato de teste')
     page.get_by_role('button',name='Salvar e selecionar cliente',exact=True).click()
     page.get_by_text('Cliente salvo no cadastro e selecionado neste orçamento.',exact=True).wait_for()
-    page.get_by_text('Selecionar produtos do catálogo',exact=True).click()
+    page.get_by_role('button',name='Selecionar produtos do catálogo',exact=True).click()
     page.get_by_label(name,exact=True).check()
     page.get_by_role('button',name='Adicionar selecionados (1)',exact=True).click()
     page.get_by_label('Quantidade de '+name,exact=True).fill('3')

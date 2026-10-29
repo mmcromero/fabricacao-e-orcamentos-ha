@@ -1,4 +1,4 @@
-# Uso — 0.1.11
+# Uso — 0.1.12
 
 ## Orçamentos
 
@@ -20,7 +20,10 @@ Cadastros antigos sem esses campos continuam disponíveis, sem exclusão de dado
 o endereço completo pode ser preenchido e salvo, mas validação fiscal, cotação de frete e envio ainda não existem.
 
 Abra Selecionar produtos do catálogo para percorrer a lista, filtrar e selecionar
-vários produtos. Só entram ao confirmar Adicionar selecionados. Um único preço
+vários produtos. A lista abre em painel suspenso com altura limitada e rolagem
+interna; o filtro e o botão de confirmar ficam fora da região que rola. Escape ou
+clique externo fecham sem adicionar, preservando a seleção. Só entram ao confirmar
+Adicionar selecionados. Um único preço
 cadastrado é escolhido automaticamente; havendo vários, escolha a modalidade
 por produto antes da inclusão. Preços são de venda, informados; não há fórmulas do
 Excel, cálculo de custos ou margem nesta etapa.
@@ -34,20 +37,47 @@ para depois na área Produtos.
 A quantidade é editável na linha. Embalagem individual vale por item do pedido,
 não altera o produto, e seu acréscimo é cobrado por unidade. Se estiver incluída no
 preço de venda, não é cobrada novamente. Tipo/valor/quantidade ausentes são
-pendências. Os totais são parciais, sem caixa de transporte ou frete. Cores podem
+pendências. Os totais são parciais enquanto houver pendências; o frete manual definido entra
+no total. Não há estimativa automática de caixa ou proteções de transporte. Cores podem
 ser descritas nas observações, com quantidade total por item.
 
-Clique em Salvar rascunho e aguarde a confirmação antes de sair. O rascunho aparece
-na lista e pode ser reaberto. Não há salvamento automático. Os dados de cliente,
+O título do orçamento é editável e aparece na lista. A busca encontra título,
+cliente ou número. Rascunhos anteriores sem título continuam editáveis.
+
+Clique em Salvar rascunho e aguarde a confirmação antes de sair. O orçamento aparece na lista com título e situação e pode ser reaberto. Não há salvamento automático. Os dados de cliente,
 produto e preços usados ficam em snapshots; editar os cadastros não reescreve o
 histórico salvo. Uma edição antiga em outra janela é rejeitada para evitar perda
-da versão mais recente. Ainda não há emissão final, cotação de frete, postagem,
-PDF, envio de mensagens ou cálculo de prazo de fabricação.
+da versão mais recente. ## Finalização e entrega
+
+Salvar rascunho continua permitindo pendências. Finalizar orçamento exige cliente,
+ao menos um produto, quantidade/preço e embalagem individual definidos. A forma
+de entrega também precisa estar definida:
+
+- Transportadora / serviço de envio: informar serviço e valor de frete manualmente.
+  Valor vazio é pendência; zero só é aceito se informado explicitamente.
+- Retirada no local: sem cobrança de frete, sem exigir consulta de transportadora.
+- Entrega por cortesia: sem cobrança de frete.
+
+O total soma produtos, embalagens cobradas e o frete informado. Não há consulta
+ou cálculo automático de transportadora; medidas e embalagem externa ainda
+precisarão de confirmação para calcular frete automaticamente ou fazer postagem.
+CPF/CNPJ é dado para postagem e não bloqueia concluir orçamento para retirada.
+
+Finalizado fica somente para consulta. Marcar como enviado pede confirmação de
+que você já enviou o orçamento ao cliente: não envia mensagem e não representa
+postagem ou entrega física. Para editar finalizado/enviado, use Reabrir como
+rascunho. A versão anterior fica preservada em quote_versions, ainda sem tela de
+histórico. Depois de alterar, finalize novamente e marque o novo envio manualmente.
+Alterações concorrentes continuam protegidas por revisão.
+
+PDF, envio de mensagens, postagem e cálculo de prazo de fabricação não estão
+implementados.
 
 ## Clientes e Produtos
 
-As páginas possuem lista e cadastro/edição em modal. Arquivar retira da lista ativa
-sem apagar fisicamente o registro; dados já copiados a orçamentos são preservados.
+As páginas possuem lista e cadastro/edição em modal. O botão Arquivar está
+desativado até existir a área de consulta e reativação dos arquivados. O mecanismo
+interno preserva registros e snapshots, mas não é acionável por esses botões.
 Não há sincronização automática com WooCommerce nem importação de clientes nesta
 versão. Os cadastros de clientes começam vazios, sem exemplos reais ou fictícios.
 

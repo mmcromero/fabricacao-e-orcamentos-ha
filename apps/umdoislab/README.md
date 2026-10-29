@@ -1,9 +1,11 @@
 # Fabricação e Orçamentos — Validação
 
 Aplicativo experimental com React, TypeScript, Fastify e SQLite no Node.js 24.
-A tela inicial é Orçamentos. Clientes, Produtos, rascunhos e configurações são
+A tela inicial é Orçamentos. Clientes, Produtos, orçamentos e configurações são
 persistentes na instalação. Fabricação possui uma área de planejamento; cálculos
-de custo, prazo, frete, envio e publicação no site ainda não estão implementados.
+de custo e prazo, cotação automática de frete, envio de mensagens e publicação
+no site ainda não estão implementados. Entrega e frete podem ser informados
+manualmente; o orçamento pode ser finalizado e marcado como enviado pelo usuário.
 
 - [Uso e limites](DOCS.md)
 - [Carga piloto e preenchimento complementar](PILOTO.md)

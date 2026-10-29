@@ -1,5 +1,25 @@
 # Histórico
 
+## 0.1.12
+
+- Adiciona situações Rascunho, Finalizado e Enviado, com marcação manual do envio do orçamento.
+- Exige cliente, itens válidos, preços/quantidades/embalagens definidos e modalidade de entrega para finalizar.
+- Permite transportadora com serviço e valor informados, retirada no local ou entrega por cortesia sem cobrança.
+- Soma o frete informado ao total e mantém frete indefinido como pendência, sem assumir zero.
+- Protege finalizados/enviados contra edição direta e permite reabrir como rascunho preservando versões anteriores no banco.
+
+
+- Permite informar e editar título do orçamento e pesquisar a lista por título, cliente ou número.
+
+- Troca a lista expansível do catálogo por painel suspenso sobre a página.
+- Mantém filtro no topo, rolagem interna com altura limitada e confirmação no rodapé.
+- Preserva seleção múltipla e preços ao filtrar ou fechar; só adiciona após confirmação.
+- Fecha por Escape, clique externo e saída do foco, com retorno ao botão quando solicitado.
+- Ajusta posição e largura para caber na tela sem expandir o formulário.
+- Mantém Arquivar desativado em Clientes e Produtos até existir consulta/reativação dos arquivados.
+- Valida o seletor no Chromium com cem produtos fictícios, inclusive largura móvel.
+
+
 ## 0.1.11
 
 - Renomeia o campo para Nome da empresa e aceita empresa ou contato: ao menos um deve ser preenchido.

@@ -22,7 +22,7 @@ test('clientes, configurações e rascunhos: persistência, versões e snapshots
   assert.equal((await send('PUT','/api/settings/clientes',config)).statusCode,400);
   assert.equal((await app.inject('/api/settings/inexistente')).statusCode,400);
   const item={id:1,name:'Produto fictício',productId:null,origin:'own',prices:{wholesale:1000,factory:null,retail:2000},priceKey:'wholesale',quantity:'3',lengthCm:null,widthCm:null,heightCm:null,weightGrams:null,packaging:'with',packagingType:'Saquinho',packagingAmount:'0,30',packagingIncluded:false};
-  const data={client:{id:cid,...client},items:[item],notes:'Cores em observações'};
+  const data={title:'Pedido fictício de teste',client:{id:cid,...client},items:[item],notes:'Cores em observações'};
   const result=await send('POST','/api/quotes',{data,expectedRevision:0});assert.equal(result.statusCode,200);const id=result.json().id;
   let saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.totals.productCents,3000);assert.equal(saved.totals.packagingCents,90);assert.equal(saved.totals.subtotalCents,3090);assert.equal(saved.totals.freightPending,true);
   await send('PUT',`/api/clients/${cid}`,{...client,name:'Cliente alterado'});
@@ -33,7 +33,7 @@ test('clientes, configurações e rascunhos: persistência, versões e snapshots
   await app.close();app=await createApp(options);
   assert.equal((await app.inject('/api/clients')).json()[0].name,'Cliente alterado');
   assert.equal((await app.inject('/api/settings/orcamentos')).json().data.originPostal,'12345-678');
-  saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.revision,2);assert.equal(saved.data.notes,'Revisado');assert.equal(saved.data.items[0].prices.wholesale,1000);
+  saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.data.title,'Pedido fictício de teste');assert.equal(saved.revision,2);assert.equal(saved.data.notes,'Revisado');assert.equal(saved.data.items[0].prices.wholesale,1000);
   assert.equal((await send('DELETE',`/api/clients/${cid}`)).statusCode,200);
   assert.equal((await app.inject('/api/clients')).json().length,0);
   assert.equal((await app.inject(`/api/quotes/${id}`)).json().data.client.name,client.name);
