@@ -1,4 +1,5 @@
 import {appName} from './branding';
+import ValidatedForm from './FormValidation';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
@@ -46,14 +47,16 @@ function App() {
       <div><dt>Node.js</dt><dd>{health?.node ?? '—'}</dd></div></dl>
     </section>
     <section><h2>Teste de persistência</h2><p>Escreva algo sem dados pessoais, salve e reinicie o aplicativo pelo Home Assistant. A anotação deve continuar aqui.</p>
-      <form onSubmit={save}><label htmlFor="note">Anotação de teste</label>
+      <ValidatedForm onSubmit={save}><label htmlFor="note">Anotação de teste</label>
       <textarea id="note" maxLength={500} value={text} onChange={e => setText(e.target.value)} disabled={busy || !health} />
-      <button disabled={busy || !health}>{busy ? 'Aguarde…' : 'Salvar anotação'}</button></form>
+      <button disabled={busy || !health}>{busy ? 'Aguarde…' : 'Salvar anotação'}</button></ValidatedForm>
       <p>Última gravação: {saved ? new Date(saved).toLocaleString('pt-BR') : 'nenhuma'}</p>
     </section><p role="status">{message}</p>
   </main>;
 }
+declare const __APP_VERSION__: string;
 const query=new URLSearchParams(window.location.search);
 const view=query.get('view');
 const area=query.get('area');
-createRoot(document.getElementById('root')!).render(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
+const page = (view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
+createRoot(document.getElementById('root')!).render(<><small className="app-version" aria-label={`Versão ${__APP_VERSION__}`}>v{__APP_VERSION__}</small>{page}</>);

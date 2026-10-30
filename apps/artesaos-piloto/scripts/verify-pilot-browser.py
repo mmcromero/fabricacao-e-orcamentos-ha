@@ -1,5 +1,5 @@
 """Uses a disposable test-only identity provider. Does NOT validate real Google or TLS."""
-import argparse,base64,hashlib,json,os,ssl,tempfile,subprocess,time,urllib.request
+import argparse,re,base64,hashlib,json,os,ssl,tempfile,subprocess,time,urllib.request
 from urllib.parse import urlparse,parse_qs
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
@@ -77,7 +77,9 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
     bar.locator('.pilot-account-title').evaluate('title=>window.pilotBrand(title)');expect(bar.locator('.pilot-account-title img')).to_be_visible()
    bb=bar.bounding_box();assert abs(bb['y'])<1
    title_box=bar.locator('.pilot-account-title').bounding_box();user_box=bar.locator('.pilot-account-user').bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
-   assert title_box['x']<user_box['x']<exit_box['x'];assert abs(user_box['x']+user_box['width']/2-page.viewport_size['width']/2)<2
+   assert title_box['x']<user_box['x']<exit_box['x'];assert abs(exit_box['x']-(user_box['x']+user_box['width'])-16)<2
+   assert bar.locator('.pilot-account-user').evaluate('el=>getComputedStyle(el).textAlign')=='right'
+   assert abs(title_box['x']-max(20,(page.viewport_size['width']-860)/2+20))<2
    assert page.get_by_role('heading',name='Orçamentos',exact=True).bounding_box()['y']>=bb['y']+bb['height']
    page.evaluate('scrollTo(0,document.body.scrollHeight)');assert abs(bar.bounding_box()['y'])<1;expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.evaluate('scrollTo(0,0)');page.screenshot(path='/tmp/artesao-digital-'+account+'.png')
    if account=='b':
@@ -97,15 +99,15 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   ip.get_by_role('checkbox').check();ip.get_by_role('button',name='Registrar interesse',exact=True).click()
   expect(ip.locator('#interest-status')).to_contain_text('Interesse registrado')
   interested.close()
-  a,pa=context('a');pa.goto(origin+prefix+'?view=produtos');pa.get_by_role('button',name='Novo produto',exact=True).click();modal=pa.locator('dialog[open]');modal.get_by_label('Nome',exact=True).fill('Produto isolado A');modal.get_by_label('Origem',exact=True).select_option('own');modal.get_by_label('Valor varejo (R$)',exact=True).fill('25');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pa.locator('.product-record')).to_have_count(1)
-  b,pb=context('b');pb.goto(origin+prefix+'?view=produtos');expect(pb.locator('.product-record')).to_have_count(0)
-  pb.get_by_role('button',name='Novo produto',exact=True).click();modal=pb.locator('dialog[open]');modal.get_by_label('Nome',exact=True).fill('Produto isolado B');modal.get_by_label('Origem',exact=True).select_option('client');modal.get_by_label('Valor varejo (R$)',exact=True).fill('15');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pb.locator('.product-record')).to_have_count(1);expect(pb.locator('.product-record')).not_to_contain_text('Produto isolado A')
-  pa.reload();expect(pa.locator('.product-record')).to_have_count(1);expect(pa.locator('.product-record')).not_to_contain_text('Produto isolado B')
+  a,pa=context('a');pa.goto(origin+prefix+'?view=produtos');pa.get_by_role('button',name='Novo produto',exact=True).click();modal=pa.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado A');modal.get_by_label('Origem',exact=True).select_option('own');modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('25');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pa.locator('.products-list-row')).to_have_count(1)
+  b,pb=context('b');pb.goto(origin+prefix+'?view=produtos');expect(pb.locator('.products-list-row')).to_have_count(0)
+  pb.get_by_role('button',name='Novo produto',exact=True).click();modal=pb.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado B');modal.get_by_label('Origem',exact=True).select_option('client');modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('15');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pb.locator('.products-list-row')).to_have_count(1);expect(pb.locator('.products-list-row')).not_to_contain_text('Produto isolado A')
+  pa.reload();expect(pa.locator('.products-list-row')).to_have_count(1);expect(pa.locator('.products-list-row')).not_to_contain_text('Produto isolado B')
   for page,account in [(pa,'a'),(pb,'b')]:
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
    expect(page.get_by_label('Código de convite (somente no primeiro acesso)')).to_have_value('');page.get_by_role('button',name='Entrar com Google',exact=True).click()
-   expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.goto(origin+prefix+'?view=produtos');expect(page.locator('.product-record')).to_have_count(1)
+   expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.goto(origin+prefix+'?view=produtos');expect(page.locator('.products-list-row')).to_have_count(1)
    for view,title in [('orcamentos','Orçamentos'),('clientes','Clientes'),('fabricacao','Fabricação')]:
     page.goto(origin+prefix+'?view='+view);expect(page.get_by_role('heading',name=title,exact=True,level=1)).to_be_visible();expect(page.locator('.brand')).to_have_text('Artesão Digital');expect(page.locator('#pilot-build-info')).to_be_in_viewport()
    # The bare application path must also render an application, not only the account bar.
@@ -120,8 +122,8 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   pa.get_by_role('button',name='Entrar com Google',exact=True).click()
   expect(pa.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
   expect(pa.locator('#pilot-account')).to_contain_text('b@example.test')
-  pa.goto(origin+prefix+'?view=produtos');expect(pa.locator('.product-record')).to_have_count(1)
-  expect(pa.locator('.product-record')).to_contain_text('Produto isolado B');expect(pa.locator('.product-record')).not_to_contain_text('Produto isolado A')
+  pa.goto(origin+prefix+'?view=produtos');expect(pa.locator('.products-list-row')).to_have_count(1)
+  expect(pa.locator('.products-list-row')).to_contain_text('Produto isolado B');expect(pa.locator('.products-list-row')).not_to_contain_text('Produto isolado A')
   # A disconnected tab must explain the failure instead of leaving Sair inert.
   a.set_offline(True)
   pa.get_by_role('button',name='Sair',exact=True).click()

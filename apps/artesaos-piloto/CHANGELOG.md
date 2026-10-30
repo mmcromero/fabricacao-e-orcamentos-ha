@@ -1,3 +1,12 @@
+# 0.1.8
+
+- Incorpora a base Fabricação e Orçamentos 0.1.23, preservando adaptações do Artesão Digital e atualizando versão/commit-base dos metadados.
+
+- Alinha a logo do cabeçalho das áreas de usuário à margem do conteúdo e posiciona o e-mail à direita, antes de Sair.
+
+- Centraliza a logo na tela de login sem alterar o alinhamento dos campos ou a posição da marca no cabeçalho autenticado.
+- Preserva imagem original, proporção e alternativa textual quando a logo não carrega.
+
 # 0.1.7
 
 - Acrescenta aviso de piloto por convite e formulário de interesse com nome/e-mail obrigatórios e WhatsApp opcional; registrar não cria conta nem libera acesso.

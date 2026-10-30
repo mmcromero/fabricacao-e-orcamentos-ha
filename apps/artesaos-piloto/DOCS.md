@@ -1,6 +1,6 @@
 # Artesão Digital — Testes
 
-Aplicativo experimental independente, baseado no núcleo Fabricação e Orçamentos 0.1.19. Não substitui, atualiza ou compartilha o volume do aplicativo principal. A imagem desta rodada foi construída/testada em amd64; aarch64 ainda depende da instalação real. Primeiro teste restrito ao responsável com duas contas Google próprias e dados fictícios; não convidar terceiros ainda.
+Aplicativo experimental independente, baseado no núcleo Fabricação e Orçamentos 0.1.23. Não substitui, atualiza ou compartilha o volume do aplicativo principal. A imagem desta rodada foi construída/testada em amd64; aarch64 ainda depende da instalação real. Primeiro teste restrito ao responsável com duas contas Google próprias e dados fictícios; não convidar terceiros ainda.
 
 ## O que está implementado
 
@@ -137,3 +137,17 @@ A imagem estática fica em `pilot/branding/logo.png` na fonte, sendo copiada par
 ### Conferência manual após atualização
 
 Atualize sem desinstalar, preserve os pares de e-mail/convite existentes e configure `admin_emails`. Reinicie; abra o login pelo domínio HTTPS. Teste o interesse sem WhatsApp, rejeição sem e-mail, login administrativo da conta autorizada, rejeição de uma conta comum e saída. Verifique nome/contato na administração e ausência de paginação com poucos registros. O mesmo Google/callback/Nginx existente é preservado; não use dados pessoais reais na primeira conferência.
+
+## Atualização 0.1.8 — base 0.1.19 para 0.1.23
+
+Código-base incorporado: versão 0.1.23, commit `f56f0e5707ad81f74f42c351171d4132f793cf9a`. A versão própria é 0.1.8; instalação e conferência no Home Assistant continuam manuais. O rodapé e o arquivo de build identificam essa base efetivamente incorporada. A base inclui as melhorias das listas e filtros, seleção para catálogo, validação dos formulários, cadastro de materiais, unidades de compra/consumo e fluxo de fabricação atualizado.
+
+A atualização mantém as adaptações do Artesão Digital: autenticação Google, convites, contas isoladas, administração restrita, lista de interesse cifrada, logo, marca e metadados de duas versões. Cada banco de produtos continua no diretório do seu usuário; não há banco comercial compartilhado. A migração de materiais da base roda dentro desse banco individual, ao acessá-lo, sem ler arquivos da instalação principal.
+
+Antes de instalar a futura atualização, faça uma cópia completa e protegida do volume de dados com o aplicativo parado. Preserve bancos de cada usuário, controle de acesso, lista de interesse e sua chave. Não confunda a cópia interna de produtos antigos com um backup completo da instalação. A cópia anterior deve ser mantida intacta: para voltar à versão antiga, restaure esse backup, em vez de abrir bancos já alterados com um código antigo.
+
+A base cria tabelas de materiais e de acompanhamento/cópia de registros antigos. Registros de fabricação antigos aguardam uma referência de compra válida do primeiro material cadastrado, em gramas ou quilos. Não é inventada uma conversão para outro tipo de unidade. A conversão preserva os preços finais salvos, inclui etapas adicionais e produtos arquivados, e guarda os dados anteriores em tabela própria. O preço da referência escolhido determina o novo cálculo; por isso, confira-o antes de cadastrar o primeiro material. Produtos novos não são capturados retroativamente por esse lote de migração. Não aplicar preços calculados automaticamente.
+
+As novas faixas de multiplicadores podem deixar parâmetros antigos fora do intervalo aceito: revise-os explicitamente, sem substituir valores silenciosamente. A nova seleção de catálogo começa desmarcada para produtos antigos e não altera a autorização de divulgação nem publica produtos na internet.
+
+O ensaio reproduzível de atualização é `node --import tsx scripts/verify-pilot-upgrade.mjs`, executado na fonte com histórico Git e dependências disponíveis. Ele arquiva o código anterior real do piloto, cria dados fictícios de duas contas e verifica preservação de dados, cálculos, referências inválidas, isolamento, reinício, contatos/administração e restauração do backup na versão anterior. Não usa nem migra dados reais.

@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {productSchema,type Product} from './products.js';
@@ -11,9 +12,9 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
   const id=req.params?.id;const row=id?db.prepare('SELECT data,updated_at FROM products WHERE id=? AND archived=0').get(id):undefined;
   if(id&&!row)return reply.code(404).send({message:'Produto não encontrado ou arquivado.'});
   if(row&&(!req.body.expectedUpdatedAt||row.updated_at!==req.body.expectedUpdatedAt))return reply.code(409).send({message:'O produto mudou. Reabra o cadastro antes de salvar.'});
-  const p=normalizedProduct(req.body.product);
-  if(!categoryAllowed(p.origin,p.category))return reply.code(400).send({message:'A categoria Produtos de cliente é reservada a produtos de cliente.'});
   const old=row?JSON.parse(String(row.data)) as Product:undefined;
+  const p=normalizedProduct({...req.body.product,catalogVisible:req.body.product.catalogVisible??old?.catalogVisible??false});
+  if(!categoryAllowed(p.origin,p.category))return reply.code(400).send({message:'A categoria Produtos de cliente é reservada a produtos de cliente.'});
   if(JSON.stringify(p.sourceKeys)!==JSON.stringify(old?.sourceKeys??[]))return reply.code(400).send({message:'Vínculos de importação devem ser preservados.'});
   const applied=req.body.applyPrices?['wholesale','factory','retail'] as const:req.body.applyTiers??[];
   if(applied.length){
@@ -26,6 +27,7 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
   }
   if(!Object.values(p.prices).some(v=>v!==null))return reply.code(400).send({message:'Informe pelo menos um preço ou aplique os preços calculados.'});
   db.exec('BEGIN IMMEDIATE');try{
+   rememberMaterialUses(db,p.manufacturing);
    if(p.origin==='own'&&p.category)storeCategory(db,p.category);
    const now=new Date(Math.max(Date.now(),row?Date.parse(String(row.updated_at))+1:0)).toISOString();
    const savedId=id?Number(id):Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),now).lastInsertRowid);

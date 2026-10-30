@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import {manufacturingSchema,type Production} from './manufacturing-model.js';
 import {storeCategory} from './categories.js';
 import {normalizedProduct,categoryAllowed} from './product-category.js';
@@ -7,14 +8,14 @@ import type { DatabaseSync } from 'node:sqlite';
 const money = {type:['integer','null'], minimum:0, maximum:10000000000};
 const measure = {type:['number','null'], exclusiveMinimum:0, maximum:1000000};
 export const productSchema = {type:'object', additionalProperties:false, required:['name','origin','publicAllowed','prices','weightGrams','lengthCm','widthCm','heightCm','colors','sourceKeys','family','description'], properties:{
-  manufacturing:manufacturingSchema,name:{type:'string',minLength:1,maxLength:200,pattern:'\\S'}, origin:{enum:['own','client']}, publicAllowed:{type:'boolean'},
+  manufacturing:manufacturingSchema,name:{type:'string',minLength:1,maxLength:200,pattern:'\\S'}, origin:{enum:['own','client']}, publicAllowed:{type:'boolean'},catalogVisible:{type:'boolean'},
   prices:{type:'object',additionalProperties:false,required:['wholesale','factory','retail'],properties:{wholesale:money,factory:money,retail:money}},
   weightGrams:measure,lengthCm:measure,widthCm:measure,heightCm:measure,
   colors:{type:'array',maxItems:100,uniqueItems:true,items:{type:'string',maxLength:100}},
   sourceKeys:{type:'array',maxItems:200,uniqueItems:true,items:{type:'string',minLength:1,maxLength:250}},
   sku:{type:'string',maxLength:100},imageUrl:{type:'string',maxLength:2048,pattern:'^(https://[^\\s]+|)$'},category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
 }};
-export type Product = {manufacturing?:Production;sku?:string;imageUrl?:string;category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
+export type Product = {manufacturing?:Production;sku?:string;imageUrl?:string;category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;catalogVisible?:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && categoryAllowed(p.origin,p.category) && !(p.origin==='client' && p.publicAllowed);}
 export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
@@ -24,6 +25,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
   const add=(input:Product)=>{
     const p=normalizedProduct(input);
+    rememberMaterialUses(db,p.manufacturing);
     if(p.origin==='own'&&p.category)storeCategory(db,p.category);
     const id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),new Date().toISOString()).lastInsertRowid);
     for(const key of p.sourceKeys) db.prepare('INSERT INTO product_sources VALUES (?,?)').run(key,id);
@@ -44,7 +46,8 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
     const old=JSON.parse(row.data as string) as Product;
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
     if(req.body.origin==='own'&&req.body.category)storeCategory(db,req.body.category);
-    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct(req.body)),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),req.params.id);
+    rememberMaterialUses(db,req.body.manufacturing);
+    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct({...req.body,catalogVisible:req.body.catalogVisible??old.catalogVisible??false})),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),req.params.id);
     return {ok:true};
   });
   app.delete<{Params:{id:string}}>('/api/products/:id',(req,reply)=>{

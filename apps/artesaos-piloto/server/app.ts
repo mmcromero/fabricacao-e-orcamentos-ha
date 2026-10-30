@@ -1,3 +1,5 @@
+import {registerLegacyMaterialUpgrade} from './legacy-material-upgrade.js';
+import {registerMaterials} from './materials.js';
 import {registerProductEditor} from './product-editor.js';
 import {registerRecordActions} from './record-actions.js';
 import {registerReconciliation} from './reconciliation.js';
@@ -39,6 +41,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     db.prepare('INSERT INTO notes (id, text, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET text=excluded.text, updated_at=excluded.updated_at').run(request.body.text, updatedAt);
     return { text: request.body.text, updated_at: updatedAt };
   });
+  registerMaterials(app, db);
   registerProducts(app, db);
   registerCategories(app, db);
   registerClients(app, db);
@@ -48,6 +51,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerReconciliation(app, db);
   registerProductEditor(app, db);
   registerRecordActions(app, db);
+  registerLegacyMaterialUpgrade(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;

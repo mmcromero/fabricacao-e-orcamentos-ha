@@ -1,4 +1,5 @@
 import {appName} from './branding';
+import ValidatedForm,{showValidation} from './FormValidation';
 import ModalClose from './ModalClose';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import './wireframe.css';
@@ -129,11 +130,11 @@ export default function QuoteWireframe() {
     if (!draft.name.trim()) { setError('Informe o nome do produto.'); return; }
     if (!validOrigin(draft.origin)) { setError('Selecione a origem do produto: Próprio ou De cliente.'); return; }
     if (draft.price.trim() && cents(draft.price) === null) {
-      setError('Informe um preço válido, com até duas casas decimais, ou deixe pendente.'); return;
+      showValidation(event.currentTarget as HTMLElement,[{element:document.getElementById('wf-price')!,message:'Informe um preço válido, com até duas casas decimais, ou deixe pendente.'}]); return;
     }
     for (const key of ['length', 'width', 'height', 'weight'] as const) {
       if (draft[key].trim() && (!/^\d+(?:[.,]\d+)?$/.test(draft[key].trim()) || Number(draft[key].replace(',', '.')) <= 0)) {
-        setError('Dimensões e peso devem ser maiores que zero. Você também pode deixá-los pendentes.'); return;
+        const field=(event.currentTarget as HTMLElement).querySelector<HTMLElement>(`#wf-${key}`);if(field)showValidation(event.currentTarget as HTMLElement,[{element:field,message:'Dimensões e peso devem ser maiores que zero. Você também pode deixá-los pendentes.'}]);return;
       }
     }
     const previousItem = items.find(p => p.id === editing);
@@ -219,7 +220,7 @@ export default function QuoteWireframe() {
       <p className="wf-status" role="status">{status}</p>
     </main>
     <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-dialog-title" onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <form noValidate onSubmit={save}>
+      <ValidatedForm noValidate onSubmit={save}>
         <div className="wf-modal-header"><div><small>CADASTRO DIRETO NO ORÇAMENTO</small><h2 id="wf-dialog-title">{editing === null ? 'Novo produto' : 'Editar produto'}</h2></div><ModalClose onClose={()=>close()}/></div>
         <div className="wf-modal-body"><p>Use o preço de venda final. Os dados do orçamento continuam guardados enquanto você preenche.</p><button type="button" className="wf-secondary" onClick={example}>Preencher exemplo histórico</button><p className="wf-muted">O exemplo é uma referência antiga; não consulta frete nem define preços atuais.</p>
           {error && <div className="wf-error" role="alert">{error}</div>}
@@ -231,11 +232,11 @@ export default function QuoteWireframe() {
             ['length', 'Comprimento (cm)'], ['width', 'Largura (cm)'], ['height', 'Altura / espessura (cm)'], ['weight', 'Peso (g)']
           ] as const).map(([key, label]) => <div key={key}><label htmlFor={`wf-${key}`}>{label}</label><input id={`wf-${key}`} inputMode="decimal" value={draft[key]} onChange={e => update(key, e.target.value)} placeholder="A informar" /></div>)}</div></fieldset>
 
-          <label htmlFor="wf-origin">Origem do produto *</label><select id="wf-origin" required aria-required="true" value={draft.origin} onChange={e => update('origin', e.target.value as ProductForm['origin'])}><option value="" disabled>Selecione a origem</option><option value="own">Próprio</option><option value="client">De cliente</option></select><p className="wf-muted">A origem organiza os produtos. Um produto próprio também pode permanecer privado.</p>
+          <label htmlFor="wf-origin">Origem do produto <span aria-hidden="true">*</span></label><select id="wf-origin" required aria-required="true" value={draft.origin} onChange={e => update('origin', e.target.value as ProductForm['origin'])}><option value="" disabled>Selecione a origem</option><option value="own">Próprio</option><option value="client">De cliente</option></select><p className="wf-muted">A origem organiza os produtos. Um produto próprio também pode permanecer privado.</p>
           {draft.origin === 'own' ? <fieldset><legend>Privacidade e divulgação</legend><label className="wf-choice"><input type="radio" name="wf-visibility" checked={draft.private} onChange={() => update('private', true)} />Privado — não incluir em futura carga no site</label><label className="wf-choice"><input type="radio" name="wf-visibility" checked={!draft.private} onChange={() => update('private', false)} />Autorizo a elegibilidade para divulgação futura</label><p className="wf-muted">Todo produto novo começa privado. Autorizar não publica o produto. A integração com o site ainda não existe.</p></fieldset> : <p className="wf-pending">{draft.origin === 'client' ? 'Produto de cliente: sempre privado e bloqueado para divulgação no site.' : 'Selecione a origem para continuar. Produtos novos começam privados.'}</p>}
           <fieldset><legend>Onde usar este produto?</legend><label className="wf-choice"><input type="checkbox" checked={draft.catalog} onChange={e => update('catalog', e.target.checked)} />Salvar também no catálogo (simulação)</label><p className="wf-muted">Desmarcado: usar só neste orçamento. Produtos privados também podem ficar no catálogo e continuam bloqueados para divulgação.</p></fieldset>
         </div><div className="wf-modal-footer"><button type="button" className="wf-secondary" onClick={() => close()}>Cancelar</button><button type="submit">{editing === null ? 'Adicionar ao orçamento' : 'Salvar alterações no item'}</button></div>
-      </form>
+      </ValidatedForm>
     </dialog>
   </div>;
 }

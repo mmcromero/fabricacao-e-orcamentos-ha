@@ -1,10 +1,11 @@
+import {rememberMaterialUses} from './materials.js';
 import {createHash} from 'node:crypto';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {productSchema,type Product} from './products.js';
 import {normalizedProduct,categoryAllowed} from './product-category.js';
 import {storeCategory} from './categories.js';
-import {configFields,operationFields} from './manufacturing-model.js';
+import {configFields,operationFields,markupRanges,validMarkup} from './manufacturing-model.js';
 type Target=number|null|'skip';
 type Decision={key:string;targetId:Target;applyPrices?:boolean;replaceManufacturing?:boolean;category?:string};
 type RecordInput={key:string;product:Product};
@@ -12,7 +13,7 @@ type Body={records:RecordInput[];settings?:Record<string,string>;decisions?:Deci
 const normalized=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR').trim();
 const sameCategory=(a:string|undefined,b:string|undefined)=>!a?.trim()||!b?.trim()||normalized(a.split(' > ').at(-1)!)===normalized(b.split(' > ').at(-1)!);
 const priceChanged=(a:Product['prices'],b:Product['prices'])=>['wholesale','factory','retail'].some(key=>a[key as keyof typeof a]!==b[key as keyof typeof b]);
-const settingsProperties=Object.fromEntries([...configFields,...operationFields].map(([key])=>[key,{type:'string',maxLength:20,pattern:'^(|[0-9]+([.,][0-9]+)?)$'}]));
+const settingsProperties=Object.fromEntries([['filamentKgPrice','Referência legada'],...configFields,...operationFields].map(([key])=>[key,{type:'string',maxLength:20,pattern:'^(|[0-9]+([.,][0-9]+)?)$'}]));
 export function registerReconciliation(app:FastifyInstance,db:DatabaseSync){
  app.get('/api/products/export',(_req,reply)=>{
   const products=db.prepare('SELECT id,data,archived,updated_at FROM products ORDER BY id').all().map(row=>({...normalizedProduct(JSON.parse(String(row.data))),id:Number(row.id),archived:Boolean(row.archived),updatedAt:row.updated_at}));
@@ -68,12 +69,14 @@ export function registerReconciliation(app:FastifyInstance,db:DatabaseSync){
    if(target!=='skip'&&target!=='review'&&!errors.length&&(!existing||changes.length))planned.push({id:existing?.id??null,data:next,sources:incoming.sourceKeys,updatedAt:existing?.updatedAt});
    return {origin:incoming.origin,categoryAfter:next.category??'',matchBy:sourceMatches.length?'vínculo externo':skuMatches.length?'SKU exato':nameMatches.length?'nome exato — confira o vínculo':'sem correspondência',category:incoming.category??'',key:record.key,name:incoming.name,sku:incoming.sku??'',targetId:target,action,changes,errors,candidates:candidates.map(row=>({id:row.id,name:row.data.name,sku:row.data.sku??'',archived:row.archived})),existingName:existing?.data.name??null,priceBefore:existing?.data.prices??null,priceAfter:next.prices,pricesDiffer:existing?priceChanged(existing.data.prices,incoming.prices):false,manufacturingBefore:existing?.data.manufacturing??null,manufacturingIncoming:incoming.manufacturing??null,manufacturingExists:Boolean(existing?.data.manufacturing),incomingManufacturing:Boolean(incoming.manufacturing)};
   });
+  if(req.body.applyConfiguration)for(const key of Object.keys(markupRanges) as (keyof typeof markupRanges)[]){const raw=req.body.settings?.[key];if(raw&& !validMarkup(key,Number(raw.replace(',','.'))))return reply.code(400).send({message:`Multiplicador fora da faixa permitida: ${key}.`,field:key});}
   const configuration=Object.entries(req.body.settings??{}).map(([key,value])=>({key,before:configData[key]??'',after:value,changed:(configData[key]??'')!==value}));
   const invalid=details.some(row=>row.errors.length);
   if(req.body.confirm&&invalid)return reply.code(400).send({message:'Resolva os vínculos e conflitos na prévia. Nenhum dado foi gravado.'});
   if(req.body.confirm){
    db.exec('BEGIN IMMEDIATE');try{
     for(const entry of planned){
+     rememberMaterialUses(db,entry.data.manufacturing);
      if(entry.data.origin==='own'&&entry.data.category)storeCategory(db,entry.data.category);
      let id=entry.id;
      if(id===null)id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(entry.data),new Date().toISOString()).lastInsertRowid);

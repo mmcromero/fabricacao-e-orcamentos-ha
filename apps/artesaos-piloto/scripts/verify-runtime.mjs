@@ -65,11 +65,21 @@ try {
   });
   assert.equal(save.status, 200);
   const send=async(path,method,payload)=>{const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});assert.equal(r.status,200);return r.json();};
+  const product=await send('api/products/editor','POST',{product:{name:'Produto fictício para catálogo',origin:'client',publicAllowed:false,catalogVisible:true,prices:{wholesale:null,factory:null,retail:1000},weightGrams:null,lengthCm:null,widthCm:null,heightCm:null,colors:[],sourceKeys:[],family:'Legado de teste',description:'',manufacturing:{machineSeconds:0,humanSeconds:0,materialGrams:0,extras:0,packaging:0,label:0,materials:[{name:'Material fictício para restauração',mode:'quantity',purchaseQuantity:1,purchasePrice:100,purchaseUnit:'kg',customUnit:'',quantity:20,unit:'g'}]}},applyPrices:false});
+  const reference=(await (await fetch(base+'api/materials')).json())[0];
+  const {id:materialId,revision:materialRevision,updatedAt:materialTime,...materialDefinition}=reference;
+  await send(`api/materials/${materialId}`,'PUT',{...materialDefinition,purchasePrice:200,expectedRevision:materialRevision});
   const client={name:'Cliente fictício para restauração',contact:'',phone:'',email:'',taxDocument:'',postal:''};
   const savedClient=await send('api/clients','POST',client);
   await send('api/quotes','POST',{data:{client:{id:savedClient.id,...client},items:[],notes:'Rascunho para restauração'},expectedRevision:0});
   await send('api/settings/fabricacao','PUT',{data:{dailyCapacity:'Capacidade de teste'},expectedRevision:0});
   async function checkBusinessData(){
+    const restoredProduct=(await (await fetch(base+'api/products')).json()).find(p=>p.id===product.id);
+    assert.equal(restoredProduct.catalogVisible,true);
+    assert.equal(restoredProduct.publicAllowed,false);
+    assert.equal(restoredProduct.family,'Legado de teste');
+    assert.equal(restoredProduct.manufacturing.materials[0].purchasePrice,100);
+    assert.equal((await (await fetch(base+'api/materials')).json())[0].purchasePrice,200);
     assert.equal((await (await fetch(base+'api/clients')).json())[0].name,client.name);
     assert.equal((await (await fetch(base+'api/quotes/1')).json()).data.notes,'Rascunho para restauração');
     assert.equal((await (await fetch(base+'api/quotes?pageSize=10&search=ficticio')).json()).total,1);

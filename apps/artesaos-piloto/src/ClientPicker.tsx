@@ -1,3 +1,4 @@
+import ValidatedForm,{RequiredMark} from './FormValidation';
 import ModalClose from './ModalClose';
 import ClientFields from './ClientFields';
 import {clientDraft,clientLabel,emptyClient,type Client,type ClientDraft} from './client-model';
@@ -70,7 +71,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     close(true);
   }
   return <div className="wf-client-picker">
-    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente</label><select ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>}
+    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente{persistent&&<RequiredMark/>}</label><select aria-required={persistent||undefined} data-required-for="finalize" aria-describedby={persistent?'quote-finalize-hint':undefined} ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>}
     {selected ? <div ref={card} tabIndex={-1} className="wf-selected-client"><strong>{clientLabel(selected)}</strong><p>Contato: {selected.contact || 'a informar'} · CEP: {selected.postal || 'pendente'}</p><details><summary>Ver dados do cliente</summary><dl className="wf-client-details">{([
       ['Nome da empresa', selected.name], ['Nome do contato', selected.contact],
       ['Telefone', selected.phone], ['E-mail', selected.email], ['CPF ou CNPJ', selected.taxDocument], ['CEP de entrega', selected.postal],['Rua / logradouro',selected.street],['Número',selected.number],['Complemento',selected.complement],['Bairro',selected.district],['Cidade',selected.city],['Estado (UF)',selected.state],
@@ -79,12 +80,12 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. Salve o orçamento para guardar a seleção.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
     <p role="status">{message}</p>
     <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-client-modal-title" onCancel={e => { e.preventDefault(); e.stopPropagation(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <form noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><ModalClose onClose={()=>close()} disabled={busy}/></div>
+      <ValidatedForm noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><ModalClose onClose={()=>close()} disabled={busy}/></div>
         <div className="wf-modal-body"><p>Os produtos, embalagens e observações do pedido continuam preservados.</p>{error && <div className="wf-error" role="alert">{error}</div>}
           <ClientFields key={openCycle} draft={draft} prefix="wf-client" update={update} busy={busy} onLookupBusy={setLookupBusy}/>
           <p className="wf-muted">CPF/CNPJ será necessário para preparar o envio, sem bloquear o rascunho ou a cotação. Validação fiscal e consulta de frete ainda não implementadas.</p>
         </div><div className="wf-modal-footer"><button type="button" className="wf-secondary" onClick={() => close()}>Cancelar</button><button type="submit" disabled={busy||lookupBusy}>{editing === null ? 'Salvar e selecionar cliente' : 'Salvar cadastro do cliente'}</button></div>
-      </form>
+      </ValidatedForm>
     </dialog>
   </div>;
 }
