@@ -1,4 +1,14 @@
-# Histórico do Artesãos — Piloto — Testes
+# Histórico do Artesão Digital — Testes
+
+## 0.1.2
+
+- Adota Artesão Digital como nome visível no aplicativo, telas de login e instalação de testes.
+- Abre Orçamentos automaticamente após login e ao acessar o login com sessão válida.
+- Mantém as duas versões em rodapé fixo visível, com espaço reservado para não cobrir controles.
+- Usa faixa verde fixa no topo, com nome à esquerda, e-mail centralizado e Sair à direita, adaptada a telas estreitas.
+- Preserva slug, volume, contas, convites e URL de retorno Google existentes.
+- Inclui Abrir interface Web na página do aplicativo do HA, apontando ao login HTTPS pela porta já existente8443.
+- Acrescenta testes de rodapé dentro do viewport e marca da implantação nas áreas principais.
 
 ## 0.1.1
 

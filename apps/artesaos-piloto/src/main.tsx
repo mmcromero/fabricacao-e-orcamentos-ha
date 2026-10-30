@@ -1,3 +1,4 @@
+import {appName} from './branding';
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
@@ -34,7 +35,7 @@ function App() {
     finally { setBusy(false); }
   }
   return <main>
-    <header><span className="brand">Fabricação e Orçamentos</span><span className="badge">Validação da instalação</span></header>
+    <header><span className="brand">{appName}</span><span className="badge">Validação da instalação</span></header>
     <AreaNav/><h1>Diagnóstico da instalação</h1><section><h2>Catálogo persistente</h2><a href="?view=orcamentos">Abrir Orçamentos</a> · <a href="?view=produtos">Abrir Produtos</a> · <a href="?view=clientes">Abrir Clientes</a></section>
     <section><h2>Fluxo em avaliação</h2><p>Experimente cadastrar um produto dentro do orçamento. O wireframe usa dados temporários e não altera a anotação do banco.</p><a href="?view=produto">Abrir wireframe: produto no orçamento</a></section>
     <p>Esta tela verifica interface, servidor e banco. Orçamentos e cadastros são persistentes. Fabricação calcula custos configurados; frete e envio continuam manuais.</p>

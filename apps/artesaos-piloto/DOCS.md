@@ -1,4 +1,4 @@
-# Artesãos — Piloto — Testes
+# Artesão Digital — Testes
 
 Aplicativo experimental independente, baseado no núcleo Fabricação e Orçamentos 0.1.19. Não substitui, atualiza ou compartilha o volume do aplicativo principal. A imagem desta rodada foi construída/testada em amd64; aarch64 ainda depende da instalação real. Primeiro teste restrito ao responsável com duas contas Google próprias e dados fictícios; não convidar terceiros ainda.
 
@@ -16,7 +16,7 @@ HTTPS protege o trajeto navegador–Nginx. A rede interna Nginx–aplicativo usa
 
 ## Instalação manual separada
 
-1. Na loja do HA, atualize o catálogo e instale **Artesãos — Piloto — Testes**. Não desinstale Fabricação e Orçamentos.
+1. Na loja do HA, atualize o catálogo e instale **Artesão Digital — Testes**. Não desinstale Fabricação e Orçamentos.
 2. Mantenha a porta do host desabilitada. O Nginx acessará a porta interna 8099 pelo hostname mostrado na informação do novo aplicativo.
 3. Não inicie sem configurar as opções abaixo. Ausência de Google ou URL válida faz o processo recusar a inicialização; não existe modo de autenticação simulada em produção.
 4. Copie o **hostname real do novo aplicativo**. Não adivinhe prefixos nem reutilize o hostname da aplicação principal.
@@ -70,10 +70,18 @@ A compilação e a suíte automatizada passaram, incluindo rejeição de assinat
 
 ## Atualização 0.1.1 — retorno após login
 
-Atualize somente o aplicativo Artesãos — Piloto — Testes, sem desinstalar. Contas, convites registrados e configurações permanecem no volume existente. Não é necessário recriar o cliente Google nem alterar a rota Nginx que já está funcionando.
+Atualize somente o aplicativo Artesão Digital — Testes, sem desinstalar. Contas, convites registrados e configurações permanecem no volume existente. Não é necessário recriar o cliente Google nem alterar a rota Nginx que já está funcionando.
 
 Depois de autenticar no Google, o piloto exibe brevemente Concluindo acesso, confirma a sessão e abre Produtos automaticamente. A mesma regra vale para o primeiro acesso com convite e para o novo login de conta já ativada com convite vazio. Se a sessão não for reconhecida, a página mostra o problema e oferece entrar novamente, em vez de um retorno silencioso.
 
 O teste local usa um provedor controlado e verifica conteúdo da aplicação visível, inclusive através de Nginx HTTPS. A validação com Google real na sua instalação ainda é necessária: faça primeiro logout/login com a conta já ativada; use o segundo convite somente depois de confirmar a entrada automática da primeira conta. Não use links diretos como substituto deste teste.
 
 O rodapé identifica separadamente a versão do piloto e a versão-base do Fabricação e Orçamentos. Os metadados são gerados no build a partir do manifesto e pacote; core-base.json registra o commit-base e deve ser atualizado conscientemente ao incorporar uma nova versão validada do projeto principal. A compilação recusa divergência entre a versão declarada da base e o pacote.
+
+## Atualização 0.1.2 — Artesão Digital
+
+O nome visível passa a Artesão Digital e a entrada após login é Orçamentos. O rodapé fica fixo com as duas versões. Atualize apenas o aplicativo de testes existente: seu identificador, volume, conta Google, convites e rota permanecem os mesmos; não é outra instalação. O nome de apresentação no console do Google pode ser alterado separadamente, sem recriar credenciais, e não é modificado por esta atualização.
+
+### Botão Abrir interface Web
+
+Na página Info do aplicativo, o botão abre o login pelo mesmo hostname usado no navegador do Home Assistant e pela porta HTTPS8443, já atendida pelo Nginx desta instalação de teste. Não é aberta uma nova porta do piloto. Para o botão usar o domínio correto do certificado e do cliente Google, acesse o Home Assistant pelo endereço HTTPS habitual. Se estiver no HA por IP local, use diretamente o endereço público configurado no piloto; o botão padrão do HA usa o hostname da página atual. Esse atalho é específico do ambiente temporário de testes e não altera a futura implantação standalone.

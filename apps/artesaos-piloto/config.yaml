@@ -1,5 +1,5 @@
-name: "Artesãos — Piloto — Testes"
-version: "0.1.1"
+name: "Artesão Digital — Testes"
+version: "0.1.2"
 slug: artesaos_piloto
 description: "Teste separado de login Google, convites e contas isoladas. Somente dados fictícios."
 arch:
@@ -10,6 +10,7 @@ boot: manual
 backup: cold
 stage: experimental
 ingress: false
+webui: "https://[HOST]:[PORT:8443]/artesaos-piloto/login"
 ports:
   8099/tcp: null
 ports_description:

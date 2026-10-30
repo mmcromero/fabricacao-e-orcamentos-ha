@@ -1,6 +1,6 @@
 # Regra de atualização e rastreabilidade do piloto
 
-Sempre que for solicitado compilar um novo pacote do Artesãos — Piloto incorporando modificações do Fabricação e Orçamentos:
+Sempre que for solicitado compilar um novo pacote do Artesão Digital incorporando modificações do Fabricação e Orçamentos:
 
 1. Identificar a versão/commit do principal autorizados pelo usuário. Publicação de uma nova versão do principal, por si só, não autoriza promoção automática.
 2. Incorporar o código desse commit à branch do piloto, preservando autenticação, convites, isolamento, adaptador de execução e volume próprios. Não copiar banco, opções pessoais, credenciais ou dados comerciais.
