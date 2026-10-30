@@ -1,6 +1,6 @@
 # Fabricação e Orçamentos
 
-Distribuição experimental para Home Assistant. Versão 0.1.20.
+Distribuição experimental para Home Assistant. Versão 0.1.21.
 A interface inclui catálogo, fabricação, clientes e orçamentos persistentes. Diagnóstico fica em Suporte e diagnóstico nas configurações.
 O catálogo possui categorias persistentes e importação com prévia nas Configurações de Produtos. CSV WooCommerce importa somente categorias; JSON preparado importa produtos; a carga de fabricação pode ser conciliada com o catálogo, preservando preços por padrão e exigindo confirmação das escolhas.
 Clientes e Orçamentos são persistentes e usam o catálogo real. Há títulos, busca,

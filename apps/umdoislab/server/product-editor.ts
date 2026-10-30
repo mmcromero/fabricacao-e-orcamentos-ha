@@ -11,9 +11,9 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
   const id=req.params?.id;const row=id?db.prepare('SELECT data,updated_at FROM products WHERE id=? AND archived=0').get(id):undefined;
   if(id&&!row)return reply.code(404).send({message:'Produto não encontrado ou arquivado.'});
   if(row&&(!req.body.expectedUpdatedAt||row.updated_at!==req.body.expectedUpdatedAt))return reply.code(409).send({message:'O produto mudou. Reabra o cadastro antes de salvar.'});
-  const p=normalizedProduct(req.body.product);
-  if(!categoryAllowed(p.origin,p.category))return reply.code(400).send({message:'A categoria Produtos de cliente é reservada a produtos de cliente.'});
   const old=row?JSON.parse(String(row.data)) as Product:undefined;
+  const p=normalizedProduct({...req.body.product,catalogVisible:req.body.product.catalogVisible??old?.catalogVisible??false});
+  if(!categoryAllowed(p.origin,p.category))return reply.code(400).send({message:'A categoria Produtos de cliente é reservada a produtos de cliente.'});
   if(JSON.stringify(p.sourceKeys)!==JSON.stringify(old?.sourceKeys??[]))return reply.code(400).send({message:'Vínculos de importação devem ser preservados.'});
   const applied=req.body.applyPrices?['wholesale','factory','retail'] as const:req.body.applyTiers??[];
   if(applied.length){

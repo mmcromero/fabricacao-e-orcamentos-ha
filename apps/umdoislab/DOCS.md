@@ -1,4 +1,4 @@
-# Uso — 0.1.20
+# Uso — 0.1.21
 
 ## Listas e filtros
 
@@ -6,7 +6,16 @@ A versão instalada aparece no canto superior direito de todas as páginas.
 Produtos, Clientes e Orçamentos iniciam com Ações em lote recolhidas. Clique no
 título para exibir opções e checkboxes; clique novamente para ocultá-los. A seleção
 fica à esquerda e centralizada, sem texto visível, com identificação acessível.
-Arquivar retira da lista sem apagar o histórico; a restauração fica em Ações em lote.
+Editar e Arquivar usam os mesmos tamanhos nas três listas. Arquivar tem cor de
+atenção; no celular ambos passam a ícones no mesmo ponto. A paginação aparece
+centralizada, imediatamente depois dos registros e antes de Ações em lote; fica
+oculta quando há uma só página. Arquivar retira da lista sem apagar o histórico;
+a restauração fica em Ações em lote.
+
+Clientes mostra empresa e contato abaixo, quando preenchido, sem indicar contato
+ausente. Sem empresa, o próprio contato identifica o cadastro. Ver dados do cliente
+fica na coluna Dados cadastrais. Orçamentos separa título e cliente em duas linhas,
+com colunas próprias para situação, itens e atualização.
 
 Na lista de Produtos, a busca por nome/SKU e os filtros Origem/Categoria ficam
 lado a lado no computador. No celular, a busca permanece visível e Filtros abre
@@ -19,6 +28,35 @@ Editar e criação dentro do orçamento. A ordem das seções é a mesma. Fabric
 começa expandida na sua área e recolhida nas demais; informações do site começam
 recolhidas. Categoria aparece desde o início; selecione a origem para habilitar a
 escolha em produtos próprios. Produtos de cliente mantêm categoria automática.
+
+## Seleção para catálogo futuro
+
+Exibir no catálogo fica disponível desde o cadastro inicial e na edição do produto,
+com o mesmo formulário em Fabricação, Produtos e Orçamentos. A coluna No catálogo
+permite marcar/desmarcar diretamente na lista, mesmo com Ações em lote recolhidas.
+O checkbox à esquerda continua reservado à seleção de registros para ações em lote;
+não é a marcação do catálogo.
+
+Em Ações em lote, selecione produtos e escolha Incluir no catálogo ou Retirar do
+catálogo. Revise os totais antes de confirmar. Essa escolha não altera preços,
+fabricação, privacidade ou autorização de divulgação. Produtos de cliente podem
+ser selecionados para catálogo e continuam privados. Isso não publica nada no site.
+
+Novos produtos e produtos antigos sem marcação começam desmarcados. Ao marcar um
+produto novo dentro de Orçamentos, ele também será salvo no cadastro de Produtos.
+A geração, o formato e o compartilhamento do catálogo não são implementados nesta
+versão e dependem de uma solicitação futura.
+
+### Compatibilidade dos dados
+
+A marcação usa o atributo booleano opcional catalogVisible no JSON persistente do
+produto. Dados antigos sem o atributo são lidos como falso; não há recriação de
+tabelas, nova dependência ou carga comercial automática. A edição e as importações
+complementares preservam a marcação existente quando não a alteram explicitamente.
+Família deixou de aparecer no formulário, mas seus valores legados permanecem nos
+dados para compatibilidade. Ao incorporar esta versão em outro projeto, levar o
+modelo, normalização, schema e ações de catálogo com seus testes; não transferir
+dados comerciais ou credenciais.
 
 ## Orçamentos
 

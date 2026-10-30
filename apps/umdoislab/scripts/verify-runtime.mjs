@@ -65,11 +65,16 @@ try {
   });
   assert.equal(save.status, 200);
   const send=async(path,method,payload)=>{const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});assert.equal(r.status,200);return r.json();};
+  const product=await send('api/products/editor','POST',{product:{name:'Produto fictício para catálogo',origin:'client',publicAllowed:false,catalogVisible:true,prices:{wholesale:null,factory:null,retail:1000},weightGrams:null,lengthCm:null,widthCm:null,heightCm:null,colors:[],sourceKeys:[],family:'Legado de teste',description:''},applyPrices:false});
   const client={name:'Cliente fictício para restauração',contact:'',phone:'',email:'',taxDocument:'',postal:''};
   const savedClient=await send('api/clients','POST',client);
   await send('api/quotes','POST',{data:{client:{id:savedClient.id,...client},items:[],notes:'Rascunho para restauração'},expectedRevision:0});
   await send('api/settings/fabricacao','PUT',{data:{dailyCapacity:'Capacidade de teste'},expectedRevision:0});
   async function checkBusinessData(){
+    const restoredProduct=(await (await fetch(base+'api/products')).json()).find(p=>p.id===product.id);
+    assert.equal(restoredProduct.catalogVisible,true);
+    assert.equal(restoredProduct.publicAllowed,false);
+    assert.equal(restoredProduct.family,'Legado de teste');
     assert.equal((await (await fetch(base+'api/clients')).json())[0].name,client.name);
     assert.equal((await (await fetch(base+'api/quotes/1')).json()).data.notes,'Rascunho para restauração');
     assert.equal((await (await fetch(base+'api/quotes?pageSize=10&search=ficticio')).json()).total,1);

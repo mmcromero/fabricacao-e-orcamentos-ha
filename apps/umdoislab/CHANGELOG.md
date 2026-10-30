@@ -1,5 +1,18 @@
 # Histórico
 
+## 0.1.21
+
+- Retira Família da interface do formulário compartilhado sem apagar valores legados ou alterar categorias e vínculos de importação.
+- Padroniza os cabeçalhos e colunas de Clientes e Orçamentos, com empresa/contato abaixo do título e dados cadastrais na coluna central de Clientes.
+- Mostra contato abaixo da empresa somente quando preenchido, sem prefixo Contato ou aviso de ausência; cadastros sem empresa continuam identificados pelo contato.
+- Compartilha botões Editar/Arquivar entre as três listas, com dimensões iguais, cor de atenção, ícones no mesmo breakpoint e seleção à esquerda centralizada.
+- Move a paginação para imediatamente após os registros, antes de Ações em lote, centralizada no computador e no celular.
+- Adiciona Exibir no catálogo ao cadastro completo e a coluna No catálogo à lista de Produtos, permitindo marcar individualmente ou incluir/retirar em lote com revisão.
+- A marcação de catálogo é independente de origem e privacidade; não autoriza divulgação na internet e não altera preços, fabricação, vínculos ou histórico.
+- Produtos novos e antigos sem marcação começam fora do catálogo. O novo atributo fica no JSON persistente do produto, sem recriar tabelas; atualizações antigas que omitem o campo e importações complementares preservam a escolha existente.
+- Ao incluir no catálogo um produto criado dentro de Orçamentos, mantém o salvamento no cadastro de Produtos para persistir a seleção. A geração do catálogo permanece para etapa futura.
+- Valida o comportamento em dados fictícios, incluindo reinício/restauração, e o layout das três listas em 1280, 768, 600, 390 e 320 pixels. Instalação e avaliação no Home Assistant permanecem manuais.
+
 ## 0.1.20
 
 - Compacta Arquivar na lista de Orçamentos, abaixo de Editar, em laranja escuro e com ícone de arquivo em telas pequenas.
