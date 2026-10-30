@@ -1,7 +1,7 @@
 import {buildInfo} from '../server/pilot/build-info.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync,readFileSync,readdirSync} from 'node:fs';
+import {mkdtempSync,rmSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createPilotApp} from '../server/pilot/app.js';
@@ -82,6 +82,37 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   admin.revoke('a@example.test');assert.equal((await request('api/products',a)).statusCode,401);assert.equal((await login('a@example.test','a')).statusCode,403);
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));
  }finally{await app.close();admin.close();rmSync(dir,{recursive:true,force:true});}
+});
+test('opções aceitam cinco pares, preservam dois antigos e não reativam convites consumidos',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'pilot-five-'));const optionsFile=join(dir,'options.json');
+ const options:Record<string,string>={public_url:origin+prefix,google_client_id:'fixture',google_client_secret:'fixture'};
+ const env={PILOT_OPTIONS_FILE:optionsFile,DATA_DIR:dir};
+ const provider:IdentityProvider={async start(){throw Error('Not used');},async complete(){throw Error('Not used');}};
+ try{
+  for(const n of [1,2]){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
+  writeFileSync(optionsFile,JSON.stringify(options));assert.equal(pilotConfig(env).initialInvites!.length,2);
+  for(const n of [3,4,5]){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
+  writeFileSync(optionsFile,JSON.stringify(options));const settings=pilotConfig(env);assert.equal(settings.initialInvites!.length,5);assert.equal(settings.maxUsers,5);
+  const overridden=pilotConfig({...env,PILOT_TEST_EMAIL_5:'override@example.test',PILOT_TEST_INVITE_5:'synthetic-override-01234567890123456789'});
+  assert.equal(overridden.initialInvites![4].email,'override@example.test');
+  const manifest=readFileSync(resolve('pilot/config.yaml'),'utf8');
+  for(const n of [1,2,3,4,5]){assert.ok(manifest.includes(`  test_email_${n}: ""`));assert.ok(manifest.includes(`  test_invite_${n}: password`));}
+  const app=await createPilotApp(settings,provider);await app.close();
+  const store=new PilotStore(dir);
+  try{
+   assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_invites').get()!.n,5);
+   for(const n of [1,2,3,4,5]){
+    const user=store.activate({issuer:'https://accounts.google.com',subject:'subject'+n,email:`account${n}@example.test`,verified:true},digest(options['test_invite_'+n]),settings.maxUsers);
+    assert.ok(user);
+   }
+   const extra=store.invite('extra@example.test');
+   assert.throws(()=>store.activate({issuer:'https://accounts.google.com',subject:'sixth',email:'extra@example.test',verified:true},digest(extra),settings.maxUsers),/Limite/);
+   const before=store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all();
+   const restarted=await createPilotApp(settings,provider);await restarted.close();
+   assert.deepEqual(store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all(),before);
+   assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n,5);
+  }finally{store.close();}
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });
 test('estados e convites expiram, não são reutilizados e limite de participantes é aplicado',()=>{
  const dir=mkdtempSync(join(tmpdir(),'pilot-store-'));const store=new PilotStore(dir);

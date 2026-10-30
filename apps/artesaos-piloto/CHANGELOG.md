@@ -1,3 +1,10 @@
+# 0.1.6
+
+- Amplia as opções do Home Assistant para cinco pares de e-mail e convite inicial, mantendo compatibilidade com os dois existentes e o limite de cinco contas.
+- Carrega os campos 3, 4 e 5 tanto do arquivo de opções quanto das variáveis de ambiente da execução independente.
+- Preserva a vinculação por e-mail, uso único, validade, revogação e isolamento dos convites; pares inteiramente vazios são ignorados.
+- Orienta a escolha entre OAuth em Teste com e-mails autorizados e publicação no Google antes de liberar os primeiros participantes.
+
 # 0.1.5
 
 - Corrige Sair após expiração ou ausência de sessão: encerra o fluxo e limpa os cookies restantes, sem exigir uma sessão ainda ativa.

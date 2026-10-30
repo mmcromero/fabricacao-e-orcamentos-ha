@@ -23,7 +23,7 @@ HTTPS protege o trajeto navegador–Nginx. A rede interna Nginx–aplicativo usa
 
 ## Cliente Google
 
-Crie um cliente OAuth de tipo aplicativo da Web no Google Cloud/Google Auth Platform. Mantenha a audiência em modo de teste e adicione somente suas duas contas de teste. Os nomes e rótulos da interface do Google podem variar.
+Crie um cliente OAuth de tipo aplicativo da Web no Google Cloud/Google Auth Platform. Para o piloto restrito, mantenha a audiência em modo de teste e adicione o e-mail Google de cada participante autorizado, até cinco contas no aplicativo. Essa lista do Google é separada dos convites individuais do aplicativo. Os nomes e rótulos da interface do Google podem variar.
 
 Para uma URL pública `https://seu-dominio:porta/artesaos-piloto/`, cadastre exatamente:
 
@@ -36,7 +36,7 @@ Solicitamos somente openid e email; não acesso ao Gmail. Configure Client ID e 
 
 - `public_url`: endereço HTTPS completo, terminando em `/artesaos-piloto/`. Use sempre este mesmo endereço, inclusive em casa.
 - `google_client_id` e `google_client_secret`: cliente Web configurado no Google.
-- `test_email_1`, `test_invite_1`, `test_email_2`, `test_invite_2`: seus dois e-mails e códigos individuais aleatórios de no mínimo 32 caracteres. Gerar códigos com um gerenciador de senhas. Não usar a senha das contas Google.
+- `test_email_1`/`test_invite_1` até `test_email_5`/`test_invite_5`: até cinco pares de e-mail e convite. Os pares ainda não usados podem ficar com os dois campos vazios. Ao preencher um par, informe o e-mail Google autorizado e um código aleatório exclusivo de no mínimo 32 caracteres. Gerar códigos com um gerenciador de senhas; não usar a senha das contas Google. Os primeiros dois pares existentes permanecem compatíveis.
 
 A primeira inicialização registra os convites por hash com validade de 24 horas. Reiniciar não renova convites já usados ou expirados. Se necessário, use um novo código aleatório nas opções para criar outro convite. Uma conta já ativada entra novamente sem código. Se o e-mail Google não corresponder ao convite, a ativação é recusada.
 
@@ -99,3 +99,9 @@ A partir da 0.1.4, o adaptador registra um service worker restrito ao caminho co
 Se a tela ficar aberta além do prazo da sessão, Sair continua levando ao login e remove os cookies restantes. As sessões continuam com os mesmos prazos; não são renovadas por esta correção. Se faltar conexão, a tela informa que não foi possível sair e permite tentar novamente. Não considera uma falha de rede como encerramento confirmado. Sessões válidas continuam protegidas por origem, CSRF e identificação da aba.
 
 Ao atualizar uma instalação 0.1.3, confirme que o rodapé passou para Artesão Digital 0.1.5 (base 0.1.19). Feche a aba antiga, abra o login pelo domínio HTTPS habitual e confira o acesso e F5 comuns sem Ctrl+Shift+R. Não desinstale nem copie dados do aplicativo principal. A configuração Google/Nginx e os convites existentes são preservados.
+
+## Antes dos primeiros participantes externos
+
+Revise a escolha no Google: manter em Teste e adicionar os e-mails dos participantes, ou publicar a configuração OAuth conforme as exigências do Google. Não é necessário publicar o OAuth para este piloto se os e-mails já estiverem na lista de teste. Isso não dispensa o convite individual do aplicativo. A abertura dos novos campos não representa certificação de segurança; valide primeiro o isolamento com duas contas e mantenha dados fictícios enquanto a revisão de segurança e a proteção dos dados em repouso estiverem pendentes.
+
+Os convites adicionados nos campos 3, 4 e 5 são registrados ao salvar as opções e reiniciar o aplicativo, com a mesma validade de 24 horas dos anteriores. Preencha perto do momento de usar: reiniciar não renova um convite já expirado, consumido ou revogado. Não recrie as contas existentes nem desinstale para atualizar.
