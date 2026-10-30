@@ -12,7 +12,9 @@
     "test": "node --import tsx --test test/*.test.ts",
     "verify:runtime": "node scripts/verify-runtime.mjs",
     "start:pilot": "node dist-server/pilot/index.js",
-    "pilot:admin": "node dist-server/pilot/admin.js"
+    "pilot:admin": "node dist-server/pilot/admin.js",
+    "prebuild": "node scripts/prepare-pilot-metadata.mjs",
+    "pretest": "node scripts/prepare-pilot-metadata.mjs"
   },
   "dependencies": {
     "@fastify/static": "^10.1.8",

@@ -1,0 +1,13 @@
+import {existsSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+const root=process.cwd();
+const manifest=resolve(root,existsSync(resolve(root,'pilot/config.yaml'))?'pilot/config.yaml':'config.yaml');
+const baseFile=resolve(root,existsSync(resolve(root,'pilot/core-base.json'))?'pilot/core-base.json':'core-base.json');
+const core=JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).version;
+const base=JSON.parse(readFileSync(baseFile,'utf8'));
+const pilot=readFileSync(manifest,'utf8').match(/^version:\s*["']?([0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.-]+)?)["']?\s*$/m)?.[1];
+if(!pilot||base.version!==core||!/^[0-9a-f]{40}$/.test(base.commit))throw Error('Confira versão do piloto e referência da base principal antes de compilar.');
+const info={pilotVersion:pilot,coreVersion:core,coreCommit:base.commit};
+writeFileSync(resolve(root,'pilot-build.json'),JSON.stringify(info,null,2)+'\n');
+const target=resolve(root,'server/pilot/build-info.ts');mkdirSync(dirname(target),{recursive:true});
+writeFileSync(target,'// Generated from the pilot manifest, core package and pinned base reference.\nexport const buildInfo = '+JSON.stringify(info)+' as const;\n');

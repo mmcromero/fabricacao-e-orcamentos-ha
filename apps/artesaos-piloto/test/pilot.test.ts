@@ -1,3 +1,4 @@
+import {buildInfo} from '../server/pilot/build-info.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync,readFileSync,readdirSync} from 'node:fs';
@@ -33,13 +34,15 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   assert.equal((await request('auth/google/start',{origin:'https://evil.example'},'POST',{})).statusCode,403);
   assert.equal((await request('login',{host:'evil.example'})).statusCode,421);
   const inviteA=admin.invite('a@example.test');const invalid=await login('wrong@example.test','wrong',inviteA);assert.equal(invalid.statusCode,403);
-  const aLogin=await login('a@example.test','a',inviteA);assert.equal(aLogin.statusCode,302,aLogin.body);const a=session(aLogin);assert.ok(aLogin.cookies.find(c=>c.name==='__Secure-artesaos_session')!.httpOnly);assert.ok(aLogin.cookies.every(c=>c.secure));
+  const aLogin=await login('a@example.test','a',inviteA);assert.equal(aLogin.statusCode,200,aLogin.body);assert.match(aLogin.body,/auth\/finish.js/);assert.equal(aLogin.headers['referrer-policy'],'no-referrer');assert.ok(!aLogin.body.includes('synthetic-code'));const a=session(aLogin);assert.ok(aLogin.cookies.find(c=>c.name==='__Secure-artesaos_session')!.httpOnly);assert.ok(aLogin.cookies.every(c=>c.secure));
   a['x-pilot-context']=(await request('api/pilot/session',a)).json().context;
+  const authenticatedEntry=await request('login',a);assert.equal(authenticatedEntry.statusCode,302);assert.equal(authenticatedEntry.headers.location,prefix+'?view=produtos');
+  const finish=await request('auth/finish',a);assert.equal(finish.statusCode,200);const finishScript=await request('auth/finish.js',a);assert.match(finishScript.body,/history.replaceState/);assert.match(finishScript.body,/api\/pilot\/session/);assert.match(finishScript.body,/view=produtos/);
   assert.equal((await request('api/products',a,'POST',product('Produto A'))).statusCode,200);
   assert.equal((await request('api/clients',a,'POST',{name:'Cliente A',contact:'',phone:'',email:'',taxDocument:'',postal:''})).statusCode,200);
   assert.equal((await request('api/quotes',a,'POST',{data:{title:'Pedido A',client:null,items:[],notes:''},expectedRevision:0})).statusCode,200);
   assert.equal((await request('api/settings/produtos',a,'PUT',{data:{productsPerPage:'20'},expectedRevision:0})).statusCode,200);
-  const bLogin=await login('b@example.test','b',admin.invite('b@example.test'));const b=session(bLogin);b['x-pilot-context']=(await request('api/pilot/session',b)).json().context;
+  const bLogin=await login('b@example.test','b',admin.invite('b@example.test'));assert.equal(bLogin.statusCode,200,bLogin.body);const b=session(bLogin);b['x-pilot-context']=(await request('api/pilot/session',b)).json().context;
   for(const area of ['products','clients','quotes'])assert.deepEqual((await request('api/'+area,b)).json(),[]);
   assert.equal((await request('api/settings/produtos',b)).json().revision,0);
   assert.equal((await request('api/quotes/1',b)).statusCode,404);
@@ -57,7 +60,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   const hashes=admin.db.prepare('SELECT hash FROM pilot_sessions').all();assert.ok(hashes.every(r=>!a.cookie.includes(String(r.hash))));
   await app.close();app=await createPilotApp(settings,provider);
   assert.equal((await request('api/clients',a)).json()[0].name,'Cliente A');assert.equal((await request('api/clients',b)).json().length,0);
-  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);
+  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.ok(html.body.includes('Artesãos — Piloto v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
   assert.equal((await request('auth/logout',b,'POST')).statusCode,200);assert.equal((await request('api/products',b)).statusCode,401);
   admin.revoke('a@example.test');assert.equal((await request('api/products',a)).statusCode,401);assert.equal((await login('a@example.test','a')).statusCode,403);
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));

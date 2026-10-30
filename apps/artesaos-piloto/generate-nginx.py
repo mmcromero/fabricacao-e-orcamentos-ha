@@ -10,6 +10,7 @@ if not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-
 text='''# Include in the EXISTING default HTTPS server, through customize.default.
 # Preserve prefix; this is not a standalone nginx.conf and contains no server block.
 location = /artesaos-piloto {
+    absolute_redirect off;
     return 308 /artesaos-piloto/;
 }
 location ^~ /artesaos-piloto/ {

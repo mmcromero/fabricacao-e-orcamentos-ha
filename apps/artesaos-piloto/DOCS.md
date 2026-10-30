@@ -67,3 +67,13 @@ O núcleo comum permanece independente do Home Assistant. A hospedagem temporár
 ## Evidência de desenvolvimento
 
 A compilação e a suíte automatizada passaram, incluindo rejeição de assinatura/audiência/nonce/validade/e-mail incorretos; convites e estados de uso único; sessão expirada/revogada; origem/CSRF; aba de conta antiga; separação de produtos/clientes/orçamentos/parâmetros/exportação/arquivamento e reinício. O navegador exercitou cookies Secure, login e CRUD de duas contas em HTTPS local com certificado e provedor fictícios. A sintaxe do fragmento Nginx passou em contêiner descartável. A auditoria das dependências de produção não apontou vulnerabilidades conhecidas nesta rodada. Esses resultados não substituem o teste real no Google/HA nem uma avaliação independente.
+
+## Atualização 0.1.1 — retorno após login
+
+Atualize somente o aplicativo Artesãos — Piloto — Testes, sem desinstalar. Contas, convites registrados e configurações permanecem no volume existente. Não é necessário recriar o cliente Google nem alterar a rota Nginx que já está funcionando.
+
+Depois de autenticar no Google, o piloto exibe brevemente Concluindo acesso, confirma a sessão e abre Produtos automaticamente. A mesma regra vale para o primeiro acesso com convite e para o novo login de conta já ativada com convite vazio. Se a sessão não for reconhecida, a página mostra o problema e oferece entrar novamente, em vez de um retorno silencioso.
+
+O teste local usa um provedor controlado e verifica conteúdo da aplicação visível, inclusive através de Nginx HTTPS. A validação com Google real na sua instalação ainda é necessária: faça primeiro logout/login com a conta já ativada; use o segundo convite somente depois de confirmar a entrada automática da primeira conta. Não use links diretos como substituto deste teste.
+
+O rodapé identifica separadamente a versão do piloto e a versão-base do Fabricação e Orçamentos. Os metadados são gerados no build a partir do manifesto e pacote; core-base.json registra o commit-base e deve ser atualizado conscientemente ao incorporar uma nova versão validada do projeto principal. A compilação recusa divergência entre a versão declarada da base e o pacote.
