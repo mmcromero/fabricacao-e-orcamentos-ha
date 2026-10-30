@@ -1,3 +1,10 @@
+# 0.1.4
+
+- Corrige tela sem conteúdo após login quando o cache do Home Assistant interfere no carregamento dos módulos da interface.
+- Isola o carregamento no caminho do Artesão Digital com um service worker sem cache, sem remover o worker ou os arquivos de cache do Home Assistant. Remove somente entradas antigas do caminho do piloto.
+- Aguarda a preparação do navegador antes de entrar com Google e carregar a interface; apresenta mensagem se essa preparação falhar.
+- Valida primeiro acesso, novo login, troca de contas no mesmo navegador e preservação do cache externo pelo proxy Nginx. Google real e instalação continuam sujeitos à conferência manual.
+
 # Histórico do Artesão Digital — Testes
 
 ## 0.1.3

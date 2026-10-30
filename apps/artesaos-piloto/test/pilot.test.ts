@@ -34,6 +34,10 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   const bundle=readFileSync(join(settings.staticDir,'index.html'),'utf8').match(/src="\.\/assets\/([^"]+)"/)![1];
   const publicBundle=await request('assets/'+bundle);assert.equal(publicBundle.statusCode,200,'Arquivos públicos de interface não podem ser redirecionados para o login');assert.match(String(publicBundle.headers['content-type']),/javascript/);assert.ok(!publicBundle.body.startsWith('<!doctype'));
 
+  const worker=await request('service-worker.js?v='+buildInfo.pilotVersion);
+  assert.equal(worker.statusCode,200);assert.match(String(worker.headers['content-type']),/javascript/);
+  assert.equal(worker.headers['service-worker-allowed'],prefix);assert.equal(worker.headers['cache-control'],'no-store');
+  assert.equal((await request('browser-ready.js?v='+buildInfo.pilotVersion)).statusCode,200);
   assert.equal((await request('auth/google/start',{origin:'https://evil.example'},'POST',{})).statusCode,403);
   assert.equal((await request('login',{host:'evil.example'})).statusCode,421);
   const inviteA=admin.invite('a@example.test');const invalid=await login('wrong@example.test','wrong',inviteA);assert.equal(invalid.statusCode,403);
@@ -63,7 +67,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   const hashes=admin.db.prepare('SELECT hash FROM pilot_sessions').all();assert.ok(hashes.every(r=>!a.cookie.includes(String(r.hash))));
   await app.close();app=await createPilotApp(settings,provider);
   assert.equal((await request('api/clients',a)).json()[0].name,'Cliente A');assert.equal((await request('api/clients',b)).json().length,0);
-  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
+  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.match(html.body,/data-pilot-module/);assert.ok(!html.body.includes('<script type="module"'),'Interface deve esperar o isolamento de cache antes de carregar JavaScript');assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
   assert.equal((await request('auth/logout',b,'POST')).statusCode,200);assert.equal((await request('api/products',b)).statusCode,401);
   admin.revoke('a@example.test');assert.equal((await request('api/products',a)).statusCode,401);assert.equal((await login('a@example.test','a')).statusCode,403);
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));
