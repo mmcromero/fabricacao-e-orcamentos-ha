@@ -68,6 +68,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
 
    page.get_by_label('Código de convite (somente no primeiro acesso)').fill('synthetic-invite-'+account+'-01234567890123456789');page.get_by_role('button',name='Entrar com Google',exact=True).click()
    expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport()
+   page.reload();expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
    bar=page.locator('#pilot-account');expect(bar.locator('.pilot-account-title')).to_have_text('Artesão Digital');expect(bar.locator('.pilot-account-user')).to_have_text(account+'@example.test')
    bb=bar.bounding_box();assert abs(bb['y'])<1
    title_box=bar.locator('.pilot-account-title').bounding_box();user_box=bar.locator('.pilot-account-user').bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
@@ -107,10 +108,21 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   expect(pa.locator('#pilot-account')).to_contain_text('b@example.test')
   pa.goto(origin+prefix+'?view=produtos');expect(pa.locator('.product-record')).to_have_count(1)
   expect(pa.locator('.product-record')).to_contain_text('Produto isolado B');expect(pa.locator('.product-record')).not_to_contain_text('Produto isolado A')
+  # A disconnected tab must explain the failure instead of leaving Sair inert.
+  a.set_offline(True)
+  pa.get_by_role('button',name='Sair',exact=True).click()
+  expect(pa.locator('#pilot-session-status')).to_contain_text('Verifique sua conexão')
+  expect(pa.get_by_role('button',name='Sair',exact=True)).to_be_enabled()
+  a.set_offline(False)
+  # Overnight absolute expiry removes browser cookies while the old tab stays open.
+  a.clear_cookies()
+  pa.get_by_role('button',name='Sair',exact=True).click()
+  expect(pa.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
+  expect(pa.get_by_label('Código de convite (somente no primeiro acesso)')).to_have_value('')
   isolated=browser.new_context(ignore_https_errors=True);lost=isolated.new_page();lost.goto(origin+prefix+'auth/finish');expect(lost.get_by_role('status')).to_contain_text('Não foi possível confirmar a sessão');expect(lost.get_by_role('link',name='Entrar novamente',exact=True)).to_be_visible();expect(lost).to_have_url(origin+prefix+'auth/finish');isolated.close()
   assert not errors,errors
   anonymous.dispose();browser.close()
- print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas e logout; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
+ print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
 finally:
  if args.nginx:subprocess.run(docker+['rm','-f',container],stdout=log,stderr=log,env=docker_env)
  server.terminate()

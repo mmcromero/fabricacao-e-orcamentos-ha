@@ -68,7 +68,17 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   await app.close();app=await createPilotApp(settings,provider);
   assert.equal((await request('api/clients',a)).json()[0].name,'Cliente A');assert.equal((await request('api/clients',b)).json().length,0);
   const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.match(html.body,/data-pilot-module/);assert.ok(!html.body.includes('<script type="module"'),'Interface deve esperar o isolamento de cache antes de carregar JavaScript');assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
-  assert.equal((await request('auth/logout',b,'POST')).statusCode,200);assert.equal((await request('api/products',b)).statusCode,401);
+  // A stale tab must not revoke a valid session without CSRF/context proof.
+  const refused=await request('auth/logout',{...b,'x-pilot-csrf':'wrong'},'POST');assert.equal(refused.statusCode,403);assert.equal(refused.headers['set-cookie'],undefined);
+  assert.equal((await request('api/products',b)).statusCode,200);
+  assert.equal((await request('auth/logout',{...b,'x-pilot-context':a['x-pilot-context']},'POST')).statusCode,403);
+  assert.equal((await request('auth/logout',{...b,origin:'https://evil.example'},'POST')).statusCode,403);
+  // Idle expiry with cookies still present: leaving the application is idempotent.
+  admin.db.prepare('UPDATE pilot_sessions SET last_seen=0 WHERE user_id=?').run(b['x-pilot-context']);
+  assert.equal((await request('api/products',b)).statusCode,401);
+  const expiredLogout=await request('auth/logout',b,'POST');assert.equal(expiredLogout.statusCode,200);assert.equal(expiredLogout.cookies.length,2);assert.ok(expiredLogout.cookies.every(c=>c.maxAge===0));
+  const repeatedLogout=await request('auth/logout',{origin},'POST');assert.equal(repeatedLogout.statusCode,200);assert.equal(repeatedLogout.cookies.length,2);
+
   admin.revoke('a@example.test');assert.equal((await request('api/products',a)).statusCode,401);assert.equal((await login('a@example.test','a')).statusCode,403);
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));
  }finally{await app.close();admin.close();rmSync(dir,{recursive:true,force:true});}

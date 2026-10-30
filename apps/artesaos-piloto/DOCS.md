@@ -93,3 +93,9 @@ A versão anterior podia redirecionar requisições dos arquivos JavaScript para
 ## Carregamento no mesmo domínio do Home Assistant
 
 A partir da 0.1.4, o adaptador registra um service worker restrito ao caminho configurado do piloto. Ele busca os recursos pela rede, sem cache local, para impedir que o worker da interface do Home Assistant forneça HTML antigo no lugar dos módulos JavaScript. A ativação remove apenas entradas de cache desse caminho; não remove o registro nem os demais recursos do Home Assistant. Não há funcionamento offline. Se o navegador não conseguir concluir a preparação, o login fica indisponível com uma mensagem explícita. Isso não substitui sessão, autorização por conta ou proteção de CSRF no servidor.
+
+## Sessão expirada e saída (0.1.5)
+
+Se a tela ficar aberta além do prazo da sessão, Sair continua levando ao login e remove os cookies restantes. As sessões continuam com os mesmos prazos; não são renovadas por esta correção. Se faltar conexão, a tela informa que não foi possível sair e permite tentar novamente. Não considera uma falha de rede como encerramento confirmado. Sessões válidas continuam protegidas por origem, CSRF e identificação da aba.
+
+Ao atualizar uma instalação 0.1.3, confirme que o rodapé passou para Artesão Digital 0.1.5 (base 0.1.19). Feche a aba antiga, abra o login pelo domínio HTTPS habitual e confira o acesso e F5 comuns sem Ctrl+Shift+R. Não desinstale nem copie dados do aplicativo principal. A configuração Google/Nginx e os convites existentes são preservados.

@@ -50,3 +50,50 @@ self.addEventListener('fetch',event=>{
 })();`;
  return {serviceWorker,bootstrap};
 }
+
+
+export function sessionScript(prefix:string,csrfCookie:string){
+ return `(()=>{
+ const prefix=${JSON.stringify(prefix)},cookieName=${JSON.stringify(csrfCookie)};
+ const original=window.fetch.bind(window);
+ const context=document.querySelector('meta[name=pilot-context]')?.content;
+ const item=document.cookie.split('; ').find(value=>value.startsWith(cookieName+'='));
+ const csrf=item?decodeURIComponent(item.slice(cookieName.length+1)):'';
+ window.fetch=(input,init)=>{
+  const request=new Request(input,init),url=new URL(request.url);
+  if(url.origin===location.origin&&url.pathname.startsWith(prefix)){
+   const headers=new Headers(request.headers);
+   if(context)headers.set('X-Pilot-Context',context);
+   if(csrf&&!['GET','HEAD','OPTIONS'].includes(request.method))headers.set('X-Pilot-CSRF',csrf);
+   return original(new Request(request,{headers,cache:'no-store'}));
+  }
+  return original(request);
+ };
+ addEventListener('DOMContentLoaded',async()=>{
+  try{await window.pilotBrowserReady;}catch{return;}
+  const response=await fetch(prefix+'api/pilot/session');
+  if(!response.ok){location.replace(prefix+'login');return;}
+  const data=await response.json();
+  const bar=document.createElement('nav');bar.id='pilot-account';bar.setAttribute('aria-label','Conta do Artesão Digital');
+  const title=document.createElement('span');title.className='pilot-account-title';title.textContent='Artesão Digital';
+  const name=document.createElement('span');name.className='pilot-account-user';name.textContent=data.email;name.title=data.email;
+  const logout=document.createElement('button');logout.textContent='Sair';
+  const status=document.createElement('p');status.id='pilot-session-status';status.setAttribute('role','alert');status.hidden=true;
+  status.style.gridColumn='1 / -1';status.style.margin='0';status.style.fontSize='14px';
+  logout.onclick=async()=>{
+   logout.disabled=true;logout.textContent='Saindo…';status.hidden=true;
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+   try{
+    const result=await fetch(prefix+'auth/logout',{method:'POST',signal:controller.signal});
+    if(result.ok){location.replace(prefix+'login');return;}
+    status.textContent=result.status===403?'A sessão desta aba mudou. Reabra a página antes de tentar sair.':'Não foi possível sair. Tente novamente.';
+   }catch{status.textContent='Não foi possível sair. Verifique sua conexão e tente novamente.';}
+   finally{
+    clearTimeout(timer);logout.disabled=false;logout.textContent='Sair';
+    if(status.textContent){status.hidden=false;document.body.style.paddingTop=(bar.offsetHeight+16)+'px';}
+   }
+  };
+  bar.append(title,name,logout,status);document.body.classList.add('pilot-session-active');document.body.prepend(bar);
+ });
+})();`;
+}

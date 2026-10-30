@@ -1,3 +1,11 @@
+# 0.1.5
+
+- Corrige Sair após expiração ou ausência de sessão: encerra o fluxo e limpa os cookies restantes, sem exigir uma sessão ainda ativa.
+- Mantém validação de origem em todas as saídas e exige CSRF/contexto da aba quando a sessão ainda é válida. Uma aba antiga não pode encerrar outra sessão ativa.
+- Exibe aviso ao falhar a conexão/saída e permite tentar novamente, sem deixar o botão sem resposta.
+- Inclui a correção de cache da 0.1.4 para instalações que ainda estão na 0.1.3. Mantém a base em 0.1.19.
+- Confere login, recarga comum, troca de contas, saída com cookies expirados e falha de rede no navegador com Nginx/cache HA simulados. Validação real continua manual.
+
 # 0.1.4
 
 - Corrige tela sem conteúdo após login quando o cache do Home Assistant interfere no carregamento dos módulos da interface.
