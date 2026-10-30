@@ -1,3 +1,4 @@
+import ValidatedForm from './FormValidation';
 import {useId,useRef,useState} from 'react';
 
 type Filters={origin:string;category:string};
@@ -30,11 +31,11 @@ export default function ProductFilters({search,onSearch,value,onChange,categorie
    {(search||active>0)&&<button type="button" className="product-filter-clear" onClick={()=>{onSearch('');onChange({origin:'',category:''});}}>Limpar filtros</button>}
   </div>
   <dialog ref={dialog} className="product-filter-dialog" aria-labelledby={headingId}>
-   <form onSubmit={event=>{event.preventDefault();onChange(draft);dialog.current?.close();}}>
+   <ValidatedForm onSubmit={event=>{event.preventDefault();onChange(draft);dialog.current?.close();}}>
     <h2 id={headingId}>Filtrar produtos</h2>
     {controls(draft,setDraft)}
     <div className="product-filter-dialog-actions"><button type="submit">Aplicar filtros</button><button type="button" onClick={()=>dialog.current?.close()}>Cancelar</button><button type="button" onClick={()=>setDraft({origin:'',category:''})}>Limpar opções</button></div>
-   </form>
+   </ValidatedForm>
   </dialog>
  </div>;
 }

@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import {createHash} from 'node:crypto';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
@@ -74,6 +75,7 @@ export function registerReconciliation(app:FastifyInstance,db:DatabaseSync){
   if(req.body.confirm){
    db.exec('BEGIN IMMEDIATE');try{
     for(const entry of planned){
+     rememberMaterialUses(db,entry.data.manufacturing);
      if(entry.data.origin==='own'&&entry.data.category)storeCategory(db,entry.data.category);
      let id=entry.id;
      if(id===null)id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(entry.data),new Date().toISOString()).lastInsertRowid);

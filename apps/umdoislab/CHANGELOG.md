@@ -1,5 +1,19 @@
 # Histórico
 
+## 0.1.22
+
+- Permite criar categorias hierárquicas durante o cadastro compartilhado de produto, preservando os dados digitados e a categoria reservada de clientes.
+- Substitui a entrada fixa de material e extras por uma lista opcional de materiais com nome, referência de compra, preço, quantidade consumida e unidades compatíveis, além de custo direto em reais.
+- Converte massa (g/kg), comprimento (mm/cm/m) e volume (ml/l), aceita unidades de contagem e unidades específicas sem inventar conversões entre dimensões diferentes.
+- Adiciona a base reutilizável de materiais nas Configurações de Produtos, com inclusão, edição e proteção contra alterações concorrentes. Materiais novos completos são lembrados ao salvar produtos.
+- Guarda referências de custo no produto. Editar a base não substitui custos nem preços existentes; usar a referência atual é uma escolha explícita no formulário.
+- Preserva o cálculo e os dados legados de material em gramas e extras; a mudança para a lista acontece ao editar os materiais, sem dupla contagem ou substituição automática de preços.
+- Renomeia Peso e medidas do produto para Informações para frete, sem adicionar cotação automática.
+- Padroniza marcação de obrigatoriedade, mensagens de erro em vermelho e foco no primeiro campo inválido a cada tentativa de salvar, com associação para leitores de tela e regras alternativas de grupo.
+- Aplica o mesmo comportamento às validações de Orçamentos, preservando rascunhos incompletos e distinguindo os requisitos para finalizar.
+- Distribui os dados expandidos de Clientes em grupos responsivos, aproveitando a largura do computador e do celular sem reservar colunas vazias para os detalhes.
+- Adiciona apenas a tabela materials; mantém os registros existentes e os snapshots de orçamentos. Nenhuma dependência de produção nova, integração externa ou carga comercial automática.
+
 ## 0.1.21
 
 - Retira Família da interface do formulário compartilhado sem apagar valores legados ou alterar categorias e vínculos de importação.

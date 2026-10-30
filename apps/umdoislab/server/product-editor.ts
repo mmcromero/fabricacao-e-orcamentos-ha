@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {productSchema,type Product} from './products.js';
@@ -26,6 +27,7 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
   }
   if(!Object.values(p.prices).some(v=>v!==null))return reply.code(400).send({message:'Informe pelo menos um preço ou aplique os preços calculados.'});
   db.exec('BEGIN IMMEDIATE');try{
+   rememberMaterialUses(db,p.manufacturing);
    if(p.origin==='own'&&p.category)storeCategory(db,p.category);
    const now=new Date(Math.max(Date.now(),row?Date.parse(String(row.updated_at))+1:0)).toISOString();
    const savedId=id?Number(id):Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),now).lastInsertRowid);

@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {calculateManufacturing,manufacturingSchema,type Production} from './manufacturing-model.js';
@@ -12,6 +13,7 @@ export function registerManufacturing(app:FastifyInstance,db:DatabaseSync){
   if(!result.prices)return reply.code(400).send({message:'Complete os dados e configurações para criar um produto com preços calculados.'});
   const data=normalizedProduct({name:req.body.name.trim(),sku:req.body.sku.trim(),category:req.body.category,origin:req.body.origin,manufacturing:req.body.manufacturing,publicAllowed:false,prices:result.prices,weightGrams:null,lengthCm:null,widthCm:null,heightCm:null,colors:[],sourceKeys:[],family:'',description:''});
   db.exec('BEGIN IMMEDIATE');try{
+   rememberMaterialUses(db,data.manufacturing);
    if(data.origin==='own'&&data.category)storeCategory(db,data.category);
    const id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(data),new Date().toISOString()).lastInsertRowid);db.exec('COMMIT');return {id};
   }catch(e){db.exec('ROLLBACK');throw e;}
@@ -29,6 +31,7 @@ export function registerManufacturing(app:FastifyInstance,db:DatabaseSync){
   const data=normalizedProduct({...JSON.parse(row.data as string),name:req.body.name.trim(),sku:req.body.sku.trim(),category:req.body.category,manufacturing:req.body.manufacturing});
   if(req.body.applyPrices)data.prices=result.prices;
   db.exec('BEGIN IMMEDIATE');try{
+   rememberMaterialUses(db,data.manufacturing);
    if(data.origin==='own'&&data.category)storeCategory(db,data.category);
    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(data),new Date(Math.max(Date.now(),Date.parse(String(row.updated_at))+1)).toISOString(),req.params.id);db.exec('COMMIT');
   }catch(e){db.exec('ROLLBACK');throw e;}

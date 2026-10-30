@@ -1,4 +1,4 @@
-# Uso — 0.1.21
+# Uso — 0.1.22
 
 ## Listas e filtros
 
@@ -28,6 +28,69 @@ Editar e criação dentro do orçamento. A ordem das seções é a mesma. Fabric
 começa expandida na sua área e recolhida nas demais; informações do site começam
 recolhidas. Categoria aparece desde o início; selecione a origem para habilitar a
 escolha em produtos próprios. Produtos de cliente mantêm categoria automática.
+
+## Materiais e fabricação
+
+Novos produtos começam sem materiais. Em Fabricação, ou ao abrir a seção de
+fabricação do cadastro compartilhado, use Adicionar material. Informe nome,
+quantidade e unidade da compra, preço pago por essa quantidade e consumo no produto.
+Exemplo: R$ 100 por 1 kg, consumo de 20 g, custo de R$ 2. Para linha, R$ 5 por 5 m
+e consumo de 50 cm resultam em R$ 0,50. O arredondamento dos preços continua no
+resultado final; a conversão não arredonda cada parcela antecipadamente.
+
+Massa, comprimento e volume têm conversões próprias. Não há conversão automática
+entre gramas e litros ou entre unidades específicas e metros. Para uma unidade
+própria, informe seu nome e use a mesma unidade na referência e no consumo.
+Custo direto em reais atende despesas de material sem uma referência física:
+informe o nome e o custo efetivamente utilizado no produto.
+
+Os materiais podem ser repetidos e combinados, inclusive em etapa adicional.
+Materiais novos completos ficam disponíveis na base ao salvar o produto, inclusive ao adicioná-lo somente ao orçamento, sem forçar o cadastro do produto. A base
+pode ser incluída e editada nas Configurações de Produtos. Selecionar uma referência
+cadastrada copia seus dados atuais para o produto. Alterar a base não muda produtos
+anteriores; a referência do produto fica preservada e pode ser atualizada por escolha.
+Alterar materiais também não substitui preços comerciais: aplicar preço calculado
+continua exigindo a escolha explícita por faixa e o salvamento do produto.
+
+Cadastros anteriores mantêm material em gramas, extras e fórmula existentes.
+Ao editar a lista de materiais, as referências legadas são apresentadas como
+Filamento e Materiais extras do cadastro anterior. O preço global de filamento
+continua servindo aos dados antigos; os novos usam suas próprias referências.
+Confira os resultados antes de salvar e aplicar preços. Não há migração automática
+que invente os nomes ou as compras dos seus materiais antigos.
+
+## Formulários, validação e acessibilidade
+
+Campos obrigatórios têm asterisco e indicação programática. Requisitos de grupo,
+como pelo menos um preço ou empresa OU contato, são descritos no grupo; as opções
+não viram campos individualmente obrigatórios. Uma tentativa inválida de salvar
+destaca os erros e move o foco ao primeiro campo afetado. A tentativa seguinte
+reavalia os dados e aponta o primeiro erro restante, sem apagar o preenchimento.
+Não há deslocamento automático de foco a cada tecla. Falhas de rede ou de
+concorrência são anunciadas no contexto da ação e não tornam um campo inválido
+sem motivo. Rascunhos de orçamento continuam aceitando informações pendentes;
+os requisitos indicados para finalizar não criam novos bloqueios ao rascunho.
+
+Nova categoria cria e seleciona uma categoria durante o cadastro de produto,
+sem sair do formulário. Conclua ou cancele essa criação antes de salvar o produto.
+Produtos de cliente continuam usando sua categoria reservada e permanecem privados.
+A seção Informações para frete mantém os mesmos campos de peso e medidas.
+
+Ao expandir Ver dados do cliente, contato/documento e endereço usam grupos e
+colunas adequados à tela. No celular, os detalhes ocupam a largura disponível,
+com campos curtos lado a lado quando houver espaço e campos longos em linha inteira.
+
+## Compatibilidade de materiais
+
+Esta versão cria de forma aditiva a tabela SQLite materials (referência de compra,
+revisão e data). Os usos e custos capturados ficam no array materials de cada
+etapa da fabricação no JSON do produto; o formato legado sem esse array continua
+aceito e calculado pela regra anterior. Os campos legados não são apagados em massa.
+Backup/restauração deve copiar o diretório de dados completo com o serviço parado,
+incluindo a mesma base SQLite. Não há nova dependência nem credencial.
+Ao incorporar em outro projeto, levar o modelo de unidades, schema, normalização,
+rotas de materiais, cálculo, formulários e testes. Não copiar dados comerciais,
+bancos ou credenciais. A integração com o piloto não ocorre automaticamente.
 
 ## Seleção para catálogo futuro
 

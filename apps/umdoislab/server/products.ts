@@ -1,3 +1,4 @@
+import {rememberMaterialUses} from './materials.js';
 import {manufacturingSchema,type Production} from './manufacturing-model.js';
 import {storeCategory} from './categories.js';
 import {normalizedProduct,categoryAllowed} from './product-category.js';
@@ -24,6 +25,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
   const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
   const add=(input:Product)=>{
     const p=normalizedProduct(input);
+    rememberMaterialUses(db,p.manufacturing);
     if(p.origin==='own'&&p.category)storeCategory(db,p.category);
     const id=Number(db.prepare('INSERT INTO products(data,updated_at) VALUES (?,?)').run(JSON.stringify(p),new Date().toISOString()).lastInsertRowid);
     for(const key of p.sourceKeys) db.prepare('INSERT INTO product_sources VALUES (?,?)').run(key,id);
@@ -44,6 +46,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
     const old=JSON.parse(row.data as string) as Product;
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
     if(req.body.origin==='own'&&req.body.category)storeCategory(db,req.body.category);
+    rememberMaterialUses(db,req.body.manufacturing);
     db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct({...req.body,catalogVisible:req.body.catalogVisible??old.catalogVisible??false})),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),req.params.id);
     return {ok:true};
   });
