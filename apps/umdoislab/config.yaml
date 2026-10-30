@@ -1,5 +1,5 @@
 name: "Fabricação e Orçamentos — Validação"
-version: "0.1.18"
+version: "0.1.19"
 slug: umdoislab
 description: "Cadastros, orçamentos e custos de fabricação. Cotação manual de frete."
 arch:

@@ -57,9 +57,15 @@ export function registerQuotes(app:FastifyInstance,db:DatabaseSync){
  const decode=(row:Record<string,unknown>)=>{const data=normalized(JSON.parse(row.data as string));return {id:row.id,data,revision:row.revision,updatedAt:row.updated_at,totals:quoteTotals(data.items,data.delivery)};};
  app.get<{Querystring:QuoteListQuery}>('/api/quotes',{schema:{querystring:quoteListQuerySchema}},req=>req.query.pageSize?pagedQuotes(db,req.query):db.prepare('SELECT * FROM quotes WHERE archived=0 ORDER BY id DESC').all().map(decode));
  app.get<{Params:{id:string}}>('/api/quotes/:id',(req,reply)=>{const row=db.prepare('SELECT * FROM quotes WHERE id=? AND archived=0').get(req.params.id);return row?decode(row):reply.code(404).send({message:'Orçamento não encontrado.'});});
+ function archivedReference(data:QuoteData,old?:QuoteData){
+  if(data.client?.id!==old?.client?.id&&data.client?.id&&db.prepare('SELECT archived FROM clients WHERE id=?').get(Number(data.client.id))?.archived===1)return true;
+  const previous=new Set((old?.items??[]).map(i=>(i as Line&{productId?:number}).productId));
+  return data.items.some(i=>{const id=(i as Line&{productId?:number}).productId;return id&&!previous.has(id)&&db.prepare('SELECT archived FROM products WHERE id=?').get(id)?.archived===1;});
+ }
  function unique(items:Line[]){return new Set(items.map(i=>i.id)).size===items.length;}
  app.post<{Body:{data:QuoteData;expectedRevision:number}}>('/api/quotes',{bodyLimit:512*1024,schema:{body}},(req,reply)=>{
   const data=normalized(req.body.data);
+  if(archivedReference(data))return reply.code(400).send({message:'Produto ou cliente arquivado não pode ser incluído em novo orçamento. Atualize a seleção.'});
   if(req.body.expectedRevision!==0||!unique(data.items))return reply.code(400).send({message:'Revise a versão e os itens do orçamento.'});
   if(data.status==='sent')return reply.code(400).send({message:'Finalize o orçamento antes de marcar como enviado ao cliente.'});
   const issues=data.status==='draft'?[]:completionIssues(data);
@@ -72,6 +78,7 @@ export function registerQuotes(app:FastifyInstance,db:DatabaseSync){
   const row=db.prepare('SELECT * FROM quotes WHERE id=? AND archived=0').get(req.params.id);
   if(!row||Number(row.revision)!==req.body.expectedRevision)return reply.code(409).send({message:'Este orçamento foi alterado em outra janela. Preserve suas alterações e reabra a versão salva antes de continuar.'});
   const old=normalized(JSON.parse(row.data as string));
+  if(archivedReference(data,old))return reply.code(400).send({message:'Produto ou cliente arquivado não pode ser incluído no orçamento. Atualize a seleção.'});
   if(data.status==='sent'&&old.status!=='finalized'&&old.status!=='sent')return reply.code(400).send({message:'Finalize o orçamento antes de marcar como enviado ao cliente.'});
   if(old.status!=='draft'&&!isDeepStrictEqual(content(old),content(data)))return reply.code(400).send({message:'Reabra como rascunho antes de editar um orçamento finalizado ou enviado.'});
   if(old.status==='sent'&&data.status==='finalized')return reply.code(400).send({message:'Reabra como rascunho para revisar o orçamento enviado.'});

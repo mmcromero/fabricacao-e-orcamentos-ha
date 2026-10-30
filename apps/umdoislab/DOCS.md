@@ -182,3 +182,17 @@ Em cada item com embalagem individual, peso e dimensões da unidade embalada sã
 ## Verificações de acessibilidade
 
 O script verify-accessibility.py executa axe-core em páginas, modais e conciliação com critérios automáticos WCAG A/AA em larguras de computador e celular. Use somente servidor descartável de loopback, Chromium e um arquivo local axe.min.js de instalação confiável. Relatórios são gravados fora do checkout por padrão. As verificações automáticas e os testes de teclado/foco não comprovam conformidade integral ou experiência com todos os leitores de tela.
+
+## Cadastro contextual e preços individuais
+
+Fabricação abre diretamente um novo produto com produção expandida. Produtos e o cadastro dentro do orçamento usam o mesmo formulário, com fabricação recolhida e acessível por botão. Dados de site começam recolhidos; foto e nome aparecem no cabeçalho quando informados. Nome, SKU, origem, categoria, preços e medidas continuam disponíveis. O cadastro iniciado num orçamento pode ficar somente naquele orçamento, sem gravar no catálogo.
+
+Em cada faixa, o formulário compara o preço comercial em edição com o cálculo de fabricação em centavos. Tanto mudar os custos quanto editar um preço manual pode produzir divergência. Usar preço calculado atualiza apenas a faixa escolhida no formulário; a persistência ocorre ao salvar. As demais faixas permanecem como informadas. Cálculo pendente não oferece preço a aplicar. O servidor refaz os cálculos escolhidos e recusa parâmetros ou produto alterados em outra janela. Nenhum orçamento existente recebe preços novos automaticamente.
+
+## Filtros, seleção e arquivamento
+
+Na lista de Produtos, combine busca por nome/SKU, origem e categoria. Categoria pendente fica no filtro de categoria, junto às categorias cadastradas. A seleção pode ser individual, da página ou de todos os resultados filtrados. Uma mudança nos resultados limpa a seleção; mudar de página mantém as escolhas. Ações em lote mostram a quantidade afetada antes da confirmação e recusam seleção desatualizada sem alterações parciais. Autorizar divulgação não publica no site e não torna públicos produtos de cliente.
+
+Arquivar retira da lista sem apagar o histórico. Produtos, clientes e orçamentos arquivados ficam ocultos por padrão; Ver arquivados permite restaurar um ou todos, com confirmação. Produtos/clientes arquivados não ficam disponíveis para novos orçamentos. Os dados já salvos em orçamentos permanecem preservados. Não há exclusão definitiva nesta versão.
+
+A paginação e a orientação sobre quantidade por página ficam ocultas quando existe apenas uma página. Quando aparecem, Configurações abre a área correspondente. Suporte e diagnóstico fica no final das configurações de qualquer área.

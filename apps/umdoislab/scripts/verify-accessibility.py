@@ -22,7 +22,7 @@ with sync_playwright() as p:
    page.locator('.quote-record').first.get_by_role('button',name='Editar',exact=True).click();check(f'modal-orcamento-com-item-{width}');toggle=page.get_by_role('button',name='Selecionar produtos do catálogo',exact=False)
    if toggle.is_enabled():toggle.click();check(f'catalogo-popup-{width}');toggle.click()
    page.locator('.quote-modal-header .modal-close').click()
-  page.goto(base+'?view=fabricacao');page.get_by_role('button',name='Novo produto com fabricação',exact=True).click();check(f'form-fabricacao-{width}')
+  page.goto(base+'?view=fabricacao');check(f'form-fabricacao-{width}')
   page.goto(base+'?view=configuracoes&area=produtos')
   product=dict(name='Peça fictícia de acessibilidade',sku='A11Y-1',origin='own',publicAllowed=False,prices=dict(wholesale=1000,factory=None,retail=None),lengthCm=None,widthCm=None,heightCm=None,weightGrams=None,colors=[],sourceKeys=['excel:a11y'],family='',description='',category='Linha fictícia')
   payload=dict(type='manufacturing-import-v1',records=[dict(key='a11y',product=product)],settings={})

@@ -81,3 +81,15 @@
 .duration-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:1px solid #789483;margin-top:16px;padding:12px;min-width:0}.duration-fields p{grid-column:1 / -1}.products-screen .duration-fields label{margin-top:0}.duration-fields legend{font-weight:650}
 
 .reconciliation-record{min-width:0}.reconciliation-record select{max-width:100%}.reconciliation-record p{overflow-wrap:anywhere}.reconciliation-panel dl{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+
+/* Product thumbnail stays first, with identification and prices beside it. */
+.record-row .record-product-info{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:start}
+.record-product-photo,.record-product-details{min-width:0}
+.record-product-details{overflow-wrap:anywhere}
+.record-product-photo img{display:block}
+.record-product-photo p,.product-photo-empty{display:block;font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.product-photo-empty{min-height:56px;display:flex;align-items:center;justify-content:center;background:#eef4ef;border-radius:4px;color:#425448}
+
+.product-editor-photo{padding-right:48px;margin-bottom:12px}
+
+.products-screen .record-select{font-size:12px;margin:0 0 4px}.record-actions button{margin-right:8px}.price-comparison{border-top:1px solid #dce3db;padding:12px 0}.price-difference{color:#795000;font-weight:650}.product-form-heading{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.product-form-heading h3{overflow-wrap:anywhere;min-width:0}

@@ -1,5 +1,18 @@
 # Histórico
 
+## 0.1.19
+
+- Compartilha cadastro completo de produtos entre Fabricação, Produtos e Orçamentos; a rota define quais seções começam abertas.
+- Fabricação inicia diretamente um novo produto; a edição de produtos existentes fica na lista de Produtos, com fabricação acessível no mesmo formulário.
+- Compara cada preço comercial com o cálculo de fabricação, inclusive após edição manual; permite usar o calculado individualmente em atacado, loja de fábrica e varejo, gravando apenas ao salvar.
+- Preserva preços não selecionados e verifica concorrência do produto e dos parâmetros antes de aplicar cálculos.
+- Separa filtros de origem e categoria, incluindo categorias pendentes e novas categorias cadastradas.
+- Adiciona seleção por registro, página ou resultados filtrados, autorização de divulgação e privacidade em lote para produtos próprios, sem publicação no site.
+- Permite arquivar e restaurar produtos, clientes e orçamentos individualmente ou em lote, preservando dados e histórico; arquivados ficam fora das listas e novas seleções.
+- Coloca miniatura à esquerda dos detalhes e foto com nome no cabeçalho do formulário.
+- Oculta toda paginação quando há uma única página e liga Configurações à área correspondente.
+- Move o atalho de diagnóstico para Suporte e diagnóstico nas configurações de todas as áreas.
+
 ## 0.1.18
 
 - Adiciona conciliação de cargas preparadas da planilha com o catálogo da instalação, por vínculos, SKU e nome/categoria.

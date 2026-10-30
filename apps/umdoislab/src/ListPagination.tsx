@@ -6,6 +6,7 @@ export function searchProducts<T extends {name:string;sku?:string}>(products:T[]
  .map((product,index)=>({product,index,exact:searchText(product.sku??'')===term}))
  .sort((a,b)=>Number(b.exact)-Number(a.exact)||a.index-b.index).map(p=>p.product);
 }
-export default function ListPagination({page,pages,total,size,label,busy=false,onPage}:{page:number;pages:number;total:number;size:string;label:string;busy?:boolean;onPage:(page:number)=>void}){
- return <nav className="quote-pagination" aria-label={`Paginação de ${label}`}><button type="button" disabled={busy||page<=1} onClick={()=>onPage(page-1)}>Página anterior</button><span role="status">Página {page} de {pages} · {total} {label}</span><button type="button" disabled={busy||page>=pages} onClick={()=>onPage(page+1)}>Próxima página</button><small>{size==='all'?'Todos os resultados':`${size} registros por página`}. Altere nas Configurações.</small></nav>;
+export default function ListPagination({page,pages,total,size,label,settingsArea,busy=false,onPage}:{page:number;pages:number;total:number;size:string;label:string;settingsArea:'clientes'|'produtos';busy?:boolean;onPage:(page:number)=>void}){
+ if(pages<=1||size==='all')return null;
+ return <nav className="quote-pagination" aria-label={`Paginação de ${label}`}><button type="button" disabled={busy||page<=1} onClick={()=>onPage(page-1)}>Página anterior</button><span role="status">Página {page} de {pages} · {total} {label}</span><button type="button" disabled={busy||page>=pages} onClick={()=>onPage(page+1)}>Próxima página</button><small>{size==='all'?'Todos os resultados':`${size} registros por página`}. Altere nas <a href={`?view=configuracoes&area=${settingsArea}`}>Configurações</a>.</small></nav>;
 }

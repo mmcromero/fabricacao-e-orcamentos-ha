@@ -40,7 +40,7 @@ A API valida formato e regras locais, não autentica a procedência do arquivo.
 `npm run build`, `npm test` e `npm run verify:runtime` verificam tipos, API,
 persistência, conflito de versões e backup/restauração fria com dados fictícios.
 O Chromium verifica fluxos persistentes com dados fictícios. A rodada atual usa
-`verify-reconciliation.py`, `verify-package.py`, `verify-manufacturing.py` e
+`verify-package-019.py`, `verify-list-interface.py` e
 `verify-accessibility.py`, seguindo os pré-requisitos documentados em cada roteiro.
 Use bancos descartáveis novos conforme o roteiro, na porta local 8198. Os roteiros
 mais antigos permanecem como referências de rodadas anteriores e não foram todos

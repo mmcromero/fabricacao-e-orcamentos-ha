@@ -1,3 +1,5 @@
+import {registerProductEditor} from './product-editor.js';
+import {registerRecordActions} from './record-actions.js';
 import {registerReconciliation} from './reconciliation.js';
 import {registerManufacturing} from './manufacturing.js';
 import {registerCategories} from './categories.js';
@@ -44,6 +46,8 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerManufacturing(app, db);
   registerQuotes(app, db);
   registerReconciliation(app, db);
+  registerProductEditor(app, db);
+  registerRecordActions(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;
