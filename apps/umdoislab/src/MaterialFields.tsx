@@ -1,5 +1,6 @@
 import {units,type MaterialDefinition,type MaterialUnit} from '../server/material-model';
-export default function MaterialFields({value,onChange,required=true}:{value:MaterialDefinition;onChange:(value:MaterialDefinition)=>void;required?:boolean}){
+export default function MaterialFields({value,onChange,required=true,readOnly=false}:{value:MaterialDefinition;onChange:(value:MaterialDefinition)=>void;required?:boolean;readOnly?:boolean}){
+ if(readOnly)return <dl className="material-readonly"><div><dt>Material cadastrado</dt><dd>{value.name}</dd></div><div><dt>Forma de custo</dt><dd>{value.mode==='direct'?'Custo direto em reais':'Preço por quantidade comprada'}</dd></div>{value.mode==='quantity'&&<><div><dt>Referência de compra</dt><dd>{value.purchaseQuantity} {value.purchaseUnit==='custom'?value.customUnit:units[value.purchaseUnit].label}</dd></div><div><dt>Preço da referência</dt><dd>{value.purchasePrice===null?'Pendente':value.purchasePrice.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</dd></div></>}</dl>;
  return <div className="material-definition-fields">
   <label>Nome do material<input data-material-field="name" required={required} maxLength={200} pattern=".*\S.*" value={value.name} onChange={e=>onChange({...value,name:e.target.value})}/></label>
   <label>Forma de custo<select required={required} value={value.mode} onChange={e=>onChange({...value,mode:e.target.value as MaterialDefinition['mode']})}><option value="quantity">Preço por quantidade comprada</option><option value="direct">Custo direto em reais</option></select></label>

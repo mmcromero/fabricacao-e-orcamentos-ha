@@ -1,4 +1,4 @@
-# Uso — 0.1.22
+# Uso — 0.1.23
 
 ## Listas e filtros
 
@@ -46,18 +46,39 @@ informe o nome e o custo efetivamente utilizado no produto.
 
 Os materiais podem ser repetidos e combinados, inclusive em etapa adicional.
 Materiais novos completos ficam disponíveis na base ao salvar o produto, inclusive ao adicioná-lo somente ao orçamento, sem forçar o cadastro do produto. A base
-pode ser incluída e editada nas Configurações de Produtos. Selecionar uma referência
-cadastrada copia seus dados atuais para o produto. Alterar a base não muda produtos
+pode ser incluída e editada nas Configurações de Produtos e de Fabricação. Selecionar uma referência
+cadastrada copia seus dados atuais para o produto e os apresenta somente para leitura. Nesse uso, apenas quantidade consumida e unidade compatível são editáveis; para alterar nome ou referência de compra, use a gestão de materiais. Alterar a base não muda produtos
 anteriores; a referência do produto fica preservada e pode ser atualizada por escolha.
 Alterar materiais também não substitui preços comerciais: aplicar preço calculado
 continua exigindo a escolha explícita por faixa e o salvamento do produto.
 
-Cadastros anteriores mantêm material em gramas, extras e fórmula existentes.
-Ao editar a lista de materiais, as referências legadas são apresentadas como
-Filamento e Materiais extras do cadastro anterior. O preço global de filamento
-continua servindo aos dados antigos; os novos usam suas próprias referências.
-Confira os resultados antes de salvar e aplicar preços. Não há migração automática
-que invente os nomes ou as compras dos seus materiais antigos.
+Ao salvar pela tela de Fabricação, uma confirmação visível recebe o foco e o
+produto permanece aberto. Uma nova gravação atualiza o mesmo produto. Use Novo
+produto para iniciar um cadastro vazio; alterações não salvas pedem confirmação.
+
+O campo global de preço do quilo de filamento foi retirado da interface. Na primeira
+inicialização desta versão, o sistema fixa quais produtos já existiam. Somente os
+que ainda têm material legado em gramas recebem uma cópia da referência do primeiro
+material cadastrado (menor ID), com conversão g/kg. Etapas adicionais e extras são
+preservados sem dupla contagem. Preços comerciais, vínculos e versões de orçamentos
+não são recalculados por essa atualização. Produtos novos e listas de materiais já
+preenchidas não recebem material automaticamente.
+
+Sem primeiro material válido por quantidade em g/kg, a atualização fica pendente
+com aviso em Fabricação e suas configurações. Cadastre ou corrija essa referência
+na gestão de materiais e use Verificar atualização, se necessário. Não há conversão
+de comprimento, volume ou custo direto para massa. Após concluída, editar a base
+não modifica novamente os produtos. Uma cópia original de cada produto alterado e
+o marcador de execução ficam no banco (manufacturing_material_backup e
+manufacturing_material_upgrade), incluídos no backup integral. Faça backup antes
+da atualização; a restauração da versão anterior usa esse backup integral.
+
+Os multiplicadores usam controles deslizantes com uma casa decimal: Atacado
+1,5–2,0; Loja de fábrica 2,0–3,0; Varejo 3,0–5,0. Use arrastar, toque ou as setas do
+teclado; Home/End levam aos limites. Valores anteriores fora dessas faixas precisam
+ser escolhidos novamente antes de salvar. O sistema não altera silenciosamente a
+configuração antiga nem os preços comerciais. Os botões de informação ao lado dos
+18 títulos abrem ajuda por mouse, toque ou foco; Escape fecha a ajuda.
 
 ## Formulários, validação e acessibilidade
 
@@ -274,13 +295,13 @@ Peso e dimensões reais do pacote fechado são campos separados e opcionais. Vol
 
 Escolha o mesmo produto de Produtos ou use Novo produto com fabricação. O cadastro básico pode existir sem dados de produção. Identificação, código e categoria pertencem ao mesmo registro; dados de fabricação são opcionais. Produtos de cliente permanecem privados e com categoria automática.
 
-Em Configurações de Fabricação, preencha preço do quilo de filamento, energia/desgaste por hora de máquina, hora humana, horas produtivas mensais e multiplicadores dos três preços. Operação reúne as despesas mensais: total dividido pelas horas produtivas. Campos operacionais vazios equivalem a zero; parâmetros de custo e multiplicadores ausentes mantêm o cálculo pendente.
+Em Configurações de Fabricação, cadastre as referências de compra em Materiais e preencha energia/desgaste por hora de máquina, hora humana, horas produtivas mensais e multiplicadores dos três preços. Operação reúne as despesas mensais: total dividido pelas horas produtivas. Campos operacionais vazios equivalem a zero; parâmetros de custo e multiplicadores ausentes mantêm o cálculo pendente.
 
-O formulário aceita horas, minutos e segundos, inclusive mais de 24 horas, convertidos internamente sem arredondamento antecipado. Material é informado em gramas, separado do peso físico cadastrado para transporte. Extras, embalagem de fabricação e etiqueta entram no custo. Uma etapa adicional opcional permite reproduzir produtos compostos cuja fórmula soma um componente-base.
+O formulário aceita horas, minutos e segundos, inclusive mais de 24 horas, convertidos internamente sem arredondamento antecipado. Materiais usam quantidades e unidades compatíveis com cada referência de compra, separados do peso físico cadastrado para transporte. Custos diretos de materiais, embalagem de fabricação e etiqueta entram no custo. Uma etapa adicional opcional permite reproduzir produtos compostos cuja fórmula soma um componente-base.
 
-Custo sem lucro soma material, máquina (energia, desgaste e operação), trabalho humano, extras, embalagem e etiqueta. Atacado, Loja de fábrica e Varejo usam seus multiplicadores. “Preço loja” corresponde a Loja de fábrica e “preço site” a Varejo. Os preços antigos da planilha não são aplicados. A exibição monetária arredonda ao final.
+Custo sem lucro soma os materiais, máquina (energia, desgaste e operação), trabalho humano, embalagem e etiqueta. Atacado, Loja de fábrica e Varejo usam seus multiplicadores. “Preço loja” corresponde a Loja de fábrica e “preço site” a Varejo. Os preços antigos da planilha não são aplicados. A exibição monetária arredonda ao final.
 
-Salvar fabricação em produto existente preserva seus preços. Para aplicar os três preços calculados, revise os resultados e marque a opção explícita; alterar dados de produção desmarca essa opção. Para criar um produto novo por este formulário é necessário ter cálculo completo e confirmar a aplicação dos preços. Revisões do produto e dos parâmetros são conferidas antes de gravar. Orçamentos já salvos preservam os preços históricos.
+Salvar fabricação em produto existente preserva seus preços. Para aplicar preços calculados, revise os resultados e escolha explicitamente cada faixa; alterar dados de produção cancela essa escolha. Um produto novo precisa de pelo menos um preço, manual ou calculado. Revisões do produto e dos parâmetros são conferidas antes de gravar. Orçamentos já salvos preservam os preços históricos.
 
 Embalagem de fabricação faz parte do custo. No orçamento, se a embalagem individual já estiver no preço de venda, marque Embalagem já incluída no preço para evitar cobrança adicional. Não há importação automática de planilha nem carga real executada.
 

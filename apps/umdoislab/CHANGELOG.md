@@ -1,5 +1,17 @@
 # Histórico
 
+## 0.1.23
+
+- Confirma o salvamento em Fabricação com mensagem de sucesso e mantém o produto aberto. Salvar novamente atualiza o mesmo registro; Novo produto inicia um cadastro vazio explicitamente.
+- Exibe referências de materiais cadastrados somente para leitura no formulário compartilhado, mantendo editáveis o consumo e sua unidade compatível.
+- Disponibiliza a gestão de materiais também nas Configurações de Fabricação.
+- Retira o preço global de filamento da interface. Uma atualização única dos produtos antigos que ainda usam gramas copia a referência do primeiro material cadastrado (menor ID), incluindo etapa adicional e extras, sem mudar preços comerciais, vínculos ou histórico de orçamentos.
+- Guarda cópia dos registros originais e o limite dos produtos existentes na primeira inicialização. Novos cadastros e produtos que já têm listas de materiais não recebem essa referência automaticamente. Sem referência válida em g/kg, a atualização fica pendente com aviso.
+- Usa seletores deslizantes acessíveis, com passo 0,1: atacado de 1,5 a 2; loja de fábrica de 2 a 3; varejo de 3 a 5. Valores antigos fora da faixa exigem escolha explícita antes de salvar, sem alterar preços comerciais.
+- Adiciona ajuda breve aos 18 campos de configuração de fabricação, por mouse, toque ou teclado.
+- Valida limites no servidor e na importação de parâmetros. Mantém compatibilidade técnica com dados legados, sem expor novamente o campo de preço global.
+- Verifica migração e idempotência, preservação de referências, salvamento sem duplicação, teclado, configurações antigas inválidas e layout em 1280, 390 e 320 pixels. Não adiciona dependências.
+
 ## 0.1.22
 
 - Permite criar categorias hierárquicas durante o cadastro compartilhado de produto, preservando os dados digitados e a categoria reservada de clientes.

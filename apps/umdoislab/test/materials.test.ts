@@ -28,11 +28,11 @@ test('custo proporcional converte apenas unidades compatíveis, mantém precisã
  const legacy={machineSeconds:3600,humanSeconds:600,materialGrams:50,extras:1,packaging:2,label:1};
  assert.equal(calculateManufacturing(legacy,{...settings,filamentKgPrice:'100',energyHour:'1',wearHour:'2',humanHour:'30'}).cost,17);
  assert.equal(calculateManufacturing({...production,materials:[{...filament,unit:'ml'}]},settings).cost,null);
- const fractional={...settings,filamentKgPrice:'100',energyHour:'0.01',humanHour:'0.01',wholesaleMarkup:'0.5',factoryMarkup:'0.5',retailMarkup:'0.5'};
+ const fractional={...settings,filamentKgPrice:'100',energyHour:'0.01',humanHour:'0.01',wholesaleMarkup:'1.5',factoryMarkup:'2.5',retailMarkup:'3.5'};
  const oldFractional={machineSeconds:3600,humanSeconds:3600,materialGrams:0.1,extras:0.06,packaging:0,label:0};
- assert.deepEqual(calculateManufacturing(oldFractional,fractional).prices,{wholesale:5,factory:5,retail:5});
+ assert.deepEqual(calculateManufacturing(oldFractional,fractional).prices,{wholesale:14,factory:22,retail:32});
  const newFractional={...oldFractional,materialGrams:0,extras:0,materials:[{...filament,quantity:0.1},{...direct,quantity:0.06}]};
- assert.deepEqual(calculateManufacturing(newFractional,fractional).prices,{wholesale:5,factory:5,retail:5});
+ assert.deepEqual(calculateManufacturing(newFractional,fractional).prices,{wholesale:14,factory:23,retail:32});
  assert.equal(emptyProduction().materials?.length,0);
 });
 

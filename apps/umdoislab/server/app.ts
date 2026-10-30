@@ -1,3 +1,4 @@
+import {registerLegacyMaterialUpgrade} from './legacy-material-upgrade.js';
 import {registerMaterials} from './materials.js';
 import {registerProductEditor} from './product-editor.js';
 import {registerRecordActions} from './record-actions.js';
@@ -50,6 +51,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerReconciliation(app, db);
   registerProductEditor(app, db);
   registerRecordActions(app, db);
+  registerLegacyMaterialUpgrade(app, db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;
