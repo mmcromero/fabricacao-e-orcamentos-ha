@@ -31,6 +31,9 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
  function session(response:any){const cookies=response.cookies;const csrf=cookies.find((c:any)=>c.name==='__Secure-artesaos_csrf')!.value;return {cookie:cookies.filter((c:any)=>c.name!=='__Secure-artesaos_flow').map((c:any)=>`${c.name}=${c.value}`).join('; '),origin,'x-pilot-csrf':csrf} as Record<string,string>;}
  try{
   assert.equal((await request('api/products')).statusCode,401);
+  const bundle=readFileSync(join(settings.staticDir,'index.html'),'utf8').match(/src="\.\/assets\/([^"]+)"/)![1];
+  const publicBundle=await request('assets/'+bundle);assert.equal(publicBundle.statusCode,200,'Arquivos públicos de interface não podem ser redirecionados para o login');assert.match(String(publicBundle.headers['content-type']),/javascript/);assert.ok(!publicBundle.body.startsWith('<!doctype'));
+
   assert.equal((await request('auth/google/start',{origin:'https://evil.example'},'POST',{})).statusCode,403);
   assert.equal((await request('login',{host:'evil.example'})).statusCode,421);
   const inviteA=admin.invite('a@example.test');const invalid=await login('wrong@example.test','wrong',inviteA);assert.equal(invalid.statusCode,403);

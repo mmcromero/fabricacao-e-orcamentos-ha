@@ -85,3 +85,7 @@ O nome visível passa a Artesão Digital e a entrada após login é Orçamentos.
 ### Botão Abrir interface Web
 
 Na página Info do aplicativo, o botão abre o login pelo mesmo hostname usado no navegador do Home Assistant e pela porta HTTPS8443, já atendida pelo Nginx desta instalação de teste. Não é aberta uma nova porta do piloto. Para o botão usar o domínio correto do certificado e do cliente Google, acesse o Home Assistant pelo endereço HTTPS habitual. Se estiver no HA por IP local, use diretamente o endereço público configurado no piloto; o botão padrão do HA usa o hostname da página atual. Esse atalho é específico do ambiente temporário de testes e não altera a futura implantação standalone.
+
+## Atualização 0.1.3 — carregamento da interface
+
+A versão anterior podia redirecionar requisições dos arquivos JavaScript para a tela de login; o navegador recusava HTML como módulo e mostrava apenas a barra da conta. Agora os arquivos compilados em dist/assets são servidos como recursos públicos com MIME correto. Esses arquivos não incluem credenciais nem dados dos usuários. HTML com contexto da conta, sessão, operações e APIs de dados continuam autenticados e isolados. Atualize somente o aplicativo existente, sem reinstalar ou recriar contas/convites.

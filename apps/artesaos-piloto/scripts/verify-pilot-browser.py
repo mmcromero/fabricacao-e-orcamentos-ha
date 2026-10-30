@@ -24,13 +24,19 @@ try:
    with urllib.request.urlopen(origin+prefix+'login',timeout=1,context=ssl._create_unverified_context()):break
   except Exception:time.sleep(.1)
  with sync_playwright() as pw:
-  browser=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);contexts=[];errors=[]
+  browser=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);contexts=[];errors=[];anonymous=pw.request.new_context(ignore_https_errors=True)
   def context(account):
    ctx=browser.new_context(ignore_https_errors=True,viewport={'width':1280 if account=='a' else 390,'height':900});contexts.append(ctx)
    def google(route):
     state=parse_qs(urlparse(route.request.url).query)['state'][0]
     route.fulfill(status=302,headers={'location':origin+prefix+'auth/google/callback?state='+state+'&code='+account})
    ctx.route('https://accounts.google.com/**',google)
+   def public_asset(route):
+    response=anonymous.get(route.request.url,max_redirects=0)
+    assert response.status==200,(route.request.url,response.status)
+    if urlparse(route.request.url).path.endswith('.js'):assert 'javascript' in response.headers.get('content-type','')
+    route.fulfill(status=response.status,headers=response.headers,body=response.body())
+   ctx.route(origin+prefix+'assets/**',public_asset)
    pending=[account=='a']
    def delayed_session(route):
     if pending[0]:pending[0]=False;route.fulfill(status=401,content_type='application/json',body='{"message":"Sessão ainda não disponível"}')
@@ -65,7 +71,7 @@ try:
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
   isolated=browser.new_context(ignore_https_errors=True);lost=isolated.new_page();lost.goto(origin+prefix+'auth/finish');expect(lost.get_by_role('status')).to_contain_text('Não foi possível confirmar a sessão');expect(lost.get_by_role('link',name='Entrar novamente',exact=True)).to_be_visible();expect(lost).to_have_url(origin+prefix+'auth/finish');isolated.close()
   assert not errors,errors
-  browser.close()
+  anonymous.dispose();browser.close()
  print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas e logout; proxy Nginx='+str(args.nginx)+'. Provedor Google controlado, validação real pendente.')
 finally:
  if args.nginx:subprocess.run(docker+['rm','-f',container],stdout=log,stderr=log,env=docker_env)

@@ -1,5 +1,11 @@
 # Histórico do Artesão Digital — Testes
 
+## 0.1.3
+
+- Serve os arquivos compilados públicos da interface sem depender do cookie de sessão, evitando redirecionamento de JavaScript para HTML de login e tela vazia.
+- Mantém documentos com contexto de usuário e todas as APIs de dados protegidos por sessão; origem, CSRF e isolamento não mudam.
+- Acrescenta regressão para JavaScript sem cookie com MIME correto e navegação pelo Nginx com recursos carregados anonimamente.
+
 ## 0.1.2
 
 - Adota Artesão Digital como nome visível no aplicativo, telas de login e instalação de testes.

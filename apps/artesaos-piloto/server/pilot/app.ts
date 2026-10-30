@@ -1,6 +1,6 @@
 import {buildInfo} from './build-info.js';
 import Fastify from 'fastify';
-import {readFile} from 'node:fs/promises';
+import staticFiles from '@fastify/static';
 import {join} from 'node:path';
 import type {FastifyInstance,HTTPMethods} from 'fastify';
 import {createApp} from '../app.js';
@@ -58,5 +58,6 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  });
  app.get('/artesaos-piloto',(_req,reply)=>reply.redirect(prefix));
  app.addHook('onClose',async()=>{await Promise.all([...tenants.values()].map(async t=>(await t).close()));store.close();});
+ await app.register(staticFiles,{root:join(config.staticDir,'assets'),prefix:prefix+'assets/',decorateReply:false,index:false,cacheControl:false,etag:false,lastModified:false});
  return app;
 }
