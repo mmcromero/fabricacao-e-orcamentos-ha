@@ -1,0 +1,43 @@
+import {DatabaseSync} from 'node:sqlite';
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createApp} from '../server/app.js';
+import {loadConfig} from '../server/config.js';
+test('finalização exige entrega definida; retirada/cortesia zeram frete; enviado é manual e revisável',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'status-'));const options={dataDir:dir,staticDir:loadConfig({}).staticDir,mode:'local' as const};let app=await createApp(options);
+ const client={id:1,name:'Empresa fictícia',contact:'',phone:'',email:'',taxDocument:'',postal:''};
+ const item={id:1,name:'Peça fictícia',productId:null,origin:'own',prices:{wholesale:null,factory:null,retail:1000},priceKey:'retail',quantity:'2',lengthCm:null,widthCm:null,heightCm:null,weightGrams:null,packaging:'none',packagingType:'',packagingAmount:'',packagingIncluded:false};
+ const data={title:'Orçamento de teste',client,items:[item],notes:''};
+ const post=(data:object)=>app.inject({method:'POST',url:'/api/quotes',payload:{data,expectedRevision:0}});
+ const put=(id:number,data:object,expectedRevision:number)=>app.inject({method:'PUT',url:`/api/quotes/${id}`,payload:{data,expectedRevision}});
+ try{
+  assert.equal((await post({...data,status:'finalized'})).statusCode,400);
+  const delivery={mode:'carrier',carrier:'Serviço informado',amount:'',notes:''};
+  assert.equal((await post({...data,status:'finalized',delivery})).statusCode,400);
+  const carrier=await post({...data,status:'finalized',delivery:{...delivery,amount:'12,34'}});assert.equal(carrier.statusCode,200);
+  assert.equal((await app.inject(`/api/quotes/${carrier.json().id}`)).json().totals.totalCents,3234);
+  assert.equal((await post({...data,status:'sent',delivery:{...delivery,amount:'12,34'}})).statusCode,400);
+  const pickup=await post({...data,status:'finalized',delivery:{...delivery,mode:'pickup',amount:'999'}});assert.equal(pickup.statusCode,200);
+  const id=pickup.json().id;let saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.totals.deliveryCents,0);assert.equal(saved.data.delivery.amount,'0');assert.equal(saved.totals.totalCents,2000);
+  assert.equal((await put(id,{...saved.data,notes:'Edição indevida'},1)).statusCode,400);
+  assert.equal((await put(id,{...saved.data,status:'sent'},1)).statusCode,200);
+  saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.data.status,'sent');
+  assert.equal((await put(id,{...saved.data,status:'finalized'},2)).statusCode,400);
+  assert.equal((await put(id,{...saved.data,status:'draft'},2)).statusCode,200);
+  saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal((await put(id,{...saved.data,notes:'Revisão permitida'},3)).statusCode,200);
+  assert.equal((await put(id,saved.data,3)).statusCode,409);
+  const courtesy=await post({...data,status:'finalized',delivery:{...delivery,mode:'courtesy'}});assert.equal(courtesy.statusCode,200);
+  assert.equal((await app.inject(`/api/quotes/${courtesy.json().id}`)).json().totals.deliveryCents,0);
+  assert.equal((await post({...data,client:null,status:'finalized',delivery:{...delivery,mode:'pickup'}})).statusCode,400);
+  assert.equal((await post({...data,items:[],status:'finalized',delivery:{...delivery,mode:'pickup'}})).statusCode,400);
+  assert.equal((await post({...data,items:[{...item,quantity:''}],status:'finalized',delivery:{...delivery,mode:'pickup'}})).statusCode,400);
+  await app.close();
+  const historyDb=new DatabaseSync(join(dir,'validation.sqlite'),{readOnly:true});
+  const states=historyDb.prepare('SELECT data FROM quote_versions WHERE quote_id=?').all(id).map(row=>JSON.parse(row.data as string).status);
+  assert.ok(states.includes('finalized')&&states.includes('sent'));historyDb.close();
+  app=await createApp(options);saved=(await app.inject(`/api/quotes/${id}`)).json();assert.equal(saved.data.status,'draft');assert.equal(saved.data.notes,'Revisão permitida');
+ }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});

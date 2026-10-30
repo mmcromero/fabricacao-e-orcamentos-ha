@@ -1,0 +1,95 @@
+.products-screen article{border-top:1px solid #dce3db;padding:16px 0;overflow-wrap:anywhere}
+.products-screen button{margin-right:8px}
+.products-screen label{margin-top:16px}
+.products-screen input:not([type=checkbox]),.products-screen select{display:block;width:100%;max-width:100%;padding:10px;border:1px solid #789483;border-radius:8px;font:inherit;background:white;color:inherit}
+.products-screen input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-right:8px}
+.products-screen dialog{border:1px solid #789483;border-radius:12px;padding:24px;color:inherit}
+.products-screen dialog::backdrop{background:#10291eb3}
+.products-screen nav{margin-top:24px}
+.products-screen nav{display:flex;flex-wrap:wrap;gap:8px 16px}
+.products-screen h1{overflow-wrap:anywhere}
+.area-settings-link{display:inline-block;margin-bottom:12px;padding:8px 16px;border:1px solid #789483;border-radius:8px;text-decoration:none;color:inherit}
+
+.archive-unavailable:disabled{cursor:not-allowed}
+.quote-catalog{position:relative;width:100%;max-width:640px;margin-top:12px}
+.products-screen .quote-catalog-toggle{width:100%;display:flex;justify-content:space-between;gap:12px;text-align:left;background:white;color:#20352e;border:1px solid #789483;margin:0}
+.quote-catalog-panel{position:fixed;z-index:20;top:calc(100% + 6px);left:0;width:100%;display:flex;flex-direction:column;background:white;border:1px solid #789483;border-radius:10px;box-shadow:0 8px 28px #10291e30;overflow:hidden}
+.quote-catalog-panel.quote-catalog-above{transform:translateY(-100%)}
+.quote-catalog-filter{flex:none;padding:12px;border-bottom:1px solid #dce3db}
+.products-screen .quote-catalog-filter label{margin-top:0}
+.quote-catalog-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 12px}
+.quote-catalog-option{padding:10px 0;border-bottom:1px solid #dce3db;overflow-wrap:anywhere}
+.products-screen .quote-catalog-option label{margin-top:0;cursor:pointer}
+.quote-catalog-option p{margin:4px 0 0 32px;font-size:14px}
+.quote-catalog-footer{flex:none;display:flex;flex-wrap:wrap;gap:8px;padding:12px;border-top:1px solid #dce3db}
+.products-screen .quote-catalog-footer button{margin:0}
+.quote-content-fields{border:0;padding:0;margin:0;min-width:0}
+.quote-content-fields:disabled{opacity:.85}
+.products-screen .quote-editor-modal{position:fixed;inset:0;margin:auto;width:min(1120px,calc(100vw - 32px));height:min(94dvh,1040px);max-width:none;max-height:none;padding:0;overflow:hidden}
+.quote-editor-modal[open]{display:flex;flex-direction:column}
+.quote-modal-header,.quote-modal-footer{flex:none;padding:14px 20px;background:#fff;gap:10px;align-items:center}
+.quote-modal-header{display:flex;justify-content:space-between;border-bottom:1px solid #dce3db}
+.quote-modal-header h2{margin:0;overflow-wrap:anywhere}
+.products-screen .quote-modal-header button{margin:0;flex:none}
+.quote-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 20px;background:#f3f5f1}
+.quote-modal-footer{display:flex;flex-wrap:wrap;border-top:1px solid #dce3db}
+.quote-modal-footer p{flex-basis:100%;margin:0}
+.products-screen .quote-modal-footer button{margin:0}
+.quote-pagination{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+.quote-pagination small{flex-basis:100%}
+@media(max-width:600px){.products-screen .quote-editor-modal{width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0}.quote-modal-header,.quote-modal-footer{padding:10px 12px}.quote-modal-body{padding:0 12px 12px}.quote-modal-header h2{font-size:19px}}
+.category-pending{color:#795000;font-size:14px}
+.products-screen .more-prices{font-size:14px;padding:6px 10px;background:#eef4ef;color:#205e47;border:1px solid #a7bcb0}
+
+/* Shared list layout: keep the primary action beside the record title. */
+.products-screen .record-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:start;padding:12px 0}
+.record-row .record-title{margin:0;font-size:17px;line-height:1.4;min-width:0}
+.record-row .record-meta{grid-column:1;margin:0;font-size:14px}
+.record-row .record-product-info{grid-column:1;grid-row:1 / span 3;min-width:0}
+.record-product-info p{margin:4px 0;font-size:14px}
+.record-row details{grid-column:1;min-width:0;font-size:14px}
+.record-row summary{cursor:pointer}
+.products-screen .record-row .list-edit{grid-column:2;grid-row:1;min-width:72px;min-height:44px;margin:0;padding:8px 12px;line-height:1.4}
+.record-row .archive-unavailable{grid-column:2;margin:0;padding:6px 10px;font-size:13px}
+.list-edit-icon{display:none;width:20px;height:20px}
+@media(min-width:701px){
+ .products-screen .quote-record{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;align-items:center}
+ .quote-record .record-meta{grid-column:2;grid-row:1}
+ .products-screen .quote-record .list-edit{grid-column:3}
+}
+@media(max-width:600px){
+ .products-screen .record-row .list-edit{min-width:44px;width:44px;padding:10px;display:flex;align-items:center;justify-content:center}
+ .list-edit-text{display:none}
+ .list-edit-icon{display:block}
+ .record-row .archive-unavailable{grid-column:1;justify-self:start}
+}
+@media(min-width:701px){
+ .products-screen .client-record{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:start}
+ .client-record .record-meta{grid-column:2;grid-row:1}
+ .products-screen .client-record .list-edit{grid-column:3}
+ .client-record details{grid-column:1 / span 2}
+ .client-record .archive-unavailable{grid-column:3;grid-row:2}
+ .record-product-info{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:2px 16px}
+ .record-product-info .record-title{grid-column:1}
+ .record-product-info p{margin:0}
+}
+.record-product-info img{width:56px!important;height:56px!important}
+
+.products-screen dialog{position:fixed}.modal-close{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;margin:0;padding:0;font-size:30px;line-height:1}.products-screen dialog>.modal-close{position:absolute;top:8px;right:8px}.products-screen dialog>.modal-close+h2{padding-right:44px}.quote-pagination button{margin:0}
+
+.category-list{list-style:none;padding:0}.category-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #dce3db;overflow-wrap:anywhere}.category-list li span{min-width:0}.category-list button{flex:none;margin:0;padding:8px;min-height:44px;font-size:14px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.duration-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:1px solid #789483;margin-top:16px;padding:12px;min-width:0}.duration-fields p{grid-column:1 / -1}.products-screen .duration-fields label{margin-top:0}.duration-fields legend{font-weight:650}
+
+.reconciliation-record{min-width:0}.reconciliation-record select{max-width:100%}.reconciliation-record p{overflow-wrap:anywhere}.reconciliation-panel dl{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+
+/* Product thumbnail stays first, with identification and prices beside it. */
+.record-row .record-product-info{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:start}
+.record-product-photo,.record-product-details{min-width:0}
+.record-product-details{overflow-wrap:anywhere}
+.record-product-photo img{display:block}
+.record-product-photo p,.product-photo-empty{display:block;font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.product-photo-empty{min-height:56px;display:flex;align-items:center;justify-content:center;background:#eef4ef;border-radius:4px;color:#425448}
+
+.product-editor-photo{padding-right:48px;margin-bottom:12px}
+
+.products-screen .record-select{font-size:12px;margin:0 0 4px}.record-actions button{margin-right:8px}.price-comparison{border-top:1px solid #dce3db;padding:12px 0}.price-difference{color:#795000;font-weight:650}.product-form-heading{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.product-form-heading h3{overflow-wrap:anywhere;min-width:0}

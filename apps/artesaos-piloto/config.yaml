@@ -1,0 +1,37 @@
+name: "Artesãos — Piloto — Testes"
+version: "0.1.0"
+slug: artesaos_piloto
+description: "Teste separado de login Google, convites e contas isoladas. Somente dados fictícios."
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: manual
+backup: cold
+stage: experimental
+ingress: false
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: "Não expor no host. Acesso HTTPS somente pelo Nginx."
+options:
+  public_url: ""
+  google_client_id: ""
+  google_client_secret: ""
+  test_email_1: ""
+  test_invite_1: ""
+  test_email_2: ""
+  test_invite_2: ""
+schema:
+  public_url: str
+  google_client_id: str
+  google_client_secret: password
+  test_email_1: str
+  test_invite_1: password
+  test_email_2: str
+  test_invite_2: password
+environment:
+  HOST: "0.0.0.0"
+  PORT: "8099"
+  DATA_DIR: /data
+  PILOT_OPTIONS_FILE: /data/options.json

@@ -1,0 +1,39 @@
+import {DatabaseSync} from 'node:sqlite';
+import {randomBytes,randomUUID,createHash,timingSafeEqual} from 'node:crypto';
+import {mkdirSync} from 'node:fs';
+import {join} from 'node:path';
+export const token=()=>randomBytes(32).toString('base64url');
+export const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
+export const equal=(a:string,b:string)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);};
+export type Identity={issuer:string;subject:string;email:string;verified:boolean};
+export type Session={userId:string;tenantId:string;email:string;csrfHash:string};
+export class PilotStore{
+ readonly db:DatabaseSync;
+ constructor(dir:string){mkdirSync(dir,{recursive:true,mode:0o700});this.db=new DatabaseSync(join(dir,'pilot-control.sqlite'));this.db.exec(`PRAGMA foreign_keys=ON;
+ CREATE TABLE IF NOT EXISTS pilot_users(id TEXT PRIMARY KEY,issuer TEXT NOT NULL,subject TEXT NOT NULL,email TEXT NOT NULL,tenant_id TEXT UNIQUE NOT NULL,disabled INTEGER NOT NULL DEFAULT 0,UNIQUE(issuer,subject));
+ CREATE TABLE IF NOT EXISTS pilot_invites(hash TEXT PRIMARY KEY,email TEXT NOT NULL,expires_at INTEGER NOT NULL,used_at INTEGER,revoked INTEGER NOT NULL DEFAULT 0);
+ CREATE TABLE IF NOT EXISTS pilot_flows(hash TEXT PRIMARY KEY,browser_hash TEXT NOT NULL,verifier TEXT NOT NULL,nonce TEXT NOT NULL,invite_hash TEXT NOT NULL,expires_at INTEGER NOT NULL);
+ CREATE TABLE IF NOT EXISTS pilot_sessions(hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES pilot_users(id),csrf_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,last_seen INTEGER NOT NULL);
+ CREATE TABLE IF NOT EXISTS pilot_limits(key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL);`);}
+ invite(email:string,hours=24){email=email.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||hours<1||hours>168)throw Error('E-mail ou validade inválidos.');const code=token();this.db.prepare('INSERT INTO pilot_invites(hash,email,expires_at) VALUES (?,?,?)').run(digest(code),email,Date.now()+hours*3600000);return code;}
+ flow(state:string,browser:string,verifier:string,nonce:string,invite:string){const now=Date.now();this.db.prepare('DELETE FROM pilot_flows WHERE expires_at<?').run(now);this.db.prepare('INSERT INTO pilot_flows VALUES (?,?,?,?,?,?)').run(digest(state),digest(browser),verifier,nonce,invite?digest(invite):'',now+600000);}
+ takeFlow(state:string,browser:string){const hash=digest(state);const row=this.db.prepare('SELECT * FROM pilot_flows WHERE hash=?').get(hash);if(!row||Number(row.expires_at)<Date.now()||!equal(String(row.browser_hash),digest(browser)))return null;this.db.prepare('DELETE FROM pilot_flows WHERE hash=?').run(hash);return {verifier:String(row.verifier),nonce:String(row.nonce),inviteHash:String(row.invite_hash)};}
+ activate(identity:Identity,inviteHash:string,maxUsers:number){
+  if(identity.issuer!=='https://accounts.google.com'||!identity.subject||!identity.verified||!identity.email)throw Error('Identidade Google não confirmada.');
+  const email=identity.email.toLowerCase();const old=this.db.prepare('SELECT * FROM pilot_users WHERE issuer=? AND subject=?').get(identity.issuer,identity.subject);
+  if(old){if(old.disabled)throw Error('Acesso revogado.');return String(old.id);}
+  this.db.exec('BEGIN IMMEDIATE');try{
+   const invite=this.db.prepare('SELECT * FROM pilot_invites WHERE hash=?').get(inviteHash);
+   if(!invite||invite.email!==email||invite.used_at||invite.revoked||Number(invite.expires_at)<Date.now())throw Error('Convite inválido, expirado ou não autorizado para esta conta.');
+   if(Number(this.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n)>=maxUsers)throw Error('Limite de participantes atingido.');
+   const id=randomUUID();this.db.prepare('INSERT INTO pilot_users(id,issuer,subject,email,tenant_id) VALUES (?,?,?,?,?)').run(id,identity.issuer,identity.subject,email,randomUUID());this.db.prepare('UPDATE pilot_invites SET used_at=? WHERE hash=?').run(Date.now(),inviteHash);this.db.exec('COMMIT');return id;
+  }catch(e){this.db.exec('ROLLBACK');throw e;}
+ }
+ bootstrap(email:string,code:string){if(!email&&!code)return;if(code.length<32||code.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Convite inicial inválido.');this.db.prepare('INSERT OR IGNORE INTO pilot_invites(hash,email,expires_at) VALUES (?,?,?)').run(digest(code),email.trim().toLowerCase(),Date.now()+86400000);}
+ session(userId:string,hours:number){const value=token(),csrf=token(),now=Date.now();this.db.prepare('DELETE FROM pilot_sessions WHERE expires_at<?').run(now);this.db.prepare('INSERT INTO pilot_sessions VALUES (?,?,?,?,?)').run(digest(value),userId,digest(csrf),now+hours*3600000,now);return {value,csrf};}
+ getSession(value:string,idleMinutes:number):Session|null{if(!value||value.length>100)return null;const hash=digest(value),now=Date.now();const row=this.db.prepare('SELECT s.*,u.tenant_id,u.email,u.disabled FROM pilot_sessions s JOIN pilot_users u ON s.user_id=u.id WHERE s.hash=?').get(hash);if(!row)return null;if(row.disabled||Number(row.expires_at)<now||now-Number(row.last_seen)>idleMinutes*60000){this.db.prepare('DELETE FROM pilot_sessions WHERE hash=?').run(hash);return null;}if(now-Number(row.last_seen)>60000)this.db.prepare('UPDATE pilot_sessions SET last_seen=? WHERE hash=?').run(now,hash);return {userId:String(row.user_id),tenantId:String(row.tenant_id),email:String(row.email),csrfHash:String(row.csrf_hash)};}
+ logout(value:string){this.db.prepare('DELETE FROM pilot_sessions WHERE hash=?').run(digest(value));}
+ revoke(email:string){this.db.exec('BEGIN IMMEDIATE');try{this.db.prepare('UPDATE pilot_users SET disabled=1 WHERE email=?').run(email.trim().toLowerCase());this.db.prepare('UPDATE pilot_invites SET revoked=1 WHERE email=?').run(email.trim().toLowerCase());this.db.prepare('DELETE FROM pilot_sessions WHERE user_id IN (SELECT id FROM pilot_users WHERE disabled=1)').run();this.db.exec('COMMIT');}catch(e){this.db.exec('ROLLBACK');throw e;}}
+ limited(key:string,maximum:number,windowMs=600000){const now=Date.now();this.db.prepare('DELETE FROM pilot_limits WHERE window_start<?').run(now-windowMs);const row=this.db.prepare('SELECT count FROM pilot_limits WHERE key=?').get(key);this.db.prepare('INSERT INTO pilot_limits VALUES (?,?,1) ON CONFLICT(key) DO UPDATE SET count=count+1').run(key,now);return Number(row?.count??0)>=maximum;}
+ close(){this.db.close();}
+}

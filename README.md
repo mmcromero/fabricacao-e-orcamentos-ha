@@ -35,3 +35,9 @@ Este repositório é um artefato de distribuição gerado da base de desenvolvim
 As alterações são feitas na base e exportadas; não manter duas implementações.
 Ainda não foi definida uma licença para distribuição open source. A visibilidade
 pública, por si só, não concede essa licença.
+
+## Aplicativo adicional: Artesãos — Piloto — Testes
+
+Disponível separadamente para instalação manual, sem substituir Fabricação e Orçamentos. Base do núcleo: 0.1.19; versão experimental do piloto: 0.1.0. Login Google próprio, convites e dados separados por conta. Requer cliente Google e rota HTTPS no proxy. Ainda não validado com Google real ou no seu Supervisor; usar apenas dados fictícios, não liberar terceiros. O banco e as opções não são criptografados em disco por esta versão.
+
+[Configuração e limites do piloto](apps/artesaos-piloto/DOCS.md).
