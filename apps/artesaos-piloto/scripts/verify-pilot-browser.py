@@ -66,12 +66,16 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    page.goto(origin+prefix)
    expect(page.get_by_role('heading',name='Artesão Digital',exact=True)).to_be_visible()
 
+   expect(page.locator('[data-pilot-brand] img')).to_be_visible()
+   assert page.locator('[data-pilot-brand] img').evaluate('img=>img.naturalWidth')==293
    page.get_by_label('Código de convite (somente no primeiro acesso)').fill('synthetic-invite-'+account+'-01234567890123456789');page.get_by_role('button',name='Entrar com Google',exact=True).click()
    expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport()
    page.reload();expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
    bar=page.locator('#pilot-account');expect(bar.locator('.pilot-account-title')).to_have_text('Artesão Digital');expect(bar.locator('.pilot-account-user')).to_have_text(account+'@example.test')
    if (root/'dist/pilot-logo.png').exists():
-    logo=bar.locator('.pilot-account-title img');expect(logo).to_be_visible();assert logo.evaluate('img=>img.naturalWidth')>0
+    logo=bar.locator('.pilot-account-title img');expect(logo).to_be_visible();assert logo.evaluate('img=>img.naturalWidth')==464
+    assert page.locator('body').evaluate('el=>getComputedStyle(el).fontFamily').startswith('Arial')
+    assert page.get_by_role('heading',name='Orçamentos',exact=True).evaluate('el=>getComputedStyle(el).fontFamily').startswith('Georgia')
     logo.evaluate("img=>img.src='/artesaos-piloto/brand/missing-logo.png'")
     expect(bar.locator('.pilot-account-title img')).to_have_count(0);expect(bar.locator('.pilot-account-title span')).to_be_visible()
     bar.locator('.pilot-account-title').evaluate('title=>window.pilotBrand(title)');expect(bar.locator('.pilot-account-title img')).to_be_visible()
@@ -108,7 +112,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
    expect(page.get_by_label('Código de convite (somente no primeiro acesso)')).to_have_value('');page.get_by_role('button',name='Entrar com Google',exact=True).click()
    expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.goto(origin+prefix+'?view=produtos');expect(page.locator('.products-list-row')).to_have_count(1)
-   for view,title in [('orcamentos','Orçamentos'),('clientes','Clientes'),('fabricacao','Fabricação')]:
+   for view,title in [('orcamentos','Orçamentos'),('clientes','Clientes'),('fabricacao','Fabricação'),('configuracoes&area=produtos','Configurações — Produtos')]:
     page.goto(origin+prefix+'?view='+view);expect(page.get_by_role('heading',name=title,exact=True,level=1)).to_be_visible();expect(page.locator('.brand')).to_have_text('Artesão Digital');expect(page.locator('#pilot-build-info')).to_be_in_viewport()
    # The bare application path must also render an application, not only the account bar.
    page.goto(origin+prefix);expect(page.get_by_role('heading',name='Orçamentos',exact=True,level=1)).to_be_visible()
@@ -145,6 +149,8 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   adm.route('https://accounts.google.com/**',admin_google);ap=adm.new_page();ap.goto(origin+prefix+'admin/login')
   ap.get_by_role('button',name='Entrar na administração com Google',exact=True).click()
   expect(ap).to_have_url(origin+prefix+'admin/');expect(ap.get_by_role('heading',name='Interessados no piloto',exact=True)).to_be_visible()
+  expect(ap.locator('.pilot-account-title img')).to_be_visible()
+  assert ap.locator('.pilot-account-title img').evaluate('img=>img.naturalWidth')==464
   expect(ap.locator('#interest-rows')).to_contain_text('interested@example.test');expect(ap.locator('#interest-rows')).to_contain_text('Não informado')
   expect(ap.locator('#admin-pagination')).to_be_hidden();ap.screenshot(path='/tmp/artesao-digital-admin.png')
   ap.set_viewport_size({'width':390,'height':900});assert ap.evaluate('document.documentElement.scrollWidth<=innerWidth');ap.screenshot(path='/tmp/artesao-digital-admin-mobile.png')

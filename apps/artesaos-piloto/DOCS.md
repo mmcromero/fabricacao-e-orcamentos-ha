@@ -132,7 +132,15 @@ A lista ativa mantém contatos por noventa dias. A limpeza roda na inicializaç�
 
 ### Logo incluída no pacote
 
-A imagem estática fica em `pilot/branding/logo.png` na fonte, sendo copiada para `dist/pilot-logo.png` na compilação. O pacote exportado usa `branding/logo.png`. Aceita PNG de até 2 MB; esta versão não oferece upload ou troca pela administração. O cabeçalho prioriza a imagem disponível e mantém o nome Artesão Digital para acessibilidade; sem imagem ou ao falhar seu carregamento, apresenta o nome por escrito.
+As orientações de identidade visual recebidas em 30/10/2026 estão no [Guia rápido de uso da marca](branding/GUIA-DA-MARCA.md), também disponível em [PDF](branding/GUIA-DA-MARCA.pdf). O guia é uma versão de trabalho e registra variantes, cores, fontes, margens, tamanhos mínimos e comunicação. Sua incorporação documental não significa que todas as aplicações já estejam implementadas na interface.
+
+Para novas aplicações, usar a logo principal no login e a horizontal no cabeçalho, preservando proporção e espaço livre. A versão colorida se destina a fundos claros; a negativa, ao Verde Mata; a branca, a fundos escuros; e a monocromática verde, a aplicações de uma cor. O símbolo isolado se destina a espaços pequenos, com o nome por perto. Preservar identificação acessível e alternativa textual.
+
+Os doze PNGs originais fornecidos estão em `pilot/branding/`: `logo_principal.png`, `logo_horizontal.png`, `simbolo.png` e suas variantes `_branca`, `_mono_verde` e `_negativa`. O ZIP recebido também contém `proposta02_completo_transparente.png`, preservado na mesma pasta como referência histórica. Os arquivos foram incorporados sem alteração. A partir de 0.1.9, a interface usa as versões principal colorida e horizontal negativa conforme o contexto.
+
+O build copia `pilot/branding/logo_principal.png` para `dist/pilot-logo.png` e `pilot/branding/logo_horizontal_negativa.png` para `dist/pilot-logo-horizontal.png`. O pacote exportado usa a pasta `branding/`. Aceita PNG de até 2 MB. O login e a conclusão de acesso usam a principal; as áreas autenticadas de usuário e administração usam a horizontal negativa sobre Verde Mata, com alternativa textual e identificação acessível. O arquivo histórico `logo.png` é apenas fallback para builds sem a principal. Não há upload administrativo.
+
+O tema do adaptador do piloto aplica Georgia (alternativa Times New Roman) aos títulos, Arial (alternativa Helvetica) aos textos e controles, Linho ao fundo, Carvão Verde ao texto e Verde Mata aos elementos principais. Areia aparece em bordas e detalhes; Terracota no foco de teclado. Os estilos ficam restritos ao piloto, sem alterar o tema do aplicativo principal.
 
 ### Conferência manual após atualização
 

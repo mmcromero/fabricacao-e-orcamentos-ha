@@ -1,3 +1,10 @@
+# 0.1.9
+
+- Aplica a identidade visual em todas as áreas do piloto, incluindo login, conclusão de acesso, administração, formulários e diálogos: Georgia nos títulos, Arial no conteúdo, fundo Linho e Verde Mata nos elementos principais.
+- Usa a logo principal colorida nas telas de acesso e a horizontal negativa nos cabeçalhos autenticados, com proporção, espaço livre, contraste e alternativa textual preservados.
+- Inclui as variantes e guias na exportação e prepara as duas logos no build. Preserva a base 0.1.23, autenticação e dados por usuário.
+- Validação: compilação, 41 testes automatizados e navegador com provedor controlado, contas isoladas e telas estreitas. Google e instalação reais continuam dependentes de validação no ambiente final.
+
 # 0.1.8
 
 - Incorpora a base Fabricação e Orçamentos 0.1.23, preservando adaptações do Artesão Digital e atualizando versão/commit-base dos metadados.

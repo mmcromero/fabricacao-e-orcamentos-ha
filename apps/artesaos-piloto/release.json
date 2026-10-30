@@ -1,0 +1,17 @@
+{
+  "pilotVersion": "0.1.9",
+  "sourceCommit": "c30b8108ef2b818b76105618d84d6206d22c2502",
+  "coreBase": {
+    "version": "0.1.23",
+    "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
+  },
+  "validation": [
+    "build TypeScript/Vite",
+    "41 automated tests passed",
+    "Chromium with controlled provider: login, logout, isolation, administration, settings, branding and mobile viewport"
+  ],
+  "pending": [
+    "Google real, Home Assistant/Supervisor and ARM installation"
+  ],
+  "migration": "No database migration added. Stop the app and make a complete protected backup before updating. Restore the complete previous backup for rollback."
+}
