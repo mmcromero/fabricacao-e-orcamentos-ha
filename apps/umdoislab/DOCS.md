@@ -1,4 +1,24 @@
-# Uso — 0.1.18
+# Uso — 0.1.20
+
+## Listas e filtros
+
+A versão instalada aparece no canto superior direito de todas as páginas.
+Produtos, Clientes e Orçamentos iniciam com Ações em lote recolhidas. Clique no
+título para exibir opções e checkboxes; clique novamente para ocultá-los. A seleção
+fica à esquerda e centralizada, sem texto visível, com identificação acessível.
+Arquivar retira da lista sem apagar o histórico; a restauração fica em Ações em lote.
+
+Na lista de Produtos, a busca por nome/SKU e os filtros Origem/Categoria ficam
+lado a lado no computador. No celular, a busca permanece visível e Filtros abre
+um painel: Aplicar filtros confirma as opções; Cancelar ou Escape preserva os filtros
+anteriores. Os filtros ativos podem ser removidos individualmente; Limpar filtros
+remove também a busca. A contagem reflete os resultados filtrados.
+
+O cadastro completo de produto é compartilhado entre Fabricação, Novo produto,
+Editar e criação dentro do orçamento. A ordem das seções é a mesma. Fabricação
+começa expandida na sua área e recolhida nas demais; informações do site começam
+recolhidas. Categoria aparece desde o início; selecione a origem para habilitar a
+escolha em produtos próprios. Produtos de cliente mantêm categoria automática.
 
 ## Orçamentos
 

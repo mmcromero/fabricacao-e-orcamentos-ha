@@ -1,5 +1,17 @@
 # Histórico
 
+## 0.1.20
+
+- Compacta Arquivar na lista de Orçamentos, abaixo de Editar, em laranja escuro e com ícone de arquivo em telas pequenas.
+- Mostra a versão do programa de forma discreta no canto superior direito de todas as páginas, usando a versão do pacote na compilação.
+- Mantém Categoria visível no cadastro novo, inicialmente desabilitada até escolher a origem; produtos de cliente continuam com categoria automática e privacidade preservada.
+- Uniformiza a ordem das seções do formulário compartilhado de produto. Fabricação inicia aberta apenas na sua área.
+- Recolhe Ações em lote por padrão nas listas de Produtos, Clientes e Orçamentos; expandir mostra opções e checkboxes, recolher oculta ambos.
+- Coloca a seleção sem texto visível na primeira coluna à esquerda, centralizada verticalmente, com nome acessível para leitores de tela.
+- Reorganiza Produtos em foto, nome com um preço por linha, categoria, origem e ações; adapta a disposição em telas pequenas para preservar a leitura.
+- Adiciona barra compacta de busca/origem/categoria no computador e painel de filtros com Aplicar/Cancelar no celular, etiquetas removíveis, limpeza e contagem de resultados.
+- Não altera esquema de banco, dependências ou regras de cálculo. Preserva preços, vínculos de importação e histórico; instalação no Home Assistant permanece manual.
+
 ## 0.1.19
 
 - Compartilha cadastro completo de produtos entre Fabricação, Produtos e Orçamentos; a rota define quais seções começam abertas.

@@ -93,3 +93,89 @@
 .product-editor-photo{padding-right:48px;margin-bottom:12px}
 
 .products-screen .record-select{font-size:12px;margin:0 0 4px}.record-actions button{margin-right:8px}.price-comparison{border-top:1px solid #dce3db;padding:12px 0}.price-difference{color:#795000;font-weight:650}.product-form-heading{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.product-form-heading h3{overflow-wrap:anywhere;min-width:0}
+
+/* Quote actions share a compact column at every list width. */
+.products-screen .quote-record .quote-archive{grid-column:2;grid-row:2;min-width:72px;min-height:44px;margin:0;padding:8px 12px;line-height:1.4;background:#fff4e5;color:#8a3b00;border:1px solid #a64b00;justify-self:stretch}
+.products-screen .quote-record .quote-archive:hover:not(:disabled){background:#ffe2bb}
+.quote-archive-icon{display:none;width:20px;height:20px}
+@media(min-width:701px){.products-screen .quote-record .quote-archive{grid-column:3}}
+@media(max-width:600px){
+ .products-screen .quote-record .quote-archive{min-width:44px;width:44px;padding:10px;display:flex;align-items:center;justify-content:center}
+ .quote-archive-text{display:none}
+ .quote-archive-icon{display:block}
+}
+
+.record-actions>details>summary{cursor:pointer;font-weight:650;min-height:44px;align-content:center}
+
+/* Product columns follow the same order in the heading and each record. */
+.product-list-heading,.products-screen .product-list-row{display:grid;grid-template-columns:56px minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 96px;gap:12px;align-items:center}
+.product-list-heading.has-selection,.products-screen .product-list-row.has-selection{grid-template-columns:44px 56px minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 96px}
+.product-list-heading{font-size:13px;font-weight:650;padding:12px 0;border-bottom:1px solid #dce3db;margin-bottom:16px}
+.product-list-select{display:flex;align-items:center;justify-content:center;min-height:44px;align-self:stretch}
+.product-list-select input{margin:0;width:20px;height:20px}
+.product-list-photo{width:56px;min-width:0}
+.product-list-photo img{width:56px!important;height:56px!important}
+.product-list-details,.product-list-category,.product-list-origin{min-width:0;overflow-wrap:anywhere}
+.product-list-details p,.product-list-origin p,.product-list-row .product-list-category{margin:4px 0;font-size:14px}
+.product-list-actions{display:flex;flex-direction:column;gap:6px;align-self:center}
+.products-screen .product-list-actions .list-edit,.product-list-actions .archive-unavailable{width:100%;min-height:44px;margin:0}
+@media(max-width:600px){
+ .product-list-heading{display:none}
+ .products-screen .product-list-row{grid-template-columns:44px minmax(0,1fr) 64px;gap:8px}
+ .products-screen .product-list-row.has-selection{grid-template-columns:32px 44px minmax(0,1fr) 64px}
+ .product-list-select{grid-column:1;grid-row:1 / span 3}
+ .product-list-photo{grid-column:1;grid-row:1;width:44px}
+ .has-selection .product-list-photo{grid-column:2}
+ .product-list-photo img{width:44px!important;height:44px!important}
+ .product-list-details{grid-column:2;grid-row:1}
+ .has-selection .product-list-details{grid-column:3}
+ .product-list-row .product-list-category{grid-column:2;grid-row:2}
+ .product-list-row .product-list-origin{grid-column:2;grid-row:3}
+ .product-list-row.has-selection .product-list-category,.product-list-row.has-selection .product-list-origin{grid-column:3}
+ .product-list-actions{grid-column:3;grid-row:1 / span 3;align-items:center}
+ .has-selection .product-list-actions{grid-column:4}
+ .products-screen .product-list-actions .list-edit{width:44px}
+ .product-list-actions .archive-unavailable{font-size:11px;padding:6px 2px}
+ .product-list-details p{font-size:12px}
+}
+
+/* Compact filters on desktop; a native modal keeps mobile controls comfortable. */
+.product-filter-toolbar{display:flex;align-items:end;gap:12px}
+.product-filter-search{flex:1.4;min-width:0}
+.product-filter-desktop{display:flex;gap:12px;flex:2;min-width:0}
+.product-filter-desktop label{flex:1;min-width:0}
+.product-filters input,.product-filters select{width:100%;min-width:0;min-height:44px}
+.product-filters label{font-size:14px}
+.product-filter-toggle{display:none}
+.product-filter-status{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin:12px 0;font-size:13px}
+.product-filter-chips{display:flex;gap:8px;flex-wrap:wrap;min-width:0}
+.product-filter-chips button,.product-filter-clear{margin:0;min-height:44px;font-size:13px;padding:6px 10px;background:#eef4ef;color:#205e47;border:1px solid #a7bcb0;overflow-wrap:anywhere;max-width:100%}
+.product-filter-clear{background:transparent;border-color:transparent;text-decoration:underline}
+.products-screen .product-filter-dialog{width:min(92vw,440px);max-height:90dvh;padding:24px;border:1px solid #a7bcb0;border-radius:16px;overflow:auto;color:#20352e}
+.product-filter-dialog::backdrop{background:#0006}
+.product-filter-dialog h2{margin-top:0}
+.product-filter-dialog label+label{margin-top:16px}
+.product-filter-dialog-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.product-filter-dialog-actions button{min-height:44px;margin:0}
+.product-filter-dialog-actions button:not([type=submit]){background:#eef4ef;color:#205e47}
+.record-selection-row{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:center}
+.record-selection-row.has-selection{grid-template-columns:44px minmax(0,1fr)}
+.record-selection-row>input[type=checkbox]{width:20px;height:20px;margin:0;justify-self:center;align-self:center}
+.record-selection-row>.record-row{min-width:0}
+@media(max-width:600px){
+ .product-filter-desktop{display:none}
+ .product-filter-toggle{display:block;margin:0;min-height:44px;padding:10px 12px;white-space:nowrap}
+ .product-filter-search{flex:1}
+ .product-filter-toolbar{gap:8px}
+ .record-selection-row.has-selection{grid-template-columns:32px minmax(0,1fr);gap:8px}
+}
+.products-screen .product-list-select{margin:0}
+.products-screen .product-list-select input,.products-screen .record-selection-row>input[type=checkbox]{margin:0}
+@media(max-width:600px){
+ .products-screen .product-list-row{grid-template-columns:44px minmax(0,1fr)}
+ .products-screen .product-list-row.has-selection{grid-template-columns:32px 44px minmax(0,1fr)}
+ .product-list-select{grid-row:1 / span 4}
+ .product-list-actions,.has-selection .product-list-actions{grid-column:2;grid-row:4;flex-direction:row;justify-content:flex-start}
+ .has-selection .product-list-actions{grid-column:3}
+ .product-list-actions .archive-unavailable{width:auto;min-width:64px}
+}
