@@ -75,7 +75,7 @@ export function sessionScript(prefix:string,csrfCookie:string){
   if(!response.ok){location.replace(prefix+'login');return;}
   const data=await response.json();
   const bar=document.createElement('nav');bar.id='pilot-account';bar.setAttribute('aria-label','Conta do Artesão Digital');
-  const title=document.createElement('span');title.className='pilot-account-title';title.textContent='Artesão Digital';
+  const title=document.createElement('span');title.className='pilot-account-title';title.textContent='Artesão Digital';if(window.pilotBrand)window.pilotBrand(title);
   const name=document.createElement('span');name.className='pilot-account-user';name.textContent=data.email;name.title=data.email;
   const logout=document.createElement('button');logout.textContent='Sair';
   const status=document.createElement('p');status.id='pilot-session-status';status.setAttribute('role','alert');status.hidden=true;

@@ -70,6 +70,11 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport()
    page.reload();expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
    bar=page.locator('#pilot-account');expect(bar.locator('.pilot-account-title')).to_have_text('Artesão Digital');expect(bar.locator('.pilot-account-user')).to_have_text(account+'@example.test')
+   if (root/'dist/pilot-logo.png').exists():
+    logo=bar.locator('.pilot-account-title img');expect(logo).to_be_visible();assert logo.evaluate('img=>img.naturalWidth')>0
+    logo.evaluate("img=>img.src='/artesaos-piloto/brand/missing-logo.png'")
+    expect(bar.locator('.pilot-account-title img')).to_have_count(0);expect(bar.locator('.pilot-account-title span')).to_be_visible()
+    bar.locator('.pilot-account-title').evaluate('title=>window.pilotBrand(title)');expect(bar.locator('.pilot-account-title img')).to_be_visible()
    bb=bar.bounding_box();assert abs(bb['y'])<1
    title_box=bar.locator('.pilot-account-title').bounding_box();user_box=bar.locator('.pilot-account-user').bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
    assert title_box['x']<user_box['x']<exit_box['x'];assert abs(user_box['x']+user_box['width']/2-page.viewport_size['width']/2)<2
@@ -80,9 +85,18 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    if args.ha_cache:
     assert page.evaluate("navigator.serviceWorker.controller.scriptURL.includes('/artesaos-piloto/service-worker.js')")
     assert page.evaluate("async()=>{const c=await caches.open('fixture-ha-files');const r=await c.match('/static/keep-ha-fixture.txt');return await r.text();}")=="Preserve HA"
-    assert page.evaluate("async()=>{for(const name of await caches.keys()){for(const request of await (await caches.open(name)).keys())if(new URL(request.url).pathname.startsWith('/artesaos-piloto/'))return false;}return true;}")
+    cached_pilot=page.evaluate("async()=>{const found=[];for(const name of await caches.keys()){for(const request of await (await caches.open(name)).keys())if(new URL(request.url).pathname.startsWith('/artesaos-piloto/'))found.push(new URL(request.url).pathname);}return found;}")
+    assert not cached_pilot,cached_pilot
     assert page.evaluate("async()=>(await navigator.serviceWorker.getRegistrations()).some(r=>new URL(r.scope).pathname==='/')")
    return ctx,page
+  # A public expression of interest is distinct from activating a pilot account.
+  interested=browser.new_context(ignore_https_errors=True,viewport={'width':390,'height':900});ip=interested.new_page();ip.goto(origin+prefix+'login')
+  expect(ip.get_by_text('Projeto piloto: acesso somente para pessoas convidadas.',exact=True)).to_be_visible()
+  ip.get_by_label('Nome (obrigatório)',exact=True).fill('Interessado de teste')
+  ip.get_by_label('E-mail (obrigatório)',exact=True).fill('interested@example.test')
+  ip.get_by_role('checkbox').check();ip.get_by_role('button',name='Registrar interesse',exact=True).click()
+  expect(ip.locator('#interest-status')).to_contain_text('Interesse registrado')
+  interested.close()
   a,pa=context('a');pa.goto(origin+prefix+'?view=produtos');pa.get_by_role('button',name='Novo produto',exact=True).click();modal=pa.locator('dialog[open]');modal.get_by_label('Nome',exact=True).fill('Produto isolado A');modal.get_by_label('Origem',exact=True).select_option('own');modal.get_by_label('Valor varejo (R$)',exact=True).fill('25');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pa.locator('.product-record')).to_have_count(1)
   b,pb=context('b');pb.goto(origin+prefix+'?view=produtos');expect(pb.locator('.product-record')).to_have_count(0)
   pb.get_by_role('button',name='Novo produto',exact=True).click();modal=pb.locator('dialog[open]');modal.get_by_label('Nome',exact=True).fill('Produto isolado B');modal.get_by_label('Origem',exact=True).select_option('client');modal.get_by_label('Valor varejo (R$)',exact=True).fill('15');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pb.locator('.product-record')).to_have_count(1);expect(pb.locator('.product-record')).not_to_contain_text('Produto isolado A')
@@ -119,10 +133,24 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   pa.get_by_role('button',name='Sair',exact=True).click()
   expect(pa.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
   expect(pa.get_by_label('Código de convite (somente no primeiro acesso)')).to_have_value('')
+  # Separate Google admin login: an ordinary account cannot open the lead list.
+  forbidden=browser.new_context(ignore_https_errors=True);fp=forbidden.new_page();fp.goto(origin+prefix+'admin/')
+  expect(fp.get_by_role('heading',name='Acesso administrativo',exact=True)).to_be_visible();forbidden.close()
+  adm=browser.new_context(ignore_https_errors=True,viewport={'width':1280,'height':900})
+  def admin_google(route):
+   state=parse_qs(urlparse(route.request.url).query)['state'][0]
+   route.fulfill(status=302,headers={'location':origin+prefix+'auth/google/callback?state='+state+'&code=admin'})
+  adm.route('https://accounts.google.com/**',admin_google);ap=adm.new_page();ap.goto(origin+prefix+'admin/login')
+  ap.get_by_role('button',name='Entrar na administração com Google',exact=True).click()
+  expect(ap).to_have_url(origin+prefix+'admin/');expect(ap.get_by_role('heading',name='Interessados no piloto',exact=True)).to_be_visible()
+  expect(ap.locator('#interest-rows')).to_contain_text('interested@example.test');expect(ap.locator('#interest-rows')).to_contain_text('Não informado')
+  expect(ap.locator('#admin-pagination')).to_be_hidden();ap.screenshot(path='/tmp/artesao-digital-admin.png')
+  ap.set_viewport_size({'width':390,'height':900});assert ap.evaluate('document.documentElement.scrollWidth<=innerWidth');ap.screenshot(path='/tmp/artesao-digital-admin-mobile.png')
+  ap.get_by_role('button',name='Sair da administração',exact=True).click();expect(ap.get_by_role('heading',name='Acesso administrativo',exact=True)).to_be_visible();adm.close()
   isolated=browser.new_context(ignore_https_errors=True);lost=isolated.new_page();lost.goto(origin+prefix+'auth/finish');expect(lost.get_by_role('status')).to_contain_text('Não foi possível confirmar a sessão');expect(lost.get_by_role('link',name='Entrar novamente',exact=True)).to_be_visible();expect(lost).to_have_url(origin+prefix+'auth/finish');isolated.close()
   assert not errors,errors
   anonymous.dispose();browser.close()
- print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
+ print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, interesse com e-mail obrigatório, administração restrita, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
 finally:
  if args.nginx:subprocess.run(docker+['rm','-f',container],stdout=log,stderr=log,env=docker_env)
  server.terminate()

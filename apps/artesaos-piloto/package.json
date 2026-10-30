@@ -7,7 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",
+    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json && node scripts/prepare-pilot-brand.mjs",
     "start": "node dist-server/index.js",
     "test": "node --import tsx --test test/*.test.ts",
     "verify:runtime": "node scripts/verify-runtime.mjs",

@@ -1,5 +1,5 @@
 name: "Artesão Digital — Testes"
-version: "0.1.6"
+version: "0.1.7"
 slug: artesaos_piloto
 description: "Teste separado de login Google, convites e contas isoladas. Somente dados fictícios."
 arch:
@@ -16,6 +16,7 @@ ports:
 ports_description:
   8099/tcp: "Não expor no host. Acesso HTTPS somente pelo Nginx."
 options:
+  admin_emails: []
   public_url: ""
   google_client_id: ""
   google_client_secret: ""
@@ -30,6 +31,8 @@ options:
   test_email_5: ""
   test_invite_5: ""
 schema:
+  admin_emails:
+    - str
   public_url: str
   google_client_id: str
   google_client_secret: password

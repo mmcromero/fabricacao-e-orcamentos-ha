@@ -105,3 +105,35 @@ Ao atualizar uma instalação 0.1.3, confirme que o rodapé passou para Artesão
 Revise a escolha no Google: manter em Teste e adicionar os e-mails dos participantes, ou publicar a configuração OAuth conforme as exigências do Google. Não é necessário publicar o OAuth para este piloto se os e-mails já estiverem na lista de teste. Isso não dispensa o convite individual do aplicativo. A abertura dos novos campos não representa certificação de segurança; valide primeiro o isolamento com duas contas e mantenha dados fictícios enquanto a revisão de segurança e a proteção dos dados em repouso estiverem pendentes.
 
 Os convites adicionados nos campos 3, 4 e 5 são registrados ao salvar as opções e reiniciar o aplicativo, com a mesma validade de 24 horas dos anteriores. Preencha perto do momento de usar: reiniciar não renova um convite já expirado, consumido ou revogado. Não recrie as contas existentes nem desinstale para atualizar.
+
+## Atualização 0.1.7 — interesse no piloto e administração
+
+A tela de login informa que o piloto exige convite. O formulário de interesse pede **nome e e-mail obrigatórios**; WhatsApp é opcional. O usuário deve concordar com a finalidade indicada. O envio apenas registra interesse: não cria conta, não emite convite e não envia mensagens automaticamente.
+
+### E-mails administrativos
+
+Na configuração do aplicativo, preencha `admin_emails` com os e-mails Google das pessoas autorizadas. A lista inicia vazia, sem conceder administração à primeira pessoa que entrar. Enquanto estiver vazia, a coleta de interesses fica indisponível. Na execução independente, `PILOT_ADMIN_EMAILS` aceita uma lista separada por vírgulas. E-mails inválidos impedem a inicialização para evitar uma configuração enganosa.
+
+A entrada administrativa é `/artesaos-piloto/admin/login`, também acessível pelo link na tela de login de usuários. Ela usa o **mesmo cliente Google e o mesmo callback já configurado**. No Google em modo Teste, acrescente à lista de testadores os e-mails administrativos também. Não precisa de outro cliente OAuth, senha local ou mudança no Nginx.
+
+O administrador autentica sua identidade no Google e o servidor compara o e-mail verificado com `admin_emails`. Um e-mail digitado, um link ou uma sessão comum de usuário não concedem administração. Essa autenticação usa uma sessão administrativa separada, com cookies restritos ao caminho administrativo, duração máxima de uma hora e expiração após quinze minutos de inatividade. Cada operação protegida revalida a sessão e a lista autorizada; retirar um e-mail das opções e reiniciar remove sua autorização. A conta administrativa não precisa consumir convite nem uma das cinco vagas de usuário. Para usar também a aplicação, a mesma pessoa precisa do acesso de usuário normal.
+
+A tela inicial da administração consulta somente a lista de interessados, em páginas de 25 registros, com nome, e-mail, WhatsApp quando informado e data. A paginação só aparece quando necessária. Não inclui gestão completa de usuários, redefinição de senhas, envio de mensagens ou upload de logo.
+
+### Proteção dos interessados e seus limites
+
+O formulário valida os campos no servidor, exige origem correta e um token de formulário vinculado a cookie Secure/HttpOnly e de uso único, válido por quinze minutos. Tem limites de tentativas e campo anti-robô. O limite usa o endereço observado pelo servidor, sem confiar em cabeçalhos que visitantes possam forjar; atrás do Nginx, esse limite pode ser compartilhado entre visitantes. Retornos de registro não revelam se um contato já existia e não substituem dados anteriores. A capacidade é de até cinco mil registros ativos.
+
+Os contatos novos ficam em `pilot-interest.sqlite`, com o conteúdo cifrado por AES-256-GCM e chaves de pesquisa derivadas por HMAC. O processo cria `pilot-interest.key`, de 32 bytes, com permissão restrita. A cifra autentica também a identificação e data do registro. A falta ou troca da chave após uso faz o sistema recusar esse armazenamento, sem descartar os contatos silenciosamente. Conserve **o banco e a chave** ao restaurar. Não publique, envie pelo chat ou versione nenhum desses arquivos.
+
+**Limite importante:** a chave é mantida no volume do próprio aplicativo. Quem tiver acesso ao banco e à chave poderá decifrar os contatos. Isto não cifra todo o banco de usuários, os dados comerciais, as opções do Home Assistant nem o arquivo de backup completo. Backups devem continuar com acesso restrito e proteção própria. Esta implementação não constitui certificação, nem substitui revisão independente de segurança.
+
+A lista ativa mantém contatos por noventa dias. A limpeza roda na inicialização, na consulta/registro e periodicamente; cópias antigas de backup não são apagadas por essa rotina. A política e exclusão de backups precisam ser administradas pelo responsável da instalação. Valide com dados fictícios e confira as permissões com contas distintas antes de coletar contatos reais.
+
+### Logo incluída no pacote
+
+A imagem estática fica em `pilot/branding/logo.png` na fonte, sendo copiada para `dist/pilot-logo.png` na compilação. O pacote exportado usa `branding/logo.png`. Aceita PNG de até 2 MB; esta versão não oferece upload ou troca pela administração. O cabeçalho prioriza a imagem disponível e mantém o nome Artesão Digital para acessibilidade; sem imagem ou ao falhar seu carregamento, apresenta o nome por escrito.
+
+### Conferência manual após atualização
+
+Atualize sem desinstalar, preserve os pares de e-mail/convite existentes e configure `admin_emails`. Reinicie; abra o login pelo domínio HTTPS. Teste o interesse sem WhatsApp, rejeição sem e-mail, login administrativo da conta autorizada, rejeição de uma conta comum e saída. Verifique nome/contato na administração e ausência de paginação com poucos registros. O mesmo Google/callback/Nginx existente é preservado; não use dados pessoais reais na primeira conferência.

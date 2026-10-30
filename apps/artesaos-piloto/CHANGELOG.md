@@ -1,3 +1,12 @@
+# 0.1.7
+
+- Acrescenta aviso de piloto por convite e formulário de interesse com nome/e-mail obrigatórios e WhatsApp opcional; registrar não cria conta nem libera acesso.
+- Adiciona login administrativo separado pelo Google e lista explícita `admin_emails`, negando acesso por padrão. Sessões administrativas são separadas e não consomem vagas de usuário.
+- Inclui consulta restrita e paginada de interessados, responsiva, com validação de autorização no servidor e proteção contra sessão de outra conta.
+- Protege o formulário com validação, origem, token de uso único, limites de tentativas e deduplicação sem revelar contatos existentes.
+- Cifra o conteúdo dos contatos novos por AES-256-GCM, com arquivo de chave restrito e retenção de noventa dias. A chave no mesmo volume não protege contra comprometimento de banco e chave juntos; backups e demais bancos ainda exigem proteção própria.
+- Inclui a logo original fornecida pelo usuário no cabeçalho, com alternativa textual em caso de ausência/falha e acessibilidade; não implementa upload ou gestão completa de usuários.
+
 # 0.1.6
 
 - Amplia as opções do Home Assistant para cinco pares de e-mail e convite inicial, mantendo compatibilidade com os dois existentes e o limite de cinco contas.
