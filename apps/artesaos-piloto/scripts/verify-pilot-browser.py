@@ -3,7 +3,7 @@ import argparse,re,base64,hashlib,json,os,ssl,tempfile,subprocess,time,urllib.re
 from urllib.parse import urlparse,parse_qs
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
-parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--nginx',action='store_true');parser.add_argument('--ha-cache',action='store_true');args=parser.parse_args();args.nginx=args.nginx or args.ha_cache
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--nginx',action='store_true');parser.add_argument('--ha-cache',action='store_true');parser.add_argument('--legal',action='store_true');args=parser.parse_args();args.nginx=args.nginx or args.ha_cache
 root=Path(__file__).resolve().parents[1]
 build_info=json.loads((root/'pilot-build.json').read_text())
 certdir=tempfile.TemporaryDirectory(prefix='pilot-tls-fixture-');key=str(Path(certdir.name)/'key.pem');cert=str(Path(certdir.name)/'cert.pem')
@@ -13,7 +13,7 @@ pubkey=subprocess.check_output(['openssl','x509','-in',cert,'-pubkey','-noout'])
 spki=subprocess.check_output(['openssl','pkey','-pubin','-outform','DER'],input=pubkey)
 fixture_spki=base64.b64encode(hashlib.sha256(spki).digest()).decode()
 log=open('/tmp/artesaos-browser-server.log','w')
-server=subprocess.Popen(['node','--import','tsx','scripts/pilot-browser-server.mjs'],cwd=root,env={**os.environ,'PILOT_BROWSER_TEST':'1','PILOT_TEST_KEY':key,'PILOT_TEST_CERT':cert,'PILOT_TEST_HTTP_BACKEND':'1' if args.nginx else '0'},stdout=log,stderr=log)
+server=subprocess.Popen(['node','--import','tsx','scripts/pilot-browser-server.mjs'],cwd=root,env={**os.environ,'PILOT_BROWSER_TEST':'1','PILOT_TEST_LEGAL':'1' if args.legal else '0','PILOT_TEST_KEY':key,'PILOT_TEST_CERT':cert,'PILOT_TEST_HTTP_BACKEND':'1' if args.nginx else '0'},stdout=log,stderr=log)
 origin='https://127.0.0.1:8298';prefix='/artesaos-piloto/'
 docker_env={k:v for k,v in os.environ.items() if k not in ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH']}
 docker=['docker','--host=unix:///var/run/docker.sock'];container='codex-pilot-proxy-'+str(os.getpid())
@@ -69,7 +69,13 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    expect(page.locator('[data-pilot-brand] img')).to_be_visible()
    assert page.locator('[data-pilot-brand] img').evaluate('img=>img.naturalWidth')==293
    page.get_by_label('Código de convite (somente no primeiro acesso)').fill('synthetic-invite-'+account+'-01234567890123456789');page.get_by_role('button',name='Entrar com Google',exact=True).click()
-   expect(page).to_have_url(origin+prefix+'?view=produtos');expect(page.get_by_role('heading',name='Boas-vindas ao Artesão Digital',exact=True)).to_be_visible()
+   expect(page).to_have_url(origin+prefix+'?view=produtos')
+   if args.legal:
+    expect(page.get_by_role('heading',name='Termos de Uso',exact=True)).to_be_visible();consent=page.get_by_role('checkbox',name='Li e aceito os Termos de Uso.',exact=True);expect(consent).not_to_be_checked();expect(page.get_by_role('button',name='Confirmar e continuar',exact=True)).to_be_disabled()
+    assert page.evaluate("async()=>(await fetch(new URL('api/company',document.baseURI))).status")==428
+    assert page.evaluate("async()=>(await fetch(new URL('api/support',document.baseURI))).status")==428
+    page.screenshot(path='/tmp/artesao-validation/aceite-'+account+'.png');consent.check();page.get_by_role('button',name='Confirmar e continuar',exact=True).click()
+   expect(page.get_by_role('heading',name='Boas-vindas ao Artesão Digital',exact=True)).to_be_visible()
    finish=page.get_by_role('button',name='Concluir configuração inicial',exact=True);expect(finish).to_be_disabled()
    assert page.evaluate("async()=>(await fetch(new URL('api/products',document.baseURI))).status")==428
    if account=='a':
@@ -137,6 +143,26 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   b,pb=context('b');pb.goto(origin+prefix+'?view=produtos');expect(pb.locator('.products-list-row')).to_have_count(0)
   pb.get_by_role('button',name='Novo produto',exact=True).click();modal=pb.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado B');modal.get_by_label('Origem',exact=True).select_option('client');expect(modal.get_by_label('Exibir no catálogo',exact=True)).to_have_count(0);modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('15');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pb.locator('.products-list-row')).to_have_count(1);expect(pb.locator('.products-list-row')).not_to_contain_text('Produto isolado A')
   pa.reload();expect(pa.locator('.products-list-row')).to_have_count(1);expect(pa.locator('.products-list-row')).not_to_contain_text('Produto isolado B')
+  # Company logo: phone upload, preview, explicit save, reload and isolation.
+  pa.set_viewport_size({'width':390,'height':844});pa.goto(origin+prefix+'?view=configuracoes')
+  logo_section=pa.get_by_role('heading',name='Logo da sua empresa (opcional)',exact=True).locator('..')
+  logo_bytes=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAD0lEQVR4nGP4z8AARAwMAAz8Af9c/RSVAAAAAElFTkSuQmCC')
+  logo_section.get_by_label('Selecionar logo',exact=True).set_input_files({'name':'logo.png','mimeType':'image/png','buffer':logo_bytes})
+  expect(logo_section.get_by_alt_text('Prévia da nova logo')).to_be_visible();logo_section.get_by_role('button',name='Salvar logo',exact=True).click();expect(logo_section.get_by_role('status')).to_have_text('Logo salva.')
+  pa.reload();expect(pa.get_by_alt_text('Logo atual da empresa',exact=True)).to_be_visible();assert pa.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  assert pb.evaluate("async()=>(await (await fetch(new URL('api/company/logo/meta',document.baseURI))).json()).present")==False
+  fixture_quote={'title':'Pedido PDF','status':'finalized','client':{'id':1,'name':'Cliente de teste','contact':'','phone':'','email':'','taxDocument':'','postal':''},'items':[{'id':1,'name':'Peça São João','productId':None,'origin':'own','prices':{'wholesale':None,'factory':None,'retail':1234},'priceKey':'retail','quantity':'3','lengthCm':None,'widthCm':None,'heightCm':None,'weightGrams':None,'packaging':'none','packagingType':'','packagingAmount':'','packagingIncluded':False}],'notes':'Pagamento e validade definidos manualmente.','delivery':{'mode':'pickup','carrier':'','amount':'0','notes':''}}
+  made=pa.evaluate("async data=>{const r=await fetch(new URL('api/quotes',document.baseURI),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({data,expectedRevision:0})});return {status:r.status,data:await r.json()};}",fixture_quote);assert made['status']==200,made
+  pa.goto(origin+prefix+'?view=orcamentos');pa.locator('.quotes-list-row').filter(has_text='Pedido PDF').get_by_role('button',name='Editar',exact=True).click()
+  document_panel=pa.get_by_role('heading',name='Documento final',exact=True).locator('..');expect(document_panel.get_by_role('combobox',name='Edição',exact=True)).to_have_value('1');pa.evaluate("()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.testSharedFile=data.files[0].name;}});}");document_panel.get_by_role('button',name='Preparar PDF',exact=True).click();expect(document_panel.get_by_role('link',name='Baixar PDF',exact=True)).to_be_visible()
+  document_panel.get_by_role('button',name='Compartilhar PDF',exact=True).click();expect(document_panel.get_by_role('status')).to_contain_text('Confirme separadamente');assert pa.evaluate('window.testSharedFile').endswith('edicao-1.pdf')
+  assert pa.evaluate("async id=>(await (await fetch(new URL('api/quotes/'+id,document.baseURI))).json()).data.status",made['data']['id'])=='finalized'
+  pa.evaluate("()=>{Object.defineProperty(navigator,'share',{configurable:true,value:async()=>{throw new Error('fixture unavailable');}});}");document_panel.get_by_role('button',name='Compartilhar PDF',exact=True).click();expect(document_panel.get_by_role('status')).to_contain_text('Use Baixar PDF')
+  with pa.expect_download() as downloaded:document_panel.get_by_role('link',name='Baixar PDF',exact=True).click()
+  downloaded.value.save_as('/tmp/artesao-validation/browser-orcamento.pdf');assert downloaded.value.suggested_filename.endswith('edicao-1.pdf')
+  expect(pa.get_by_role('button',name='Marcar como enviado',exact=True)).to_be_visible();assert pa.evaluate('document.documentElement.scrollWidth<=innerWidth');document_panel.screenshot(path='/tmp/artesao-validation/documento-mobile.png')
+  pa.get_by_role('button',name='Fechar',exact=True).last.click();pa.goto(origin+prefix+'?view=produtos');pa.set_viewport_size({'width':1280,'height':900})
+
   pa.get_by_role('link',name='Suporte técnico',exact=True).click();form=pa.get_by_role('dialog',name='Abrir chamado de suporte',exact=True);form.get_by_label(re.compile('^Motivo do contato')).select_option('bug');form.get_by_label(re.compile('^Assunto')).fill('Erro de teste no cadastro');form.get_by_label(re.compile('^Descrição da dúvida ou erro')).fill('Descrição literal <img src=x onerror=alert(1)>\nPassos para reproduzir.');form.get_by_role('button',name='Enviar chamado',exact=True).click();expect(form).to_have_count(0);expect(pa.locator('.support-conversation')).to_contain_text('Erro de teste no cadastro');assert pa.locator('.support-conversation img').count()==0
   support_id=pa.evaluate("async()=>(await (await fetch(new URL('api/support',document.baseURI))).json()).items.find(item=>item.subject==='Erro de teste no cadastro').id")
   pb.goto(origin+prefix+'?view=configuracoes&area=suporte');panel=pb.get_by_role('tabpanel',name='Meus chamados',exact=True);expect(panel).to_be_visible();expect(panel).to_contain_text('Nenhum chamado encontrado.');assert pb.evaluate("async id=>(await fetch(new URL('api/support/'+id,document.baseURI))).status",support_id)==404
@@ -219,7 +245,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   isolated=browser.new_context(ignore_https_errors=True);lost=isolated.new_page();lost.goto(origin+prefix+'auth/finish');expect(lost.get_by_role('status')).to_contain_text('Não foi possível confirmar a sessão');expect(lost.get_by_role('link',name='Entrar novamente',exact=True)).to_be_visible();expect(lost).to_have_url(origin+prefix+'auth/finish');isolated.close()
   assert not errors,errors
   anonymous.dispose();browser.close()
- print('PASS: primeiro acesso e novo login SEM URL manual, Produtos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, interesse com e-mail obrigatório, administração restrita, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
+ print('PASS: logo/PDF mobile, download e isolamento; aceite jurídico fixture='+str(args.legal)+'; primeiro acesso e novo login SEM URL manual, Produtos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, interesse com e-mail obrigatório, administração restrita, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
 finally:
  if args.nginx:subprocess.run(docker+['rm','-f',container],stdout=log,stderr=log,env=docker_env)
  server.terminate()

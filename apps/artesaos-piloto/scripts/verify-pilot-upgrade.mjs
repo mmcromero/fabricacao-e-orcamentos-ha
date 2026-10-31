@@ -24,6 +24,14 @@ try{
  app=await createPilotApp(config,{async start(){throw Error('Not used');},async complete(){throw Error('Not used');}});
  const request=(path,headers={},method='GET',payload)=>app.inject({url:prefix+path,method,headers:{host:'upgrade.example.test',...headers},...(payload===undefined?{}:{payload})});
  const json=async(path,headers,method,payload)=>{const r=await request(path,headers,method,payload);assert.equal(r.statusCode,200,r.body);return r.json();};
+ // This rehearsal predates mandatory onboarding. Verify the new guard, then mark
+ // only disposable fixtures complete so the original material migration checks can run.
+ for(const account of manifest.accounts){
+  assert.equal((await request('api/products',account.headers)).statusCode,428);
+  const control=new PilotStore(dataDir),tenant=control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(account.headers['x-pilot-context']);control.close();
+  const db=new DatabaseSync(join(dataDir,'tenants',String(tenant.tenant_id),'validation.sqlite'));
+  db.prepare('INSERT INTO pilot_onboarding(id,completed_at) VALUES(1,?)').run(new Date().toISOString());db.close();
+ }
  for(const account of manifest.accounts){
   assert.deepEqual(await json('api/products',account.headers),migratedView(account.products),'new catalog flag defaults to false; existing fields must be preserved');
   assert.deepEqual(await json('api/records/products/archived',account.headers),account.archivedProducts);

@@ -1,3 +1,12 @@
+# 0.1.15 — pacote experimental de testes
+
+- Acrescenta logo opcional por conta, com prévia, otimização, substituição e remoção sem histórico de imagens no aplicativo.
+- Gera PDF selecionável em memória, com empresa, cliente, produtos/preços escolhidos, quantidades, embalagem, frete, total e observações. Sem custos internos, margens ou multiplicadores.
+- Preserva dados textuais e valores por edição finalizada, usa logo atual ao gerar novamente e oferece visualizar/baixar/compartilhar quando suportado. Compartilhar não marca como enviado.
+- Prepara documentos públicos e aceite versionado antes das boas-vindas, com bloqueio no servidor quando ativado. Desativado por padrão; nenhuma minuta definitiva incluída.
+- Reconstrói minutas e pendências operacionais com hospedagem pessoal no Brasil e ausência atual de backup. Mantém base 0.1.23 e aplicação principal.
+- Entrega experimental, não primeiro release estável. Consultar DOCS e VALIDACAO-0.1.15.md para evidências e limites.
+
 # 0.1.14
 
 - Acrescenta link fixo de Suporte técnico no rodapé autenticado, com formulário de abertura de chamado para dúvida de uso ou relato de erro. O suporte também fica disponível durante as boas-vindas.

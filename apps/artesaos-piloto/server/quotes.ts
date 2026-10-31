@@ -1,3 +1,4 @@
+import {ensureDocuments,captureDocument} from './pilot/quote-document.js';
 import {CLIENT_CATEGORY} from './product-category.js';
 import {ensureQuoteSearch,quoteSearchText,quoteListQuerySchema,pagedQuotes,type QuoteListQuery} from './quote-pagination.js';
 import {isDeepStrictEqual} from 'node:util';
@@ -49,7 +50,8 @@ function completionIssues(data:QuoteData){
  return issues;
 }
 const content=(data:QuoteData)=>{const {status,...rest}=normalized(data);return rest;};
-export function registerQuotes(app:FastifyInstance,db:DatabaseSync){
+export function registerQuotes(app:FastifyInstance,db:DatabaseSync,pilot=false){
+ if(pilot)ensureDocuments(db);
  db.exec(`CREATE TABLE IF NOT EXISTS quotes (id INTEGER PRIMARY KEY, data TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0);
  CREATE TABLE IF NOT EXISTS quote_versions (quote_id INTEGER NOT NULL, revision INTEGER NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(quote_id,revision));`);
  ensureQuoteSearch(db);
@@ -70,7 +72,13 @@ export function registerQuotes(app:FastifyInstance,db:DatabaseSync){
   if(data.status==='sent')return reply.code(400).send({message:'Finalize o orçamento antes de marcar como enviado ao cliente.'});
   const issues=data.status==='draft'?[]:completionIssues(data);
   if(issues.length)return reply.code(400).send({message:'Para finalizar: '+issues.join('; ')+'.'});
-  const result=db.prepare('INSERT INTO quotes(data,search_text,updated_at) VALUES (?,?,?)').run(JSON.stringify(data),quoteSearchText(data),new Date().toISOString());return {id:Number(result.lastInsertRowid),revision:1};
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   const result=db.prepare('INSERT INTO quotes(data,search_text,updated_at) VALUES (?,?,?)').run(JSON.stringify(data),quoteSearchText(data),new Date().toISOString());
+   const id=Number(result.lastInsertRowid);
+   if(pilot&&data.status==='finalized')captureDocument(db,id,1,data,quoteTotals(data.items,data.delivery));
+   db.exec('COMMIT');return {id,revision:1};
+  }catch(e){db.exec('ROLLBACK');throw e;}
  });
  app.put<{Params:{id:string};Body:{data:QuoteData;expectedRevision:number}}>('/api/quotes/:id',{bodyLimit:512*1024,schema:{body}},(req,reply)=>{
   const data=normalized(req.body.data);
@@ -89,6 +97,7 @@ export function registerQuotes(app:FastifyInstance,db:DatabaseSync){
    db.prepare('INSERT INTO quote_versions(quote_id,revision,data,updated_at) VALUES (?,?,?,?)').run(req.params.id,row.revision,row.data,row.updated_at);
    const result=db.prepare('UPDATE quotes SET data=?,search_text=?,revision=revision+1,updated_at=? WHERE id=? AND revision=? AND archived=0').run(JSON.stringify(data),quoteSearchText(data),new Date().toISOString(),req.params.id,req.body.expectedRevision);
    if(!result.changes)throw Error('Conflito de versão.');
+   if(pilot&&old.status==='draft'&&data.status==='finalized')captureDocument(db,Number(req.params.id),req.body.expectedRevision+1,data,quoteTotals(data.items,data.delivery));
    db.exec('COMMIT');
   }catch(e){db.exec('ROLLBACK');throw e;}
   return {id:Number(req.params.id),revision:req.body.expectedRevision+1};

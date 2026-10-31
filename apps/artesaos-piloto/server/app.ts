@@ -1,3 +1,5 @@
+import {registerCompanyLogo} from './pilot/company-logo.js';
+import {registerQuoteDocuments} from './pilot/quote-document.js';
 import {registerOnboarding} from './pilot/onboarding.js';
 import {registerCompany} from './pilot/company.js';
 import {registerLegacyMaterialUpgrade} from './legacy-material-upgrade.js';
@@ -50,7 +52,8 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerClients(app, db);
   registerSettings(app, db,options.pilotFeatures??false);
   registerManufacturing(app, db,options.pilotFeatures??false);
-  registerQuotes(app, db);
+  registerQuotes(app, db,options.pilotFeatures??false);
+  if(options.pilotFeatures){registerCompanyLogo(app,db);registerQuoteDocuments(app,db);}
   registerReconciliation(app, db,options.pilotFeatures??false);
   registerProductEditor(app, db,options.pilotFeatures??false);
   registerRecordActions(app, db,options.pilotFeatures??false);

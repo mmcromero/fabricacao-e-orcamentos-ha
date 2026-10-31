@@ -16,5 +16,6 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/pilot-build.json ./pilot-build.json
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
+COPY --from=build /app/assets/fonts ./assets/fonts
 EXPOSE 8099
 CMD ["node", "dist-server/pilot/index.js"]

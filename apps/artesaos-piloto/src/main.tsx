@@ -1,3 +1,4 @@
+import LegalGate from './LegalGate';
 import {appName} from './branding';
 import ValidatedForm from './FormValidation';
 import React, { useEffect, useState } from 'react';
@@ -62,5 +63,5 @@ const query=new URLSearchParams(window.location.search);
 const view=query.get('view');
 const area=query.get('area');
 const pilotPage=view==='suporte'?<SupportHub/>:view==='configuracoes'?<PilotSettings/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Products/>;
-const page = appName==='Artesão Digital'?<PilotGate allowBeforeSetup={view==='suporte'}>{pilotPage}</PilotGate>:(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
+const page = appName==='Artesão Digital'?<LegalGate><PilotGate allowBeforeSetup={view==='suporte'}>{pilotPage}</PilotGate></LegalGate>:(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
 createRoot(document.getElementById('root')!).render(<><small className="app-version" aria-label={`Versão ${__APP_VERSION__}`}>v{__APP_VERSION__}</small>{page}</>);
