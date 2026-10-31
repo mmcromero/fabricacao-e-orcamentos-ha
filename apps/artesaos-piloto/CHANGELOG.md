@@ -1,3 +1,7 @@
+# 0.1.11
+
+- Atualiza o aviso no login para orientar a manter uma cópia das informações e informar que o ambiente está em construção e pode apresentar instabilidades.
+
 # 0.1.10
 
 - Prioriza a apresentação do piloto gratuito por convite e o formulário de interesse na entrada; separa o login em uma seção própria abaixo, acessível pelo link “já tenho um convite/login”.
