@@ -1,18 +1,19 @@
 {
-  "pilotVersion": "0.1.13",
-  "sourceCommit": "37fa4dbe2c037960acbcf7ea106a6dd07c3d1036",
+  "pilotVersion": "0.1.14",
+  "sourceCommit": "22db07298aede2a6df1b295214ae74a974aafe5f",
   "coreBase": {
     "version": "0.1.23",
     "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
   },
   "validation": [
     "TypeScript/Vite build",
-    "43 automated tests passed: onboarding/API gate, mandatory company, material/settings minima, persistence, catalog migration and bulk exclusion, hourly overhead fallback without double counting and authoritative price application",
-    "Chromium with controlled provider: unfinished onboarding after logout/login, saved data retained, completion, normal access, catalog checkbox hidden and cleared on client origin, settings visible, mobile navigation and account isolation"
+    "45 automated tests passed, including support authentication, ownership, admin authorization, CSRF/origin/context, status history, stale revisions, idempotent retries, restart persistence and pagination isolation",
+    "Chromium with controlled provider: support during onboarding, footer form, private settings tab, two-account isolation, admin reply/status, user follow-up after reload, closed-ticket reopen action and mobile layout"
   ],
   "pending": [
     "Google real, Home Assistant/Supervisor and ARM installation"
   ],
-  "migration": "Creates pilot_onboarding in each pilot account database. Persists missing/below-minimum markups and zero for unused missing hourly rates; clears catalog selection for client products. Existing accounts complete onboarding once; prior saved data is reused. Stop app and make a complete protected backup before updating; rollback requires restoring the complete prior volume.",
-  "backlog": "Company details in the final client-facing quote document only; not implemented in this package."
+  "migration": "Creates pilot-support.sqlite in the pilot volume with restricted file permissions. No changes to commercial schemas or the incorporated core. Back up the complete volume with the app stopped before updating; restore the complete previous backup for rollback.",
+  "backlog": "Company details in the final client-facing quote document only; not implemented in this package.",
+  "support": "Tickets are linked to the authenticated account; admins can view all. Messages and status history stay in the app. No automatic external messages, attachments or collection of commercial records."
 }

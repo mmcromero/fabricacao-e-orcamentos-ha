@@ -1,3 +1,12 @@
+# 0.1.14
+
+- Acrescenta link fixo de Suporte técnico no rodapé autenticado, com formulário de abertura de chamado para dúvida de uso ou relato de erro. O suporte também fica disponível durante as boas-vindas.
+- Inclui a aba Meus chamados nas configurações, com histórico da própria conta, filtros, paginação, mensagens e acompanhamento de status.
+- Acrescenta Central de suporte na administração, com consulta de todas as contas, resposta e mudança de status: Em aberto, Em análise, Respondido, Aguardando resposta do cliente e Finalizado.
+- Mantém o histórico das mensagens e mudanças de status; a resposta do usuário retorna o chamado a Em aberto e permite reabrir um chamado finalizado.
+- Protege acesso por conta e permissão administrativa, sessão, contexto da aba e CSRF. Inclui revisão para alterações concorrentes, limites de envio e chaves de reenvio para evitar duplicações em falhas de rede.
+- Armazena chamados no volume do piloto, sem envio automático de e-mail nem coleta automática de arquivos ou registros comerciais. Preserva a base 0.1.23.
+
 # 0.1.13
 
 - Oculta a opção de catálogo para produtos de cliente, limpa a marcação ao mudar a origem e corrige os registros antigos. O servidor também impede a inclusão por edição, importação ou ação em lote.

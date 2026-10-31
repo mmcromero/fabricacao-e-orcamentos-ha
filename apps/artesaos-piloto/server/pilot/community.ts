@@ -1,3 +1,6 @@
+import type {SupportStore} from './support-store.js';
+import {registerSupportRoutes} from './support-routes.js';
+import {supportAdminHtml,supportAdminScript} from './support-admin-ui.js';
 import type {FastifyInstance,FastifyReply} from 'fastify';
 import type {PilotConfig} from './config.js';
 import type {IdentityProvider} from './google.js';
@@ -6,7 +9,8 @@ import {InterestStore,parseInterest} from './interest.js';
 import {interestForm,interestScript,adminScript} from './community-ui.js';
 const ADMIN='__Secure-artesaos_admin_session',CSRF='__Secure-artesaos_admin_csrf',INTEREST='__Secure-artesaos_interest',FLOW='__Secure-artesaos_flow';
 type Cookies=(header:string|undefined,name:string)=>string;
-export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:PilotStore,provider:IdentityProvider,readCookie:Cookies,browserTag:string,footer:string){
+export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:PilotStore,provider:IdentityProvider,readCookie:Cookies,browserTag:string,footer:string,support:SupportStore){
+ footer=footer.replace('?view=suporte&amp;novo=1','admin/support').replace('Suporte técnico','Central de suporte');
  const prefix=config.prefix,base=prefix+'admin/',allowed=(config.adminEmails??[]),interests=new InterestStore(config.dataDir);
  const adminCookie=(name:string,value:string,httpOnly=true,age=3600)=>`${name}=${encodeURIComponent(value)}; Path=${base}; Secure; SameSite=Lax; Max-Age=${age}${httpOnly?'; HttpOnly':''}`;
  const current=(req:{headers:{cookie?:string}})=>store.getAdmin(readCookie(req.headers.cookie,ADMIN),allowed);
@@ -55,9 +59,17 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
  });
  const adminPage=async(req:{headers:{cookie?:string}},reply:FastifyReply)=>{
   const admin=current(req);if(!admin)return reply.redirect(base+'login');
-  return reply.type('text/html').send(page('Interessados no piloto',`<main class="pilot-admin"><h1>Interessados no piloto</h1><p>Lista restrita à administração. O registro de interesse não cria conta nem libera acesso.</p><p id="admin-total"></p><p id="admin-status" role="status" aria-live="polite"></p><div class="pilot-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Recebido em</th></tr></thead><tbody id="interest-rows"></tbody></table></div><nav id="admin-pagination" aria-label="Paginação de interessados" hidden><button id="admin-previous">Anterior</button><span id="admin-page"></span><button id="admin-next">Próxima</button></nav></main>`,`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script>`));
+  return reply.type('text/html').send(page('Interessados no piloto',`<main class="pilot-admin"><nav class="pilot-admin-nav" aria-label="Administração"><a href="${base}" aria-current="page">Interessados no piloto</a><a href="${base}support">Chamados de suporte</a></nav><h1>Interessados no piloto</h1><p>Lista restrita à administração. O registro de interesse não cria conta nem libera acesso.</p><p id="admin-total"></p><p id="admin-status" role="status" aria-live="polite"></p><div class="pilot-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Recebido em</th></tr></thead><tbody id="interest-rows"></tbody></table></div><nav id="admin-pagination" aria-label="Paginação de interessados" hidden><button id="admin-previous">Anterior</button><span id="admin-page"></span><button id="admin-next">Próxima</button></nav></main>`,`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script>`));
  };
  app.get(base,adminPage);app.get(prefix+'admin',(_req,reply)=>reply.redirect(base));
+ registerSupportRoutes(app,base+'api/support',support,true,(req,reply)=>{
+  const admin=current(req);if(!admin){reply.code(401).send({message:'Acesso administrativo necessário.'});return null;}
+  if(req.headers['x-pilot-admin-context']!==admin.context){reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});return null;}
+  if(!['GET','HEAD','OPTIONS'].includes(req.method)&&!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),admin.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida.'});return null;}
+  return {key:'admin:'+admin.email,email:admin.email};
+ },(key,max)=>store.limited(key,max));
+ app.get(base+'support',async(req,reply)=>{const admin=current(req);if(!admin)return reply.redirect(base+'login');return reply.type('text/html').send(page('Central de suporte',supportAdminHtml(base),`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script><script defer src="${base}support.js"></script>`));});
+ app.get(base+'support.js',(_req,reply)=>reply.type('application/javascript').send(supportAdminScript(base)));
  app.all(base+'*',(_req,reply)=>reply.code(404).send({message:'Página administrativa não encontrada.'}));
  return {interestForm:()=>available()?interestForm():'<p>A lista de interesse está temporariamente indisponível.</p>',async completeAdmin(identity:Identity,req:{headers:{cookie?:string}},reply:FastifyReply){
   if(identity.issuer!=='https://accounts.google.com'||!identity.verified||!identity.subject||!allowed.includes(identity.email.toLowerCase()))return reply.code(403).send({message:'Esta conta não tem autorização administrativa.'});

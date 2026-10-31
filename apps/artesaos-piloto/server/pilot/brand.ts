@@ -81,5 +81,36 @@ export const identityCss=`
 }
 @media(max-width:480px){:root #pilot-shell .pilot-account-user{display:none}}
 
+:root #pilot-build-info .pilot-support-link{display:none;pointer-events:auto;font-weight:700;text-underline-offset:3px}
+:root .pilot-session-active #pilot-build-info .pilot-support-link{display:inline-flex}
+:root .support-hub input,:root .support-hub select,:root .support-hub textarea,:root .support-admin input,:root .support-admin select,:root .support-admin textarea{display:block;width:100%;padding:10px;margin-top:6px;border:1px solid #789483;border-radius:8px;background:white;color:var(--carvao);font:inherit}
+:root .support-filters{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin-top:20px}
+:root .support-filters label{flex:1;min-width:160px}
+:root .support-filters button{margin:0}
+:root .support-list article,:root #support-list article{padding:16px 0;border-bottom:1px solid var(--areia);overflow-wrap:anywhere}
+:root .support-list article button,:root #support-list article button{background:transparent;color:var(--mata);font-weight:700;text-align:left;padding:8px 0;text-decoration:underline}
+:root .support-list article p,:root #support-list article p{margin:6px 0}
+:root .support-badge{display:inline-block;border:1px solid var(--areia);border-radius:16px;padding:2px 10px}
+:root .support-events{list-style:none;padding:0;margin:24px 0}
+:root .support-events li{border:1px solid var(--areia);border-radius:10px;padding:16px;margin:12px 0;background:white;overflow-wrap:anywhere}
+:root .support-events small{display:block;margin-top:4px}
+:root .support-events p{white-space:pre-wrap;overflow-wrap:anywhere}
+:root .support-compose{position:fixed;inset:0;width:min(650px,calc(100vw - 24px));max-height:90dvh;overflow:auto;border:1px solid var(--areia);border-radius:12px;padding:24px;color:var(--carvao);background:var(--linho)}
+:root .support-compose::backdrop{background:#10291eaa}
+:root .support-compose label{display:block;margin-top:16px;font-weight:600}
+:root .support-compose fieldset,:root .support-conversation fieldset{border:0;padding:0;min-width:0}
+:root .support-secondary{background:white;color:var(--mata);border:1px solid var(--mata);margin-left:8px}
+:root .pilot-admin-nav{display:flex;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--areia);padding-bottom:16px}
+:root .pilot-admin-nav a[aria-current=page]{font-weight:700}
+:root #support-pagination{display:flex;gap:16px;align-items:center;margin-top:20px}
+:root #support-pagination[hidden]{display:none}
+:root .support-admin #support-detail[hidden]{display:none}
+:root .support-admin #support-detail{margin-top:32px;padding:24px;border:1px solid var(--areia);border-radius:12px}
+:root .support-admin textarea{min-height:120px}
+:root .support-admin button{border:1px solid var(--mata);border-radius:8px;cursor:pointer}
+:root .support-admin button:disabled{opacity:.5;cursor:wait}
+:root .pilot-session-active{padding-bottom:110px}
+@media(max-width:480px){:root .support-compose{padding:20px 16px}:root .support-admin #support-detail{padding:16px}:root .pilot-session-active{padding-bottom:132px}}
+
 `;
 export function brandScript(prefix:string,version:string,available:boolean){return `(()=>{window.pilotBrand=parent=>{parent.replaceChildren();const text=document.createElement('span');text.textContent='Artesão Digital';parent.append(text);if(!${available})return;const img=document.createElement('img');img.alt='Artesão Digital';img.hidden=true;img.onload=()=>{text.hidden=true;img.hidden=false;};img.onerror=()=>{img.remove();text.hidden=false;};parent.append(img);img.src=parent.matches('.pilot-account-title,[data-pilot-brand=horizontal]')?${JSON.stringify(prefix+'brand/logo-horizontal.png?v='+version)}:${JSON.stringify(prefix+'brand/logo.png?v='+version)};};addEventListener('DOMContentLoaded',async()=>{try{await window.pilotBrowserReady;}catch{return;}document.querySelectorAll('[data-pilot-brand]').forEach(window.pilotBrand);});})();`;}

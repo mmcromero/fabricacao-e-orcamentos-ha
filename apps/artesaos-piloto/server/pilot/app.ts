@@ -1,3 +1,5 @@
+import {SupportStore} from './support-store.js';
+import {registerSupportRoutes} from './support-routes.js';
 import {browserScripts,sessionScript} from './browser.js';
 import {registerCommunity} from './community.js';
 import {brandScript,communityCss,identityCss} from './brand.js';
@@ -16,13 +18,14 @@ function cookie(header:string|undefined,name:string){try{const entries=(header??
 export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config)){
  const app=Fastify({logger:{redact:['req.headers.cookie','req.headers.authorization','res.headers.set-cookie']},disableRequestLogging:true,bodyLimit:2*1024*1024,trustProxy:false});
  const store=new PilotStore(config.dataDir);try{for(const invite of config.initialInvites??[])store.bootstrap(invite.email,invite.code);}catch(e){store.close();throw e;}const tenants=new Map<string,Promise<FastifyInstance>>();const prefix=config.prefix;
+ let support:SupportStore;try{support=new SupportStore(config.dataDir);}catch(error){store.close();throw error;}
  const destination=prefix+'?view=produtos';
  const scripts=browserScripts(prefix,buildInfo.pilotVersion);
  const browserTag=`<script src="${prefix}browser-ready.js?v=${buildInfo.pilotVersion}"></script><script src="${prefix}brand.js?v=${buildInfo.pilotVersion}"></script>`;
- const versionFooter=`<footer id="pilot-build-info" aria-label="Versões do aplicativo"><span>Artesão Digital v${buildInfo.pilotVersion}</span><span>Base: Fabricação e Orçamentos v${buildInfo.coreVersion}</span></footer>`;
+ const versionFooter=`<footer id="pilot-build-info" aria-label="Versões do aplicativo"><span>Artesão Digital v${buildInfo.pilotVersion}</span><span>Base: Fabricação e Orçamentos v${buildInfo.coreVersion}</span><a class="pilot-support-link" href="${prefix}?view=suporte&amp;novo=1">Suporte técnico</a></footer>`;
  const finishPage=()=>`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Concluindo acesso — Artesão Digital</title><link rel="stylesheet" href="${prefix}pilot.css">${browserTag}<script defer src="${prefix}auth/finish.js?v=${buildInfo.pilotVersion}"></script></head><body><main class="pilot-auth"><div data-pilot-brand>Artesão Digital</div><h1>Concluindo acesso</h1><p id="finish-status" role="status">Confirmando sua sessão antes de abrir o aplicativo…</p><a id="finish-continue" href="${destination}" hidden>Continuar para Produtos</a><a id="finish-login" href="${prefix}login" hidden>Entrar novamente</a></main>${versionFooter}</body></html>`;
  const setCookie=(name:string,value:string,httpOnly=true,maxAge=28800)=>`${name}=${encodeURIComponent(value)}; Path=${prefix}; Secure; SameSite=Lax; Max-Age=${maxAge}${httpOnly?'; HttpOnly':''}`;
- let community:ReturnType<typeof registerCommunity>;try{community=registerCommunity(app,config,store,provider,cookie,browserTag,versionFooter);}catch(e){store.close();throw e;}
+ let community:ReturnType<typeof registerCommunity>;try{community=registerCommunity(app,config,store,provider,cookie,browserTag,versionFooter,support);}catch(e){support.close();store.close();throw e;}
  function session(req:{headers:{cookie?:string}}){return store.getSession(cookie(req.headers.cookie,SESSION),config.idleMinutes);}
  app.addContentTypeParser('application/x-www-form-urlencoded',{parseAs:'string',bodyLimit:4096},(_req,body,done)=>{const entries=new URLSearchParams(String(body));if([...entries.keys()].some((k,i,all)=>all.indexOf(k)!==i)){done(Error('Formulário inválido.'));return;}done(null,Object.fromEntries(entries));});
  app.addHook('onRequest',async(req,reply)=>{
@@ -63,6 +66,12 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   reply.header('Set-Cookie',[setCookie(SESSION,'',true,0),setCookie(CSRF,'',false,0)]);return {ok:true};
  });
  app.get(prefix+'api/pilot/session',async(req,reply)=>{const current=session(req);return current?{email:current.email,context:current.userId}:reply.code(401).send({message:'Entre na sua conta.'});});
+ registerSupportRoutes(app,prefix+'api/support',support,false,(req,reply)=>{
+  const current=session(req);if(!current){reply.code(401).send({message:'Entre na sua conta para acessar o suporte.'});return null;}
+  if(req.headers['x-pilot-context']!==current.userId){reply.code(409).send({message:'A conta desta janela mudou. Reabra a página.'});return null;}
+  if(!['GET','HEAD','OPTIONS'].includes(req.method)&&!equal(digest(String(req.headers['x-pilot-csrf']??'')),current.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida. Reabra a página.'});return null;}
+  return {key:'user:'+current.userId,owner:current.userId,email:current.email};
+ },(key,max)=>store.limited(key,max));
  app.all(prefix+'*',async(req,reply)=>{
   const current=session(req);
   if(!current){if(req.method==='GET'&&!req.url.slice(prefix.length).startsWith('api/'))return reply.redirect(prefix+'login');return reply.code(401).send({message:'Entre na sua conta.'});}
@@ -76,7 +85,7 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   return reply.send(body);
  });
  app.get('/artesaos-piloto',(_req,reply)=>reply.redirect(prefix));
- app.addHook('onClose',async()=>{await Promise.all([...tenants.values()].map(async t=>(await t).close()));store.close();});
+ app.addHook('onClose',async()=>{await Promise.all([...tenants.values()].map(async t=>(await t).close()));support.close();store.close();});
  await app.register(staticFiles,{root:join(config.staticDir,'assets'),prefix:prefix+'assets/',decorateReply:false,index:false,cacheControl:false,etag:false,lastModified:false});
  return app;
 }
