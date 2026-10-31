@@ -8,9 +8,10 @@ export function registerCompany(app:FastifyInstance,db:DatabaseSync){
  app.get('/api/company',()=>{const row=db.prepare('SELECT data,revision FROM company_profile WHERE id=1').get();return row?{data:JSON.parse(String(row.data)),revision:Number(row.revision)}:{data:empty,revision:0};});
  app.put<{Body:{data:Company;expectedRevision:number}}>('/api/company',{bodyLimit:4096,schema:{body:{type:'object',additionalProperties:false,required:['data','expectedRevision'],properties:{expectedRevision:{type:'integer',minimum:0},data:{type:'object',additionalProperties:false,required:['name','responsible','phone','email'],properties:{name:{type:'string',maxLength:200},responsible:{type:'string',maxLength:200},phone:{type:'string',maxLength:40},email:{type:'string',maxLength:254}}}}}}},(req,reply)=>{
   const data=Object.fromEntries(Object.entries(req.body.data).map(([key,value])=>[key,value.trim()])) as Company;
+  if(Object.values(data).some(value=>!value))return reply.code(400).send({message:'Preencha nome da empresa, responsável, telefone e e-mail.'});
   if(Object.values(data).some(value=>/[\u0000-\u001f\u007f]/.test(value)))return reply.code(400).send({message:'Os dados da empresa não podem conter caracteres de controle.'});
   if(data.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))return reply.code(400).send({message:'Informe um e-mail válido.',field:'email'});
-  if(data.phone&&!/^[\d+().\s-]+$/.test(data.phone))return reply.code(400).send({message:'Informe um telefone válido com DDD.',field:'phone'});
+  if(data.phone&&(!/^[\d+().\s-]+$/.test(data.phone)||data.phone.replace(/\D/g,'').length<7))return reply.code(400).send({message:'Informe um telefone válido com DDD.',field:'phone'});
   const revision=Number(db.prepare('SELECT revision FROM company_profile WHERE id=1').get()?.revision??0);
   if(req.body.expectedRevision!==revision)return reply.code(409).send({message:'Os dados da empresa foram alterados em outra janela. Reabra a página antes de salvar.'});
   db.prepare('INSERT INTO company_profile(id,data,revision) VALUES (1,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,revision=excluded.revision').run(JSON.stringify(data),revision+1);

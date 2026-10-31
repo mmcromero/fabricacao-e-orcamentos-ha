@@ -1,3 +1,4 @@
+import {registerOnboarding} from './pilot/onboarding.js';
 import {registerCompany} from './pilot/company.js';
 import {registerLegacyMaterialUpgrade} from './legacy-material-upgrade.js';
 import {registerMaterials} from './materials.js';
@@ -44,16 +45,17 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   });
   if(options.pilotFeatures)registerCompany(app,db);
   registerMaterials(app, db);
-  registerProducts(app, db);
+  registerProducts(app, db,options.pilotFeatures??false);
   registerCategories(app, db);
   registerClients(app, db);
-  registerSettings(app, db);
-  registerManufacturing(app, db);
+  registerSettings(app, db,options.pilotFeatures??false);
+  registerManufacturing(app, db,options.pilotFeatures??false);
   registerQuotes(app, db);
-  registerReconciliation(app, db);
-  registerProductEditor(app, db);
-  registerRecordActions(app, db);
+  registerReconciliation(app, db,options.pilotFeatures??false);
+  registerProductEditor(app, db,options.pilotFeatures??false);
+  registerRecordActions(app, db,options.pilotFeatures??false);
   registerLegacyMaterialUpgrade(app, db);
+  if(options.pilotFeatures)registerOnboarding(app,db);
   await app.register(staticFiles, { root: staticDir });
   app.addHook('onClose', async () => { db.close(); });
   return app;

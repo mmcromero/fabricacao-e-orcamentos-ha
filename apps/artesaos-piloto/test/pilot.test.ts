@@ -29,6 +29,11 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   return callback;
  }
  function session(response:any){const cookies=response.cookies;const csrf=cookies.find((c:any)=>c.name==='__Secure-artesaos_csrf')!.value;return {cookie:cookies.filter((c:any)=>c.name!=='__Secure-artesaos_flow').map((c:any)=>`${c.name}=${c.value}`).join('; '),origin,'x-pilot-csrf':csrf} as Record<string,string>;}
+ async function prepare(headers:Record<string,string>){
+  const result=await request('api/materials',headers,'POST',{name:'Material inicial',mode:'quantity',purchaseQuantity:1,purchasePrice:20,purchaseUnit:'kg',customUnit:''});assert.equal(result.statusCode,200,result.body);
+  const settings=(await request('api/settings/fabricacao',headers)).json();assert.equal((await request('api/settings/fabricacao',headers,'PUT',{data:{...settings.data,humanHour:'20',productiveHours:'160',otherCost:'100'},expectedRevision:settings.revision})).statusCode,200);
+  assert.equal((await request('api/onboarding/complete',headers,'POST')).statusCode,200);
+ }
  try{
   assert.equal((await request('api/products')).statusCode,401);
   assert.equal((await request('api/company')).statusCode,401);
@@ -46,10 +51,6 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   a['x-pilot-context']=(await request('api/pilot/session',a)).json().context;
   const authenticatedEntry=await request('login',a);assert.equal(authenticatedEntry.statusCode,302);assert.equal(authenticatedEntry.headers.location,prefix+'?view=produtos');
   const finish=await request('auth/finish',a);assert.equal(finish.statusCode,200);const finishScript=await request('auth/finish.js',a);assert.match(finishScript.body,/history.replaceState/);assert.match(finishScript.body,/api\/pilot\/session/);assert.match(finishScript.body,/view=produtos/);
-  assert.equal((await request('api/products',a,'POST',product('Produto A'))).statusCode,200);
-  assert.equal((await request('api/clients',a,'POST',{name:'Cliente A',contact:'',phone:'',email:'',taxDocument:'',postal:''})).statusCode,200);
-  assert.equal((await request('api/quotes',a,'POST',{data:{title:'Pedido A',client:null,items:[],notes:''},expectedRevision:0})).statusCode,200);
-  assert.equal((await request('api/settings/produtos',a,'PUT',{data:{productsPerPage:'20'},expectedRevision:0})).statusCode,200);
   const company={name:'Ateliê A',responsible:'Pessoa A',phone:'+55 (11) 99999-0000',email:'contato@example.test'};
   assert.deepEqual((await request('api/company',a)).json(),{data:{name:'',responsible:'',phone:'',email:''},revision:0});
   assert.equal((await request('api/company',a,'PUT',{data:company,expectedRevision:0})).statusCode,200);
@@ -58,10 +59,20 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   assert.equal((await request('api/company',a,'PUT',{data:{...company,phone:'not a phone'},expectedRevision:1})).statusCode,400);
   assert.equal((await request('api/company',a,'PUT',{data:{...company,name:'x'.repeat(201)},expectedRevision:1})).statusCode,400);
   assert.equal((await request('api/company',{...a,'x-pilot-csrf':'wrong'},'PUT',{data:company,expectedRevision:1})).statusCode,403);
+  assert.equal((await request('api/products',a)).statusCode,428);
+  await prepare(a);
+  assert.equal((await request('api/products',a,'POST',product('Produto A'))).statusCode,200);
+  assert.equal((await request('api/clients',a,'POST',{name:'Cliente A',contact:'',phone:'',email:'',taxDocument:'',postal:''})).statusCode,200);
+  assert.equal((await request('api/quotes',a,'POST',{data:{title:'Pedido A',client:null,items:[],notes:''},expectedRevision:0})).statusCode,200);
+  assert.equal((await request('api/settings/produtos',a,'PUT',{data:{productsPerPage:'20'},expectedRevision:0})).statusCode,200);
   const bLogin=await login('b@example.test','b',admin.invite('b@example.test'));assert.equal(bLogin.statusCode,200,bLogin.body);const b=session(bLogin);b['x-pilot-context']=(await request('api/pilot/session',b)).json().context;
+  assert.equal((await request('api/company',b)).json().revision,0);
+  const companyB={name:'Ateliê B',responsible:'Pessoa B',phone:'11999990000',email:'b@example.test'};
+  assert.equal((await request('api/company',b,'PUT',{data:companyB,expectedRevision:0})).statusCode,200);
+  await prepare(b);
   for(const area of ['products','clients','quotes'])assert.deepEqual((await request('api/'+area,b)).json(),[]);
   assert.equal((await request('api/settings/produtos',b)).json().revision,0);
-  assert.equal((await request('api/company',b)).json().revision,0);
+  assert.equal((await request('api/company',b)).json().revision,1);
   assert.equal((await request('api/company',{...b,'x-pilot-context':a['x-pilot-context']})).statusCode,409);
   assert.deepEqual((await request('api/company',a)).json().data,company);
   assert.equal((await request('api/quotes/1',b)).statusCode,404);
@@ -80,7 +91,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   await app.close();app=await createPilotApp(settings,provider);
   assert.equal((await request('api/clients',a)).json()[0].name,'Cliente A');assert.equal((await request('api/clients',b)).json().length,0);
   assert.deepEqual((await request('api/company',a)).json().data,company);
-  assert.equal((await request('api/company',b)).json().data.name,'');
+  assert.equal((await request('api/company',b)).json().data.name,'Ateliê B');
   const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.match(html.body,/data-pilot-module/);assert.ok(!html.body.includes('<script type="module"'),'Interface deve esperar o isolamento de cache antes de carregar JavaScript');assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
   // A stale tab must not revoke a valid session without CSRF/context proof.
   const refused=await request('auth/logout',{...b,'x-pilot-csrf':'wrong'},'POST');assert.equal(refused.statusCode,403);assert.equal(refused.headers['set-cookie'],undefined);

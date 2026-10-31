@@ -1,3 +1,12 @@
+# 0.1.13
+
+- Oculta a opção de catálogo para produtos de cliente, limpa a marcação ao mudar a origem e corrige os registros antigos. O servidor também impede a inclusão por edição, importação ou ação em lote.
+- Mantém custos e precificação sempre expostos nas configurações gerais. Multiplicadores vazios, inválidos ou abaixo do mínimo são corrigidos e persistidos: atacado 1,5; loja de fábrica 2,0; varejo 3,0. Valores acima do máximo continuam exigindo revisão explícita.
+- Acrescenta boas-vindas obrigatórias, com checklist e retomada em próximos logins até a conclusão. Exige empresa/responsável/telefone/e-mail, ao menos um material válido, uma tarifa horária positiva, horas produtivas mensais positivas e uma despesa operacional positiva. Tarifas horárias não utilizadas recebem zero.
+- Bloqueia operações comerciais no servidor enquanto a configuração inicial não estiver concluída, preservando acesso aos cadastros necessários e à saída da sessão. A conclusão fica registrada no banco individual de cada conta.
+- Rateia despesas pelo tempo humano quando o tempo de máquina da etapa é zero, conforme solicitado. Quando há máquina, utiliza somente esse tempo para o rateio; tarifas de trabalho humano continuam somadas normalmente. Preços comerciais e orçamentos anteriores não são substituídos automaticamente.
+- Preserva a base 0.1.23 e o comportamento do aplicativo principal.
+
 # 0.1.12
 
 - Reorganiza o menu em Produtos, Clientes, Orçamentos e Configurações, com ícones. A faixa de navegação ocupa a largura abaixo do cabeçalho verde e usa botão hambúrguer para abrir/fechar os itens no celular, com suporte a Escape e teclado.

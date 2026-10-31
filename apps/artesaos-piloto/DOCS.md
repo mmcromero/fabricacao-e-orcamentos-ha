@@ -181,3 +181,20 @@ Configurações tem uma área geral fora das abas e as abas Produtos, Clientes e
 **Migração e restauração:** cria-se a tabela adicional `company_profile` apenas nos bancos das contas do piloto, ao abri-los. Os dados comerciais, convites e parâmetros anteriores são preservados. Antes de atualizar, pare o aplicativo e faça backup completo e protegido do volume e configurações. Para reverter, restaure a cópia anterior completa; não execute apenas código antigo sobre o volume atualizado.
 
 **Validação:** compilação, 41 testes automatizados e Chromium com provedor controlado, incluindo login para Produtos, menu móvel e desktop, abas por teclado, preservação de rascunhos, persistência dos dados da empresa e isolamento entre contas. Esses testes não substituem a validação real do Google, Home Assistant/Supervisor e hardware ARM.
+
+
+## Atualização 0.1.13 — preparação inicial e cálculo
+
+A tela de boas-vindas é obrigatória até sua conclusão, inclusive para contas existentes ainda sem esse registro. Dados já salvos são aproveitados. É possível sair e retomar; apenas alterações efetivamente salvas são preservadas. O servidor bloqueia APIs comerciais enquanto a etapa estiver pendente, e o acesso às telas também passa pela verificação inicial. Concluir em uma conta não conclui em outra.
+
+Para concluir: informar nome da empresa, responsável, telefone válido e e-mail; cadastrar ao menos um material válido; informar pelo menos uma tarifa positiva de hora humana, energia ou desgaste de máquina; informar horas produtivas mensais maiores que zero; informar pelo menos uma despesa operacional positiva; manter os parâmetros numéricos válidos. Materiais de custo direto recebem o valor utilizado em cada produto. Tarifas horárias vazias são gravadas como zero; despesas operacionais vazias representam zero. A conclusão é registrada separadamente e não apaga dados.
+
+As horas produtivas mensais são necessárias para calcular a taxa operacional. Em cada etapa de um produto, o rateio usa o tempo de máquina quando ele é positivo; quando é zero, usa o tempo humano. Não soma os dois tempos para o rateio. Os custos de energia/desgaste continuam associados somente à máquina, e o custo de trabalho humano permanece separado. Ao cadastrar um produto, informe seus tempos, usando zero para o tempo não utilizado, e os materiais consumidos. A preparação inicial não inventa quantidades ou tempos de produção. Alterações de cálculo não aplicam novos preços comerciais automaticamente.
+
+Os multiplicadores mínimos são atacado 1,5; loja de fábrica 2,0; varejo 3,0. A correção de campos ausentes, vazios, não numéricos ou inferiores aos mínimos ocorre no banco individual ao inicializar ou consultar as configurações, e nos novos salvamentos. Os outros campos são preservados e a revisão é incrementada. Multiplicadores acima do máximo ou com precisão não permitida pedem correção explícita. A área de custos fica sempre visível, sem grupo recolhido.
+
+Produtos de cliente não exibem controle de catálogo e sua marcação é desfeita ao selecionar essa origem. Registros antigos são corrigidos no banco da conta, incluindo arquivados; edição, importação e ações em lote seguem a mesma restrição. A privacidade e os demais dados do produto são preservados.
+
+**Migração:** cria a tabela `pilot_onboarding`, normaliza os mínimos e tarifas vazias e desmarca produtos de clientes nos bancos individuais do piloto, ao abri-los. Não incorpora nova base e não altera a instalação principal. Faça backup completo e protegido com o aplicativo parado. Para reverter, restaure o volume anterior completo.
+
+**Validação:** compilação, 43 testes automatizados e Chromium com provedor controlado, incluindo cadastro inicial incompleto após novo login, preservação e conclusão, bloqueio por API, isolamento, normalização persistente, catálogo de clientes e rateio manual sem dupla cobrança. A instalação real, Google e hardware final continuam pendentes de validação pelo responsável.

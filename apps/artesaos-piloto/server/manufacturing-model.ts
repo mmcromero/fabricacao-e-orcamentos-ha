@@ -9,7 +9,7 @@ export const operationFields=[['internetCost','Internet (R$/mês)'],['pluginsCos
 export const productionSchema={type:'object',additionalProperties:false,required:['machineSeconds','humanSeconds','materialGrams','extras','packaging','label'],properties:{materials:{type:'array',maxItems:100,items:materialUseSchema},machineSeconds:{type:['integer','null'],minimum:0,maximum:3600000000},humanSeconds:{type:['integer','null'],minimum:0,maximum:3600000000},materialGrams:{type:['number','null'],minimum:0,maximum:1000000},extras:{type:['number','null'],minimum:0,maximum:100000000},packaging:{type:['number','null'],minimum:0,maximum:100000000},label:{type:['number','null'],minimum:0,maximum:100000000}}};
 export const manufacturingSchema={...productionSchema,properties:{...productionSchema.properties,base:{anyOf:[{type:'null'},productionSchema]}}};
 const parse=(raw:string|undefined)=>raw?.trim()&&/^\d+([.,]\d+)?$/.test(raw.trim())?Number(raw.replace(',','.')):null;
-export function calculateManufacturing(production:Production,settings:Record<string,string>){
+export function calculateManufacturing(production:Production,settings:Record<string,string>,manualOperatingFallback=false){
  const pending:string[]=[];const config:Record<string,number>={};
  const legacy=[production,production.base].some(step=>step&&step.materials===undefined);
  if(legacy){const value=parse(settings.filamentKgPrice);if(value===null||!Number.isFinite(value)||value<0)pending.push('Atualize os materiais dos cadastros antigos nas configurações de Fabricação.');else config.filamentKgPrice=value;}
@@ -22,8 +22,8 @@ export function calculateManufacturing(production:Production,settings:Record<str
   if(step.materials!==undefined){for(const material of step.materials){const result=materialUseCost(material);if(result.issue)pending.push(`${name} — ${material.name||'Material'}: ${result.issue}`);else materialsCost+=result.cost!;}}
   if(pending.length)return null;
   const machineHours=step.machineSeconds!/3600,humanHours=step.humanSeconds!/3600;
-  if(step.materials===undefined)return step.materialGrams!*config.filamentKgPrice/1000+machineHours*(config.energyHour+config.wearHour+operatingHour!)+humanHours*config.humanHour+step.extras!+step.packaging!+step.label!;
-  return materialsCost+machineHours*(config.energyHour+config.wearHour+operatingHour!)+humanHours*config.humanHour+step.packaging!+step.label!;
+  if(step.materials===undefined)return step.materialGrams!*config.filamentKgPrice/1000+machineHours*(config.energyHour+config.wearHour)+(manualOperatingFallback&&machineHours===0?humanHours:machineHours)*operatingHour!+humanHours*config.humanHour+step.extras!+step.packaging!+step.label!;
+  return materialsCost+machineHours*(config.energyHour+config.wearHour)+(manualOperatingFallback&&machineHours===0?humanHours:machineHours)*operatingHour!+humanHours*config.humanHour+step.packaging!+step.label!;
  };
  const {base,...main}=production;const mainCost=cost(main,'Produção'),baseCost=base?cost(base,'Etapa adicional'):0;
  if(pending.length||mainCost===null||baseCost===null)return {pending,operatingTotal,operatingHour,cost:null,prices:null,rawPrices:null};

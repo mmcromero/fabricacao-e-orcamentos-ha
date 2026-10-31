@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {productSchema,type Product} from './products.js';
-import {normalizedProduct,categoryAllowed} from './product-category.js';
+import {normalizedProduct as normalizeProduct,categoryAllowed} from './product-category.js';
 import {storeCategory} from './categories.js';
 import {configFields,operationFields,markupRanges,validMarkup} from './manufacturing-model.js';
 type Target=number|null|'skip';
@@ -14,7 +14,8 @@ const normalized=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/g
 const sameCategory=(a:string|undefined,b:string|undefined)=>!a?.trim()||!b?.trim()||normalized(a.split(' > ').at(-1)!)===normalized(b.split(' > ').at(-1)!);
 const priceChanged=(a:Product['prices'],b:Product['prices'])=>['wholesale','factory','retail'].some(key=>a[key as keyof typeof a]!==b[key as keyof typeof b]);
 const settingsProperties=Object.fromEntries([['filamentKgPrice','Referência legada'],...configFields,...operationFields].map(([key])=>[key,{type:'string',maxLength:20,pattern:'^(|[0-9]+([.,][0-9]+)?)$'}]));
-export function registerReconciliation(app:FastifyInstance,db:DatabaseSync){
+export function registerReconciliation(app:FastifyInstance,db:DatabaseSync,pilotFeatures=false){
+ const normalizedProduct=<T extends {origin:string;category?:string;catalogVisible?:boolean}>(product:T)=>normalizeProduct(product,pilotFeatures);
  app.get('/api/products/export',(_req,reply)=>{
   const products=db.prepare('SELECT id,data,archived,updated_at FROM products ORDER BY id').all().map(row=>({...normalizedProduct(JSON.parse(String(row.data))),id:Number(row.id),archived:Boolean(row.archived),updatedAt:row.updated_at}));
   const config=db.prepare("SELECT data,revision FROM area_settings WHERE area='fabricacao'").get();

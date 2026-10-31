@@ -3,9 +3,10 @@ import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {productSchema,type Product} from './products.js';
 import {calculateManufacturing} from './manufacturing-model.js';
-import {normalizedProduct,categoryAllowed} from './product-category.js';
+import {normalizedProduct as normalizeProduct,categoryAllowed} from './product-category.js';
 import {storeCategory} from './categories.js';
-export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
+export function registerProductEditor(app:FastifyInstance,db:DatabaseSync,pilotFeatures=false){
+ const normalizedProduct=<T extends {origin:string;category?:string;catalogVisible?:boolean}>(product:T)=>normalizeProduct(product,pilotFeatures);
  const schema={type:'object',additionalProperties:false,required:['product','applyPrices'],properties:{product:productSchema,applyPrices:{type:'boolean'},applyTiers:{type:'array',maxItems:3,uniqueItems:true,items:{enum:['wholesale','factory','retail']}},expectedUpdatedAt:{type:'string'},expectedSettingsRevision:{type:'integer',minimum:0}}};
  type Body={product:Product;applyPrices:boolean;applyTiers?:('wholesale'|'factory'|'retail')[];expectedUpdatedAt?:string;expectedSettingsRevision?:number};
  async function save(req:{body:Body;params?:{id:string}},reply:any){
@@ -21,7 +22,7 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync){
    const config=db.prepare("SELECT data,revision FROM area_settings WHERE area='fabricacao'").get();
    if(req.body.expectedSettingsRevision!==Number(config?.revision??0))return reply.code(409).send({message:'As configurações mudaram. Reabra o formulário e revise os preços.'});
    if(!p.manufacturing)return reply.code(400).send({message:'Informe os dados de fabricação.'});
-   const result=calculateManufacturing(p.manufacturing,config?JSON.parse(String(config.data)):{});
+   const result=calculateManufacturing(p.manufacturing,config?JSON.parse(String(config.data)):{},pilotFeatures);
    if(!result.prices)return reply.code(400).send({message:'Complete os dados e configurações antes de aplicar preços.'});
    for(const key of applied)p.prices[key]=result.prices[key];
   }

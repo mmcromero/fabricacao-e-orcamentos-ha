@@ -1,7 +1,8 @@
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
-import {normalizedProduct} from './product-category.js';
-export function registerRecordActions(app:FastifyInstance,db:DatabaseSync){
+import {normalizedProduct as normalizeProduct} from './product-category.js';
+export function registerRecordActions(app:FastifyInstance,db:DatabaseSync,pilotFeatures=false){
+ const normalizedProduct=<T extends {origin:string;category?:string;catalogVisible?:boolean}>(product:T)=>normalizeProduct(product,pilotFeatures);
  const kind={enum:['products','clients','quotes']};
  app.get<{Params:{kind:string}}>('/api/records/:kind/archived',{schema:{params:{type:'object',required:['kind'],properties:{kind}}}},req=>db.prepare(`SELECT id,data,updated_at FROM ${req.params.kind} WHERE archived=1 ORDER BY id DESC`).all().map(row=>{const data=JSON.parse(String(row.data));return {id:row.id,name:data.name||data.contact||data.title||`Orçamento ${row.id}`,updatedAt:row.updated_at};}));
  type Body={action:'archive'|'restore'|'public'|'private'|'catalog_include'|'catalog_remove';records:{id:number;updatedAt:string}[];confirm:boolean};
@@ -16,7 +17,7 @@ export function registerRecordActions(app:FastifyInstance,db:DatabaseSync){
    const row=db.prepare(`SELECT * FROM ${table} WHERE id=?`).get(selected.id);
    if(!row||row.updated_at!==selected.updatedAt||Number(row.archived)!==(action==='restore'?1:0))return reply.code(409).send({message:'A seleção mudou em outra janela. Atualize a lista e revise novamente. Nada foi alterado.'});
    const data=JSON.parse(String(row.data));
-   if(action==='public'&&data.origin==='client'){skipped++;continue;}
+   if((action==='public'||(pilotFeatures&&action==='catalog_include'))&&data.origin==='client'){skipped++;continue;}
    if(action==='public'||action==='private'){data.publicAllowed=action==='public';if(data.publicAllowed===JSON.parse(String(row.data)).publicAllowed){skipped++;continue;}}
    if(catalogAction){const included=action==='catalog_include';if(Boolean(data.catalogVisible)===included){skipped++;continue;}data.catalogVisible=included;}
    planned.push({id:selected.id,data:table==='products'?normalizedProduct(data):data,updatedAt:new Date(Math.max(Date.now(),Date.parse(String(row.updated_at))+1)).toISOString()});

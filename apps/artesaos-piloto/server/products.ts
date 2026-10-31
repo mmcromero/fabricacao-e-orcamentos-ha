@@ -1,7 +1,7 @@
 import {rememberMaterialUses} from './materials.js';
 import {manufacturingSchema,type Production} from './manufacturing-model.js';
 import {storeCategory} from './categories.js';
-import {normalizedProduct,categoryAllowed} from './product-category.js';
+import {normalizedProduct as normalizeProduct,categoryAllowed} from './product-category.js';
 import type { FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
 
@@ -17,10 +17,11 @@ export const productSchema = {type:'object', additionalProperties:false, require
 }};
 export type Product = {manufacturing?:Production;sku?:string;imageUrl?:string;category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;catalogVisible?:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && categoryAllowed(p.origin,p.category) && !(p.origin==='client' && p.publicAllowed);}
-export function registerProducts(app:FastifyInstance, db:DatabaseSync) {
+export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatures=false){
+ const normalizedProduct=<T extends {origin:string;category?:string;catalogVisible?:boolean}>(product:T)=>normalizeProduct(product,pilotFeatures);
   db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS product_sources (source_key TEXT PRIMARY KEY, product_id INTEGER NOT NULL REFERENCES products(id));`);
-  const categoryCorrections=db.prepare("SELECT id,data FROM products WHERE json_extract(data,'$.origin')='client'").all().map(row=>({row,product:JSON.parse(row.data as string) as Product})).filter(({product})=>product.category!==normalizedProduct(product).category||product.publicAllowed!==normalizedProduct(product).publicAllowed);
+  const categoryCorrections=db.prepare("SELECT id,data FROM products WHERE json_extract(data,'$.origin')='client'").all().map(row=>({row,product:JSON.parse(row.data as string) as Product})).filter(({product})=>product.category!==normalizedProduct(product).category||product.publicAllowed!==normalizedProduct(product).publicAllowed||product.catalogVisible!==normalizedProduct(product).catalogVisible);
   if(categoryCorrections.length){db.exec('BEGIN IMMEDIATE');try{for(const {row,product} of categoryCorrections)db.prepare('UPDATE products SET data=? WHERE id=?').run(JSON.stringify(normalizedProduct(product)),row.id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}
   const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
   const add=(input:Product)=>{
