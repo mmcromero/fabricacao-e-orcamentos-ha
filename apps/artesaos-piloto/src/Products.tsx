@@ -1,3 +1,5 @@
+import BrandIcon from './BrandIcon';
+import MaterialUpgradeNotice from './MaterialUpgradeNotice';
 import {appName} from './branding';
 import ProductFilters from './ProductFilters';
 import ProductForm,{ProductPhoto,emptyProduct,type EditableProduct} from './ProductForm';
@@ -33,8 +35,8 @@ export default function Products(){
  useEffect(()=>{load().then(()=>setMessage('Catálogo persistente.')).catch(e=>setMessage(e.message));},[]);
  async function run(work:()=>Promise<void>){setBusy(true);try{await work();}catch(e){setMessage(e instanceof Error?e.message:'Falha na operação.');}finally{setBusy(false);}}
  return <main className="products-screen"><header><span className="brand">{appName}</span></header><AreaNav active="produtos"/>
- <h1>Produtos</h1><SettingsLink area="produtos"/><p>Cadastro salvo no banco desta instalação e disponível na área Orçamentos.</p><p role="status">{message}</p>
- <button disabled={busy} onClick={()=>openProduct()}>Novo produto</button>
+ <h1>Produtos</h1><SettingsLink area="produtos"/><p>{appName==='Artesão Digital'?'Cadastre produtos e seus dados de fabricação em um só lugar.':'Cadastro salvo no banco desta instalação e disponível na área Orçamentos.'}</p>{appName==='Artesão Digital'&&<MaterialUpgradeNotice/>}<p role="status">{message}</p>
+ <button disabled={busy} onClick={()=>openProduct()}>{appName==='Artesão Digital'&&<BrandIcon name="plus"/>}Novo produto</button>
  <section><h2>Catálogo ({filtered.length})</h2><ProductFilters search={search} onSearch={value=>{setSearch(value);setPage(1);}} value={{origin:filter,category:categoryFilter}} onChange={value=>{setFilter(value.origin);setCategoryFilter(value.category);setPage(1);}} categories={Array.from(new Set([...categories.map(c=>c.path),...products.map(productCategory).filter(Boolean)])).sort((a,b)=>a.localeCompare(b,'pt-BR'))} total={filtered.length}/><ListHeading kind="products" selection={batchExpanded}/>{!filtered.length&&<p>Nenhum produto encontrado.</p>}{visible.map(p=><article key={p.id} className={`data-list-row products-list-row${batchExpanded?' has-selection':''}`}>
  {batchExpanded&&<label className="list-selection"><input type="checkbox" aria-label={`Selecionar ${p.name}`} checked={batchSelection.includes(p.id!)} onChange={e=>setBatchSelection(previous=>e.target.checked?[...previous,p.id!]:previous.filter(id=>id!==p.id))}/></label>}
  <div className="product-list-identity"><div className="product-list-photo">{p.imageUrl?<ProductPhoto url={p.imageUrl} name={p.name}/>:<span className="product-photo-empty">Sem foto</span>}</div>

@@ -14,6 +14,7 @@ test('gravação persiste após reabrir o banco; API rejeita dados inválidos', 
   let app = await local(dir);
   try {
     assert.equal((await app.inject('/api/health')).json().database, 'ok');
+    assert.equal((await app.inject('/api/company')).statusCode,404,'Cadastro de empresa é exclusivo do piloto');
     assert.equal((await app.inject({method:'PUT',url:'/api/note',payload:{text:'Teste persistente'}})).statusCode, 200);
     assert.equal((await app.inject({method:'PUT',url:'/api/note',payload:{text:'x'.repeat(501)}})).statusCode, 400);
     await app.close();

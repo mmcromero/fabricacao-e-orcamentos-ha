@@ -1,3 +1,4 @@
+import {appName} from './branding';
 import ValidatedForm,{RequiredMark,focusField} from './FormValidation';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import type {Product as ProductData} from '../server/products';
@@ -14,7 +15,7 @@ export function ProductPhoto({url,name}:{url:string;name:string}){const [failed,
 export default function ProductForm({initial,context,onSaved,onCancel,onDirtyChange,onBusyChange}:{initial?:EditableProduct;context:'fabricacao'|'produtos'|'orcamentos';onSaved:(product:EditableProduct,catalog:boolean,tier:typeof tiers[number])=>void|Promise<void>;onCancel?:()=>void;onDirtyChange?:(dirty:boolean)=>void;onBusyChange?:(busy:boolean)=>void}){
  const [value,setValue]=useState<EditableProduct>(()=>structuredClone(initial??emptyProduct()));
  const [originChosen,setOriginChosen]=useState(!!initial||context==='fabricacao');
- const [manufacturingOpen,setManufacturingOpen]=useState(context==='fabricacao'),[siteOpen,setSiteOpen]=useState(false),[appliedTiers,setAppliedTiers]=useState<(typeof tiers[number])[]>([]),[catalog,setCatalog]=useState(context!=='orcamentos'),[tier,setTier]=useState('');
+ const [manufacturingOpen,setManufacturingOpen]=useState(context==='fabricacao'||(appName==='Artesão Digital'&&context==='produtos')),[siteOpen,setSiteOpen]=useState(false),[appliedTiers,setAppliedTiers]=useState<(typeof tiers[number])[]>([]),[catalog,setCatalog]=useState(context!=='orcamentos'),[tier,setTier]=useState('');
  const [settings,setSettings]=useState<Record<string,string>>({}),[revision,setRevision]=useState(0),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [success,setSuccess]=useState('');const successRef=useRef<HTMLParagraphElement>(null);
  const baseline=useRef(JSON.stringify(initial??emptyProduct()));

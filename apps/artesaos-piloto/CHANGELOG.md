@@ -1,3 +1,12 @@
+# 0.1.12
+
+- Reorganiza o menu em Produtos, Clientes, Orçamentos e Configurações, com ícones. A faixa de navegação ocupa a largura abaixo do cabeçalho verde e usa botão hambúrguer para abrir/fechar os itens no celular, com suporte a Escape e teclado.
+- Define Produtos como entrada após primeiro login, novo login e acesso à raiz. A antiga página de Fabricação deixa de existir no piloto; links antigos abrem Produtos, cujo formulário mantém os dados de fabricação e preços calculados.
+- Reúne configurações em uma página: dados da empresa e parâmetros comuns nas configurações gerais, fora das abas Produtos, Clientes e Orçamentos. As abas preservam o preenchimento ao alternar e aceitam navegação por teclado.
+- Acrescenta cadastro opcional de empresa, responsável, telefone e e-mail por conta, com validação, persistência e proteção contra sobrescrita por outra janela. Não inclui estes dados na tela nem em arquivos de orçamento.
+- Registra o uso futuro dos dados da empresa somente no documento final do orçamento em Ideias Futuras, sem execução automática.
+- Mantém a base 0.1.23 e os dados existentes. O novo cadastro cria apenas uma tabela adicional no banco individual do piloto.
+
 # 0.1.11
 
 - Atualiza o aviso no login para orientar a manter uma cópia das informações e informar que o ambiente está em construção e pode apresentar instabilidades.

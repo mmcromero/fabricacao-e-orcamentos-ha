@@ -69,29 +69,35 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    expect(page.locator('[data-pilot-brand] img')).to_be_visible()
    assert page.locator('[data-pilot-brand] img').evaluate('img=>img.naturalWidth')==293
    page.get_by_label('Código de convite (somente no primeiro acesso)').fill('synthetic-invite-'+account+'-01234567890123456789');page.get_by_role('button',name='Entrar com Google',exact=True).click()
-   expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport()
-   page.reload();expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
+   expect(page).to_have_url(origin+prefix+'?view=produtos');expect(page.get_by_role('heading',name='Produtos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport()
+   page.reload();expect(page.get_by_role('heading',name='Produtos',exact=True)).to_be_visible()
    bar=page.locator('#pilot-account');expect(bar.locator('.pilot-account-title')).to_have_text('Artesão Digital');expect(bar.locator('.pilot-account-user')).to_have_text(account+'@example.test')
    if (root/'dist/pilot-logo.png').exists():
     logo=bar.locator('.pilot-account-title img');expect(logo).to_be_visible();assert logo.evaluate('img=>img.naturalWidth')==464
     assert page.locator('body').evaluate('el=>getComputedStyle(el).fontFamily').startswith('Arial')
-    assert page.get_by_role('heading',name='Orçamentos',exact=True).evaluate('el=>getComputedStyle(el).fontFamily').startswith('Georgia')
+    assert page.get_by_role('heading',name='Produtos',exact=True).evaluate('el=>getComputedStyle(el).fontFamily').startswith('Georgia')
     logo.evaluate("img=>img.src='/artesaos-piloto/brand/missing-logo.png'")
     expect(bar.locator('.pilot-account-title img')).to_have_count(0);expect(bar.locator('.pilot-account-title span')).to_be_visible()
     bar.locator('.pilot-account-title').evaluate('title=>window.pilotBrand(title)');expect(bar.locator('.pilot-account-title img')).to_be_visible()
-   bb=bar.bounding_box();assert abs(bb['y'])<1
-   menu=bar.get_by_role('navigation',name='Áreas',exact=True);expect(menu).to_be_visible()
-   title_box=bar.locator('.pilot-account-title').bounding_box();menu_box=menu.bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
-   assert title_box['x']<menu_box['x']<exit_box['x']
-   links=menu.get_by_role('link');assert links.count()==4
-   tops=links.evaluate_all('items=>items.map(el=>el.getBoundingClientRect().top)');assert max(tops)-min(tops)<2
+   shell=page.locator('#pilot-shell');bb=bar.bounding_box();assert abs(bb['y'])<1
+   menu=shell.get_by_role('navigation',name='Áreas',exact=True)
+   toggle=shell.get_by_role('button',name='Menu',exact=True)
+   if page.viewport_size['width']<=700:
+    expect(menu).to_be_hidden();expect(toggle).to_have_attribute('aria-expanded','false');toggle.click()
+    expect(menu).to_be_visible();expect(shell.get_by_role('button',name='Fechar menu',exact=True)).to_have_attribute('aria-expanded','true')
+   else:expect(toggle).to_be_hidden()
+   links=menu.get_by_role('link');assert links.all_text_contents()==['Produtos','Clientes','Orçamentos','Configurações']
+   assert menu.get_by_role('link',name='Fabricação',exact=True).count()==0
+   assert menu.bounding_box()['y']>=bb['height']-1
    if page.viewport_size['width']>700:
-    user_box=bar.locator('.pilot-account-user').bounding_box();assert menu_box['x']<user_box['x']<exit_box['x']
-   assert menu_box['y']>=bb['y'] and menu_box['y']+menu_box['height']<=bb['height']
-   assert page.get_by_role('heading',name='Orçamentos',exact=True).bounding_box()['y']>=bb['y']+bb['height']
-   page.evaluate('scrollTo(0,document.body.scrollHeight)');assert abs(bar.bounding_box()['y'])<1;expect(menu).to_be_in_viewport();expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.evaluate('scrollTo(0,0)');page.screenshot(path='/tmp/artesao-digital-'+account+'.png')
+    tops=links.evaluate_all('items=>items.map(el=>el.getBoundingClientRect().top)');assert max(tops)-min(tops)<2
+   else:
+    shell.get_by_role('button',name='Fechar menu',exact=True).press('Escape');expect(menu).to_be_hidden();expect(toggle).to_be_focused()
+   assert page.get_by_role('heading',name='Produtos',exact=True).bounding_box()['y']>=shell.bounding_box()['height']
+   page.evaluate('scrollTo(0,document.body.scrollHeight)');assert abs(shell.bounding_box()['y'])<1;expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.evaluate('scrollTo(0,0)');page.screenshot(path='/tmp/artesao-digital-'+account+'.png')
    if account=='b':
-    page.set_viewport_size({'width':320,'height':800});page.locator('.pilot-account-user').evaluate("el=>el.textContent='testador.com.email.longo@example.test'");assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');expect(bar).to_be_in_viewport();expect(menu).to_be_in_viewport();menu.get_by_role('link',name='Produtos',exact=True).focus();assert menu.get_by_role('link',name='Produtos',exact=True).evaluate('el=>el.getBoundingClientRect().right<=innerWidth');expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.screenshot(path='/tmp/artesao-digital-320.png');page.set_viewport_size({'width':390,'height':900})
+    page.set_viewport_size({'width':320,'height':800});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');expect(shell).to_be_in_viewport();expect(menu).to_be_hidden();page.screenshot(path='/tmp/artesao-digital-320.png')
+    toggle.click();expect(menu).to_be_visible();expect(menu.get_by_role('link',name='Configurações',exact=True)).to_be_in_viewport();page.screenshot(path='/tmp/artesao-digital-320-menu.png');shell.get_by_role('button',name='Fechar menu',exact=True).click();expect(menu).to_be_hidden();page.set_viewport_size({'width':390,'height':900})
    if args.ha_cache:
     assert page.evaluate("navigator.serviceWorker.controller.scriptURL.includes('/artesaos-piloto/service-worker.js')")
     assert page.evaluate("async()=>{const c=await caches.open('fixture-ha-files');const r=await c.match('/static/keep-ha-fixture.txt');return await r.text();}")=="Preserve HA"
@@ -114,7 +120,8 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   ip.get_by_role('checkbox').check();ip.get_by_role('button',name='Registrar interesse',exact=True).click()
   expect(ip.locator('#interest-status')).to_contain_text('Interesse registrado')
   interested.close()
-  a,pa=context('a');pa.goto(origin+prefix+'?view=produtos');pa.get_by_role('button',name='Novo produto',exact=True).click();modal=pa.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado A');modal.get_by_label('Origem',exact=True).select_option('own');modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('25');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pa.locator('.products-list-row')).to_have_count(1)
+  a,pa=context('a');pa.goto(origin+prefix+'?view=produtos');pa.get_by_role('button',name='Novo produto',exact=True).click();modal=pa.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado A');modal.get_by_label('Origem',exact=True).select_option('own');expect(modal.get_by_role('heading',name='Produção',exact=True)).to_be_visible();modal.locator('#main-machineSeconds-hours').fill('1');modal.locator('#main-humanSeconds-minutes').fill('15');modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('25');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pa.locator('.products-list-row')).to_have_count(1)
+  saved=pa.evaluate("async()=>(await (await fetch(new URL('api/products',document.baseURI))).json())[0]");assert saved['manufacturing']['machineSeconds']==3600;assert saved['manufacturing']['humanSeconds']==900;assert saved['prices']['retail']==2500
   b,pb=context('b');pb.goto(origin+prefix+'?view=produtos');expect(pb.locator('.products-list-row')).to_have_count(0)
   pb.get_by_role('button',name='Novo produto',exact=True).click();modal=pb.locator('dialog[open]');modal.get_by_label(re.compile(r'^Nome(?:\s|$)')).fill('Produto isolado B');modal.get_by_label('Origem',exact=True).select_option('client');modal.get_by_label(re.compile(r'^Valor varejo \(R\$\)')).fill('15');modal.get_by_role('button',name='Salvar produto',exact=True).click();expect(pb.locator('.products-list-row')).to_have_count(1);expect(pb.locator('.products-list-row')).not_to_contain_text('Produto isolado A')
   pa.reload();expect(pa.locator('.products-list-row')).to_have_count(1);expect(pa.locator('.products-list-row')).not_to_contain_text('Produto isolado B')
@@ -122,12 +129,32 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
    expect(page.get_by_label('Código de convite (somente no primeiro acesso)')).to_have_value('');page.get_by_role('button',name='Entrar com Google',exact=True).click()
-   expect(page).to_have_url(origin+prefix+'?view=orcamentos');expect(page.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.goto(origin+prefix+'?view=produtos');expect(page.locator('.products-list-row')).to_have_count(1)
-   for view,title in [('orcamentos','Orçamentos'),('clientes','Clientes'),('fabricacao','Fabricação'),('configuracoes&area=produtos','Configurações — Produtos')]:
-    page.goto(origin+prefix+'?view='+view);expect(page.get_by_role('heading',name=title,exact=True,level=1)).to_be_visible();expect(page.locator('.brand')).to_have_text('Artesão Digital');expect(page.locator('#pilot-build-info')).to_be_in_viewport()
+   expect(page).to_have_url(origin+prefix+'?view=produtos');expect(page.get_by_role('heading',name='Produtos',exact=True)).to_be_visible();expect(page.locator('#pilot-account')).to_contain_text(account+'@example.test');expect(page.locator('#pilot-build-info')).to_contain_text('Artesão Digital v'+build_info['pilotVersion']);expect(page.locator('#pilot-build-info')).to_contain_text('Fabricação e Orçamentos v'+build_info['coreVersion']);expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.goto(origin+prefix+'?view=produtos');expect(page.locator('.products-list-row')).to_have_count(1)
+   for view,title in [('orcamentos','Orçamentos'),('clientes','Clientes'),('fabricacao','Produtos'),('configuracoes','Configurações')]:
+    page.goto(origin+prefix+'?view='+view);expect(page.get_by_role('heading',name=title,exact=True,level=1)).to_be_visible();expect(page.locator('.pilot-account-title img')).to_be_visible();expect(page.locator('#pilot-build-info')).to_be_in_viewport()
    # The bare application path must also render an application, not only the account bar.
-   page.goto(origin+prefix);expect(page.get_by_role('heading',name='Orçamentos',exact=True,level=1)).to_be_visible()
+   page.goto(origin+prefix);expect(page.get_by_role('heading',name='Produtos',exact=True,level=1)).to_be_visible()
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
+  def enter_settings(page):
+   page.goto(origin+prefix+'?view=configuracoes');expect(page.get_by_role('heading',name='Configurações',exact=True)).to_be_visible()
+  # General data stays in the existing fabrication namespace; tabs keep drafts mounted.
+  # A has logged out at this point: authenticate again without repeating an invitation.
+  pa.get_by_role('button',name='Entrar com Google',exact=True).click();expect(pa).to_have_url(origin+prefix+'?view=produtos')
+  enter_settings(pa);company=pa.get_by_role('region',name='Dados da empresa',exact=True)
+  company.get_by_label('Nome da empresa',exact=True).fill('Ateliê de teste A');company.get_by_label('Nome da pessoa responsável',exact=True).fill('Responsável A');company.get_by_label('Telefone para contato',exact=True).fill('(11) 99999-0000');company.get_by_label('E-mail para contato',exact=True).fill('atelie-a@example.test');company.get_by_role('button',name='Salvar dados da empresa',exact=True).click();expect(company.get_by_role('status')).to_contain_text('Dados da empresa salvos')
+  general=pa.locator('.pilot-general');general.locator('summary').click()
+  general.get_by_label('Valor da hora humana (R$)',exact=True).fill('23.50');general.get_by_role('button',name='Salvar configurações gerais',exact=True).click();expect(general.locator('.settings-content > p[role=status]')).to_contain_text('Configurações salvas')
+  pa.get_by_role('tab',name='Clientes',exact=True).click();panel=pa.get_by_role('tabpanel',name='Clientes',exact=True);panel.get_by_label('Registros por página',exact=True).select_option('30')
+  pa.get_by_role('tab',name='Produtos',exact=True).click();pa.get_by_role('tab',name='Clientes',exact=True).click();expect(panel.get_by_label('Registros por página',exact=True)).to_have_value('30')
+  panel.get_by_role('button',name='Salvar configurações de clientes',exact=True).click();expect(panel.get_by_role('status')).to_contain_text('Configurações salvas')
+  pa.reload();expect(pa.get_by_label('Nome da empresa',exact=True)).to_have_value('Ateliê de teste A');pa.locator('.pilot-general summary').click();expect(pa.get_by_label('Valor da hora humana (R$)',exact=True)).to_have_value('23.50')
+  pa.get_by_role('tab',name='Produtos',exact=True).focus();pa.get_by_role('tab',name='Produtos',exact=True).press('ArrowRight');expect(pa.get_by_role('tab',name='Clientes',exact=True)).to_have_attribute('aria-selected','true');expect(pa.get_by_role('tabpanel',name='Clientes',exact=True).get_by_label('Registros por página',exact=True)).to_have_value('30')
+  pa.get_by_role('tab',name='Produtos',exact=True).click();pa.locator('.pilot-general summary').click();pa.evaluate('scrollTo(0,0)');pa.screenshot(path='/tmp/artesao-configuracoes.png')
+  # B's values are unchanged by A's settings.
+  pb.get_by_role('button',name='Entrar com Google',exact=True).click();expect(pb).to_have_url(origin+prefix+'?view=produtos');enter_settings(pb);expect(pb.get_by_label('Nome da empresa',exact=True)).to_have_value('');pb.get_by_role('tab',name='Clientes',exact=True).click();expect(pb.get_by_role('tabpanel',name='Clientes',exact=True).get_by_label('Registros por página',exact=True)).to_have_value('10')
+  pb.locator('.pilot-general summary').click();expect(pb.get_by_label('Valor da hora humana (R$)',exact=True)).not_to_have_value('23.50')
+  pb.locator('.pilot-general summary').click();pb.evaluate('scrollTo(0,0)');pb.screenshot(path='/tmp/artesao-configuracoes-mobile.png')
+  pa.get_by_role('button',name='Sair',exact=True).click();pb.get_by_role('button',name='Sair',exact=True).click()
   # Reuse A's browser/storage for B: root HA caches must not restore A's UI/data.
   a.unroute('https://accounts.google.com/**')
   def switch_google(route):
@@ -135,7 +162,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    route.fulfill(status=302,headers={'location':origin+prefix+'auth/google/callback?state='+state+'&code=b'})
   a.route('https://accounts.google.com/**',switch_google)
   pa.get_by_role('button',name='Entrar com Google',exact=True).click()
-  expect(pa.get_by_role('heading',name='Orçamentos',exact=True)).to_be_visible()
+  expect(pa.get_by_role('heading',name='Produtos',exact=True)).to_be_visible()
   expect(pa.locator('#pilot-account')).to_contain_text('b@example.test')
   pa.goto(origin+prefix+'?view=produtos');expect(pa.locator('.products-list-row')).to_have_count(1)
   expect(pa.locator('.products-list-row')).to_contain_text('Produto isolado B');expect(pa.locator('.products-list-row')).not_to_contain_text('Produto isolado A')
@@ -169,7 +196,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   isolated=browser.new_context(ignore_https_errors=True);lost=isolated.new_page();lost.goto(origin+prefix+'auth/finish');expect(lost.get_by_role('status')).to_contain_text('Não foi possível confirmar a sessão');expect(lost.get_by_role('link',name='Entrar novamente',exact=True)).to_be_visible();expect(lost).to_have_url(origin+prefix+'auth/finish');isolated.close()
   assert not errors,errors
   anonymous.dispose();browser.close()
- print('PASS: primeiro acesso e novo login SEM URL manual, Orçamentos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, interesse com e-mail obrigatório, administração restrita, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
+ print('PASS: primeiro acesso e novo login SEM URL manual, Produtos automático, marca/rodapé visíveis, demais áreas/raiz, contas isoladas, interesse com e-mail obrigatório, administração restrita, F5, logout após expiração e aviso de falha de rede; proxy Nginx='+str(args.nginx)+', cache HA='+str(args.ha_cache)+'. Provedor Google controlado, validação real pendente.')
 finally:
  if args.nginx:subprocess.run(docker+['rm','-f',container],stdout=log,stderr=log,env=docker_env)
  server.terminate()

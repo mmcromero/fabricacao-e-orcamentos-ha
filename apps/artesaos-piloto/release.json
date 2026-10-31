@@ -1,15 +1,18 @@
 {
-  "pilotVersion": "0.1.11",
-  "sourceCommit": "9ab242d9a50fc73be7ca6ef9ab39edd985e6b0a7",
+  "pilotVersion": "0.1.12",
+  "sourceCommit": "6a06950096d325df69c116543feab2220cdaf4cd",
   "coreBase": {
     "version": "0.1.23",
     "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
   },
   "validation": [
-    "Text-only change: replacement checked, git diff --check and export consistency passed. Build and browser suite were not rerun for this wording change."
+    "TypeScript/Vite build",
+    "41 automated tests passed, including company validation, CSRF, stale revision, persistence and tenant isolation",
+    "Chromium with controlled provider: first/repeat login to Products, fixed desktop navigation, mobile hamburger open/close/Escape, settings tabs and draft persistence, company data save/reload/isolation, product manufacturing data and 320px layout"
   ],
   "pending": [
     "Google real, Home Assistant/Supervisor and ARM installation"
   ],
-  "migration": "No database migration added. Stop the app and make a complete protected backup before updating. Restore the complete previous backup for rollback."
+  "migration": "Adds company_profile table only to each pilot user database when opened. Existing commercial data and settings keys are preserved. Stop the app and make a complete protected backup before updating; restore the complete previous backup for rollback.",
+  "backlog": "Company details in the final client-facing quote document only; not implemented in this package."
 }

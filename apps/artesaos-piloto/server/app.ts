@@ -1,3 +1,4 @@
+import {registerCompany} from './pilot/company.js';
 import {registerLegacyMaterialUpgrade} from './legacy-material-upgrade.js';
 import {registerMaterials} from './materials.js';
 import {registerProductEditor} from './product-editor.js';
@@ -17,7 +18,7 @@ import { resolve } from 'node:path';
 import { registerHomeAssistantAccess } from './adapters/home-assistant.js';
 import type { AppMode } from './config.js';
 
-export async function createApp(options: { dataDir: string; staticDir: string; mode: AppMode; logRequests?:boolean }) {
+export async function createApp(options: { dataDir: string; staticDir: string; mode: AppMode; logRequests?:boolean;pilotFeatures?:boolean }) {
   const { dataDir, staticDir, mode } = options;
   mkdirSync(dataDir, { recursive: true });
   const db = new DatabaseSync(resolve(dataDir, 'validation.sqlite'));
@@ -41,6 +42,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     db.prepare('INSERT INTO notes (id, text, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET text=excluded.text, updated_at=excluded.updated_at').run(request.body.text, updatedAt);
     return { text: request.body.text, updated_at: updatedAt };
   });
+  if(options.pilotFeatures)registerCompany(app,db);
   registerMaterials(app, db);
   registerProducts(app, db);
   registerCategories(app, db);

@@ -38,6 +38,8 @@ pública, por si só, não concede essa licença.
 
 ## Aplicativo adicional: Artesão Digital — Testes
 
-Disponível separadamente para instalação manual, sem substituir Fabricação e Orçamentos. Base do núcleo: 0.1.23; versão experimental do piloto: 0.1.11. Login Google próprio, convites e dados separados por conta. Requer cliente Google e rota HTTPS no proxy. Ainda não validado com Google real ou no seu Supervisor; usar apenas dados fictícios, não liberar terceiros. O banco e as opções não são criptografados em disco por esta versão.
+Disponível separadamente para instalação manual, sem substituir Fabricação e Orçamentos. Base do núcleo: 0.1.23; versão experimental do piloto: 0.1.12. Login Google próprio, convites e dados separados por conta. Requer cliente Google e rota HTTPS no proxy. Ainda não validado com Google real ou no seu Supervisor; usar apenas dados fictícios, não liberar terceiros. O banco e as opções não são criptografados em disco por esta versão.
 
 [Configuração e limites do piloto](apps/artesaos-piloto/DOCS.md).
+
+A versão 0.1.12 abre em Produtos, reúne configurações por abas e inclui dados da empresa por conta. A navegação tem ícones em faixa própria e menu hambúrguer no celular. O uso dos dados da empresa no documento final do orçamento permanece em [Ideias Futuras](apps/artesaos-piloto/BACKLOG.md).

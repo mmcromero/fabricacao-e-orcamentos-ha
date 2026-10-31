@@ -32,22 +32,54 @@ export const identityCss=`
 :root .pilot-auth section{background:white;border:1px solid var(--areia);border-radius:12px;padding:24px;margin:24px 0 40px}
 :root .pilot-auth .pilot-login-section{border-top:5px solid var(--mata);scroll-margin-top:24px}
 :root .pilot-auth section h2{margin-top:0}
-:root #pilot-account:has(#pilot-navigation){grid-template-columns:auto minmax(0,1fr) minmax(0,160px) auto;padding:10px max(16px,calc((100% - 1200px)/2));gap:16px}
-:root #pilot-account:has(#pilot-navigation) .pilot-account-title{padding:8px 12px}
-:root #pilot-account:has(#pilot-navigation) .pilot-account-title img{width:180px}
-:root #pilot-navigation{min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--areia) var(--mata)}
-:root #pilot-navigation nav{display:flex;align-items:center;gap:20px;flex-wrap:nowrap;width:max-content;min-width:100%;padding:12px 2px}
-:root #pilot-navigation a{display:block;flex:none;white-space:nowrap;color:var(--linho);margin:0!important;padding:8px 0;text-decoration:none}
-:root #pilot-navigation a[aria-current=page]{border-bottom:2px solid var(--areia)}
-:root #pilot-account:has(#pilot-navigation) .pilot-account-user{text-align:right}
+/* The pilot shell owns the green account row and the separate full-width navigation row. */
+:root #pilot-shell{display:block;position:fixed;inset:0 0 auto;z-index:3;box-shadow:0 2px 8px #10291e25}
+:root #pilot-shell #pilot-account{width:100%;position:static;min-height:88px;box-shadow:none;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;padding:8px max(20px,calc((100% - 1200px)/2))}
+:root #pilot-shell .pilot-account-title{padding:8px 12px}
+:root #pilot-shell .pilot-account-title img{width:180px;height:auto}
+:root #pilot-shell .pilot-account-user{text-align:right}
+:root #pilot-navigation{background:var(--linho);color:var(--mata);border-bottom:1px solid var(--areia);max-height:calc(100dvh - 120px);overflow:auto}
+:root .pilot-menu{max-width:1200px;margin:auto}
+:root #pilot-navigation nav{display:flex;align-items:center;gap:12px;padding:0 20px;flex-wrap:nowrap}
+:root #pilot-navigation a{display:flex;align-items:center;gap:10px;padding:16px 18px;color:var(--mata);text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent;min-height:52px}
+:root #pilot-navigation a[aria-current=page]{border-color:var(--mata);font-weight:700;background:#1e4d3b08}
+:root .pilot-menu-toggle{display:none}
+:root .pilot-icon{width:22px;height:22px;flex:none;vertical-align:middle;margin-right:8px}
+:root #pilot-navigation .pilot-icon{margin:0}
+:root .pilot-session-active #root{padding-top:0}
+:root .pilot-session-active #root>main{max-width:1200px;padding:24px 20px 64px}
+:root .pilot-session-active #root>main>h1{margin-top:0}
+:root .pilot-settings section{background:white}
+:root .pilot-settings h2{margin-top:0}
+:root .pilot-settings .settings-content section{padding:20px;margin-top:16px;box-shadow:none}
+:root .pilot-general details>summary{cursor:pointer;font-weight:700;padding:12px 0;color:var(--mata)}
+:root .pilot-settings [role=tablist]{display:flex;border-bottom:1px solid var(--areia);gap:8px;overflow-x:auto}
+:root .pilot-settings [role=tab]{background:transparent;color:var(--carvao);border-radius:0;border-bottom:3px solid transparent;margin:0;padding:14px 18px;white-space:nowrap}
+:root .pilot-settings [role=tab][aria-selected=true]{border-color:var(--mata);color:var(--mata);font-weight:700}
+:root .pilot-settings [role=tabpanel]{padding-top:24px}
+:root .pilot-settings [hidden]{display:none}
+:root .pilot-settings fieldset{min-width:0}
+:root .pilot-settings .setting-field{max-width:100%}
+:root .company-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+:root .company-settings fieldset{border:0;padding:0}
+:root .company-settings h3{margin-top:0}
+:root .pilot-session-active main>header:has(>.brand){display:none}
 @media(max-width:700px){
- :root #pilot-account:has(#pilot-navigation){grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:8px 12px}
- :root #pilot-account:has(#pilot-navigation) .pilot-account-title{padding:8px}
- :root #pilot-account:has(#pilot-navigation) .pilot-account-title img{width:120px}
- :root #pilot-account:has(#pilot-navigation) .pilot-account-user{display:none}
- :root #pilot-navigation nav{gap:16px}
+ :root #pilot-shell #pilot-account{padding:8px 12px;gap:8px;min-height:84px}
+ :root #pilot-shell .pilot-account-title{padding:8px}
+ :root #pilot-shell .pilot-account-title img{width:144px;min-width:120px}
+ :root #pilot-shell .pilot-account-user{font-size:12px}
+ :root #pilot-navigation .pilot-menu-toggle{display:flex;align-items:center;gap:12px;background:transparent;color:var(--mata);padding:14px 20px;margin:0;border-radius:0;width:100%;text-align:left}
+ :root #pilot-navigation nav{display:none;flex-direction:column;align-items:stretch;gap:0;padding:0}
+ :root #pilot-navigation .is-open nav{display:flex}
+ :root #pilot-navigation a{border-bottom:0;border-left:3px solid transparent;padding:14px 20px}
+ :root #pilot-navigation a[aria-current=page]{border-left-color:var(--mata);background:#1e4d3b12}
+ :root .pilot-settings .settings-content section{padding:16px 12px}
+ :root .pilot-settings [role=tab]{padding:12px 10px}
+ :root .company-fields{grid-template-columns:1fr}
  :root .pilot-auth section{padding:20px}
 }
+@media(max-width:480px){:root #pilot-shell .pilot-account-user{display:none}}
 
 `;
 export function brandScript(prefix:string,version:string,available:boolean){return `(()=>{window.pilotBrand=parent=>{parent.replaceChildren();const text=document.createElement('span');text.textContent='Artesão Digital';parent.append(text);if(!${available})return;const img=document.createElement('img');img.alt='Artesão Digital';img.hidden=true;img.onload=()=>{text.hidden=true;img.hidden=false;};img.onerror=()=>{img.remove();text.hidden=false;};parent.append(img);img.src=parent.matches('.pilot-account-title,[data-pilot-brand=horizontal]')?${JSON.stringify(prefix+'brand/logo-horizontal.png?v='+version)}:${JSON.stringify(prefix+'brand/logo.png?v='+version)};};addEventListener('DOMContentLoaded',async()=>{try{await window.pilotBrowserReady;}catch{return;}document.querySelectorAll('[data-pilot-brand]').forEach(window.pilotBrand);});})();`;}

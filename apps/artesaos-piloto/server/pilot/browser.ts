@@ -90,12 +90,12 @@ export function sessionScript(prefix:string,csrfCookie:string){
    }catch{status.textContent='Não foi possível sair. Verifique sua conexão e tente novamente.';}
    finally{
     clearTimeout(timer);logout.disabled=false;logout.textContent='Sair';
-    if(status.textContent){status.hidden=false;document.body.style.paddingTop=(bar.offsetHeight+16)+'px';}
+    if(status.textContent){status.hidden=false;document.body.style.paddingTop=((document.getElementById('pilot-shell')??bar).offsetHeight+16)+'px';}
    }
   };
   const navigation=document.createElement('div');navigation.id='pilot-navigation';
-  bar.append(title,navigation,name,logout,status);document.body.classList.add('pilot-session-active');document.body.prepend(bar);
-  new ResizeObserver(()=>{document.body.style.paddingTop=(bar.offsetHeight+16)+'px';}).observe(bar);
+  bar.append(title,name,logout,status);const shell=document.createElement('header');shell.id='pilot-shell';shell.append(bar,navigation);document.body.classList.add('pilot-session-active');document.body.prepend(shell);
+  new ResizeObserver(()=>{document.body.style.paddingTop=((document.getElementById('pilot-shell')??bar).offsetHeight+16)+'px';}).observe(shell);
  });
 })();`;
 }

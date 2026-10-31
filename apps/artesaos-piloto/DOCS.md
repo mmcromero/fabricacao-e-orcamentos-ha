@@ -168,3 +168,16 @@ A página de entrada apresenta primeiro as condições do piloto gratuito por co
 Nas áreas de usuário, logo, navegação e saída compartilham a faixa fixa. O menu mantém uma linha com rolagem horizontal quando necessário. Em telas de até 700 px, o e-mail fica oculto para reservar espaço à navegação; o botão Sair permanece disponível. O conteúdo acompanha a altura real do cabeçalho.
 
 Validação: compilação, 41 testes e navegador com provedor controlado, incluindo ordem dos formulários, âncora de login, menu fixo sem quebra de linha, navegação e largura de 320 px. Google e Home Assistant reais ainda precisam de conferência na instalação. Não há nova migração de banco. Antes de instalar, pare o aplicativo e faça backup completo e protegido; para reverter, restaure a cópia anterior completa.
+
+
+## Atualização 0.1.12 — navegação, configurações e empresa
+
+Produtos passa a ser a entrada do piloto, no primeiro login, no novo login e na raiz. O menu tem Produtos, Clientes, Orçamentos e Configurações, com ícones, em uma faixa abaixo do cabeçalho verde. No celular, o botão Menu abre os itens; Fechar menu ou Escape recolhe a lista. A altura do conteúdo acompanha a faixa fixa. A tela antiga de Fabricação não é mais exibida no piloto: o endereço antigo abre Produtos, cujo formulário contém os dados de fabricação, custos e aplicação explícita de preços. O aplicativo principal mantém sua navegação original.
+
+Configurações tem uma área geral fora das abas e as abas Produtos, Clientes e Orçamentos. A área geral inclui os dados da empresa e um grupo expansível de custos, precificação e planejamento. Os valores existentes continuam no armazenamento original, sem renomear chaves ou perder dados. Materiais e categorias ficam na aba Produtos. As abas mantêm seus formulários montados ao alternar, preservando edições ainda não salvas. Os botões salvam cada grupo separadamente; salvar dados da empresa não altera os parâmetros de cálculo, nem o contrário.
+
+**Dados da empresa:** nome da empresa, nome da pessoa responsável, telefone e e-mail para contato. Os campos são opcionais, com limites e validação no servidor. O cadastro fica no banco individual da conta, protegido pela sessão, contexto e CSRF do piloto. Alterações concorrentes são recusadas; reabra a página antes de tentar novamente. Não há envio de mensagens nem divulgação automática. A inclusão dessas informações no documento final enviado ao cliente está registrada em [Ideias Futuras](BACKLOG.md); a listagem e a tela de orçamento não passam a mostrar esses dados.
+
+**Migração e restauração:** cria-se a tabela adicional `company_profile` apenas nos bancos das contas do piloto, ao abri-los. Os dados comerciais, convites e parâmetros anteriores são preservados. Antes de atualizar, pare o aplicativo e faça backup completo e protegido do volume e configurações. Para reverter, restaure a cópia anterior completa; não execute apenas código antigo sobre o volume atualizado.
+
+**Validação:** compilação, 41 testes automatizados e Chromium com provedor controlado, incluindo login para Produtos, menu móvel e desktop, abas por teclado, preservação de rascunhos, persistência dos dados da empresa e isolamento entre contas. Esses testes não substituem a validação real do Google, Home Assistant/Supervisor e hardware ARM.
