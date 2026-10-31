@@ -80,14 +80,18 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
     expect(bar.locator('.pilot-account-title img')).to_have_count(0);expect(bar.locator('.pilot-account-title span')).to_be_visible()
     bar.locator('.pilot-account-title').evaluate('title=>window.pilotBrand(title)');expect(bar.locator('.pilot-account-title img')).to_be_visible()
    bb=bar.bounding_box();assert abs(bb['y'])<1
-   title_box=bar.locator('.pilot-account-title').bounding_box();user_box=bar.locator('.pilot-account-user').bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
-   assert title_box['x']<user_box['x']<exit_box['x'];assert abs(exit_box['x']-(user_box['x']+user_box['width'])-16)<2
-   assert bar.locator('.pilot-account-user').evaluate('el=>getComputedStyle(el).textAlign')=='right'
-   assert abs(title_box['x']-max(20,(page.viewport_size['width']-860)/2+20))<2
+   menu=bar.get_by_role('navigation',name='Áreas',exact=True);expect(menu).to_be_visible()
+   title_box=bar.locator('.pilot-account-title').bounding_box();menu_box=menu.bounding_box();exit_box=bar.get_by_role('button',name='Sair',exact=True).bounding_box()
+   assert title_box['x']<menu_box['x']<exit_box['x']
+   links=menu.get_by_role('link');assert links.count()==4
+   tops=links.evaluate_all('items=>items.map(el=>el.getBoundingClientRect().top)');assert max(tops)-min(tops)<2
+   if page.viewport_size['width']>700:
+    user_box=bar.locator('.pilot-account-user').bounding_box();assert menu_box['x']<user_box['x']<exit_box['x']
+   assert menu_box['y']>=bb['y'] and menu_box['y']+menu_box['height']<=bb['height']
    assert page.get_by_role('heading',name='Orçamentos',exact=True).bounding_box()['y']>=bb['y']+bb['height']
-   page.evaluate('scrollTo(0,document.body.scrollHeight)');assert abs(bar.bounding_box()['y'])<1;expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.evaluate('scrollTo(0,0)');page.screenshot(path='/tmp/artesao-digital-'+account+'.png')
+   page.evaluate('scrollTo(0,document.body.scrollHeight)');assert abs(bar.bounding_box()['y'])<1;expect(menu).to_be_in_viewport();expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.evaluate('scrollTo(0,0)');page.screenshot(path='/tmp/artesao-digital-'+account+'.png')
    if account=='b':
-    page.set_viewport_size({'width':320,'height':800});page.locator('.pilot-account-user').evaluate("el=>el.textContent='testador.com.email.longo@example.test'");assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');expect(bar).to_be_in_viewport();expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.screenshot(path='/tmp/artesao-digital-320.png');page.set_viewport_size({'width':390,'height':900})
+    page.set_viewport_size({'width':320,'height':800});page.locator('.pilot-account-user').evaluate("el=>el.textContent='testador.com.email.longo@example.test'");assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');expect(bar).to_be_in_viewport();expect(menu).to_be_in_viewport();menu.get_by_role('link',name='Produtos',exact=True).focus();assert menu.get_by_role('link',name='Produtos',exact=True).evaluate('el=>el.getBoundingClientRect().right<=innerWidth');expect(page.locator('#pilot-build-info')).to_be_in_viewport();page.screenshot(path='/tmp/artesao-digital-320.png');page.set_viewport_size({'width':390,'height':900})
    if args.ha_cache:
     assert page.evaluate("navigator.serviceWorker.controller.scriptURL.includes('/artesaos-piloto/service-worker.js')")
     assert page.evaluate("async()=>{const c=await caches.open('fixture-ha-files');const r=await c.match('/static/keep-ha-fixture.txt');return await r.text();}")=="Preserve HA"
@@ -98,6 +102,13 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
   # A public expression of interest is distinct from activating a pilot account.
   interested=browser.new_context(ignore_https_errors=True,viewport={'width':390,'height':900});ip=interested.new_page();ip.goto(origin+prefix+'login')
   expect(ip.get_by_text('Projeto piloto: acesso somente para pessoas convidadas.',exact=True)).to_be_visible()
+  assert ip.locator('#interest-form').bounding_box()['y']<ip.locator('#pilot-login').bounding_box()['y']
+  assert ip.locator('form').first.get_attribute('id')=='interest-form'
+  ip.screenshot(path='/tmp/artesao-login-interesse.png',full_page=True)
+  ip.get_by_role('link',name='já tenho um convite/login',exact=True).click()
+  expect(ip).to_have_url(origin+prefix+'login#pilot-login');expect(ip.get_by_role('heading',name='Já tem convite ou conta ativada?',exact=True)).to_be_in_viewport()
+  ip.screenshot(path='/tmp/artesao-login-acesso.png')
+
   ip.get_by_label('Nome (obrigatório)',exact=True).fill('Interessado de teste')
   ip.get_by_label('E-mail (obrigatório)',exact=True).fill('interested@example.test')
   ip.get_by_role('checkbox').check();ip.get_by_role('button',name='Registrar interesse',exact=True).click()

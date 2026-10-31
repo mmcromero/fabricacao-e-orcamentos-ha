@@ -93,7 +93,9 @@ export function sessionScript(prefix:string,csrfCookie:string){
     if(status.textContent){status.hidden=false;document.body.style.paddingTop=(bar.offsetHeight+16)+'px';}
    }
   };
-  bar.append(title,name,logout,status);document.body.classList.add('pilot-session-active');document.body.prepend(bar);
+  const navigation=document.createElement('div');navigation.id='pilot-navigation';
+  bar.append(title,navigation,name,logout,status);document.body.classList.add('pilot-session-active');document.body.prepend(bar);
+  new ResizeObserver(()=>{document.body.style.paddingTop=(bar.offsetHeight+16)+'px';}).observe(bar);
  });
 })();`;
 }

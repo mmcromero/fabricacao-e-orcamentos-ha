@@ -26,5 +26,28 @@ export const identityCss=`
 @media(max-width:480px){:root .pilot-account-title{padding:8px}
 :root .pilot-account-title img{width:120px;min-width:120px}
 :root .pilot-session-active{padding-top:132px}}
+:root .pilot-auth .pilot-introduction{padding:20px 0}
+:root .pilot-kicker{font-weight:700;color:var(--mata)}
+:root .pilot-login-shortcut{display:inline-block;padding:12px 0;font-weight:700;text-underline-offset:4px}
+:root .pilot-auth section{background:white;border:1px solid var(--areia);border-radius:12px;padding:24px;margin:24px 0 40px}
+:root .pilot-auth .pilot-login-section{border-top:5px solid var(--mata);scroll-margin-top:24px}
+:root .pilot-auth section h2{margin-top:0}
+:root #pilot-account:has(#pilot-navigation){grid-template-columns:auto minmax(0,1fr) minmax(0,160px) auto;padding:10px max(16px,calc((100% - 1200px)/2));gap:16px}
+:root #pilot-account:has(#pilot-navigation) .pilot-account-title{padding:8px 12px}
+:root #pilot-account:has(#pilot-navigation) .pilot-account-title img{width:180px}
+:root #pilot-navigation{min-width:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--areia) var(--mata)}
+:root #pilot-navigation nav{display:flex;align-items:center;gap:20px;flex-wrap:nowrap;width:max-content;min-width:100%;padding:12px 2px}
+:root #pilot-navigation a{display:block;flex:none;white-space:nowrap;color:var(--linho);margin:0!important;padding:8px 0;text-decoration:none}
+:root #pilot-navigation a[aria-current=page]{border-bottom:2px solid var(--areia)}
+:root #pilot-account:has(#pilot-navigation) .pilot-account-user{text-align:right}
+@media(max-width:700px){
+ :root #pilot-account:has(#pilot-navigation){grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:8px 12px}
+ :root #pilot-account:has(#pilot-navigation) .pilot-account-title{padding:8px}
+ :root #pilot-account:has(#pilot-navigation) .pilot-account-title img{width:120px}
+ :root #pilot-account:has(#pilot-navigation) .pilot-account-user{display:none}
+ :root #pilot-navigation nav{gap:16px}
+ :root .pilot-auth section{padding:20px}
+}
+
 `;
 export function brandScript(prefix:string,version:string,available:boolean){return `(()=>{window.pilotBrand=parent=>{parent.replaceChildren();const text=document.createElement('span');text.textContent='Artesão Digital';parent.append(text);if(!${available})return;const img=document.createElement('img');img.alt='Artesão Digital';img.hidden=true;img.onload=()=>{text.hidden=true;img.hidden=false;};img.onerror=()=>{img.remove();text.hidden=false;};parent.append(img);img.src=parent.matches('.pilot-account-title,[data-pilot-brand=horizontal]')?${JSON.stringify(prefix+'brand/logo-horizontal.png?v='+version)}:${JSON.stringify(prefix+'brand/logo.png?v='+version)};};addEventListener('DOMContentLoaded',async()=>{try{await window.pilotBrowserReady;}catch{return;}document.querySelectorAll('[data-pilot-brand]').forEach(window.pilotBrand);});})();`;}

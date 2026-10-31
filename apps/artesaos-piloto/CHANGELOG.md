@@ -1,3 +1,9 @@
+# 0.1.10
+
+- Prioriza a apresentação do piloto gratuito por convite e o formulário de interesse na entrada; separa o login em uma seção própria abaixo, acessível pelo link “já tenho um convite/login”.
+- Integra a navegação das áreas ao cabeçalho fixo, em uma única linha. Em telas estreitas, o menu tem rolagem horizontal e mantém o item atual acessível; o e-mail fica oculto para reservar espaço à navegação e ao botão Sair.
+- Ajusta o espaço do conteúdo à altura real do cabeçalho e preserva autenticação, isolamento e a base 0.1.23.
+
 # 0.1.9
 
 - Aplica a identidade visual em todas as áreas do piloto, incluindo login, conclusão de acesso, administração, formulários e diálogos: Georgia nos títulos, Arial no conteúdo, fundo Linho e Verde Mata nos elementos principais.

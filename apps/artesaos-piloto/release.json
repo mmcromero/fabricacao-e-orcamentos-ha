@@ -1,14 +1,14 @@
 {
-  "pilotVersion": "0.1.9",
-  "sourceCommit": "c30b8108ef2b818b76105618d84d6206d22c2502",
+  "pilotVersion": "0.1.10",
+  "sourceCommit": "414effd3969fc0d4742b0a0718caf9b759e8668e",
   "coreBase": {
     "version": "0.1.23",
     "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
   },
   "validation": [
-    "build TypeScript/Vite",
+    "TypeScript/Vite build",
     "41 automated tests passed",
-    "Chromium with controlled provider: login, logout, isolation, administration, settings, branding and mobile viewport"
+    "Chromium with controlled provider: interest form first, login anchor, fixed single-line menu, all user areas, settings, administration, two isolated accounts and 320px viewport"
   ],
   "pending": [
     "Google real, Home Assistant/Supervisor and ARM installation"

@@ -159,3 +159,12 @@ A base cria tabelas de materiais e de acompanhamento/cópia de registros antigos
 As novas faixas de multiplicadores podem deixar parâmetros antigos fora do intervalo aceito: revise-os explicitamente, sem substituir valores silenciosamente. A nova seleção de catálogo começa desmarcada para produtos antigos e não altera a autorização de divulgação nem publica produtos na internet.
 
 O ensaio reproduzível de atualização é `node --import tsx scripts/verify-pilot-upgrade.mjs`, executado na fonte com histórico Git e dependências disponíveis. Ele arquiva o código anterior real do piloto, cria dados fictícios de duas contas e verifica preservação de dados, cálculos, referências inválidas, isolamento, reinício, contatos/administração e restauração do backup na versão anterior. Não usa nem migra dados reais.
+
+
+## Atualização 0.1.10 — entrada e navegação
+
+A página de entrada apresenta primeiro as condições do piloto gratuito por convite e o formulário de interesse. O link “já tenho um convite/login” leva à seção de acesso abaixo, com título e borda próprios. Registrar interesse continua sem ativar uma conta.
+
+Nas áreas de usuário, logo, navegação e saída compartilham a faixa fixa. O menu mantém uma linha com rolagem horizontal quando necessário. Em telas de até 700 px, o e-mail fica oculto para reservar espaço à navegação; o botão Sair permanece disponível. O conteúdo acompanha a altura real do cabeçalho.
+
+Validação: compilação, 41 testes e navegador com provedor controlado, incluindo ordem dos formulários, âncora de login, menu fixo sem quebra de linha, navegação e largura de 320 px. Google e Home Assistant reais ainda precisam de conferência na instalação. Não há nova migração de banco. Antes de instalar, pare o aplicativo e faça backup completo e protegido; para reverter, restaure a cópia anterior completa.
