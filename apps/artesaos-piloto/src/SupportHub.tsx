@@ -1,3 +1,4 @@
+import Contribution from './Contribution';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import AreaNav from './AreaNav';
 import BrandIcon from './BrandIcon';
@@ -11,13 +12,13 @@ async function request(path:string,init:RequestInit={}){
 export default function SupportHub({embedded=false}:{embedded?:boolean}){
  const [list,setList]=useState<SupportList|null>(null),[page,setPage]=useState(1),[status,setStatus]=useState(''),[kindFilter,setKindFilter]=useState(''),[notice,setNotice]=useState(''),[error,setError]=useState(false),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false);
  const [ticket,setTicket]=useState<SupportDetail|null>(null),[reply,setReply]=useState('');
- const [compose,setCompose]=useState(!embedded&&new URLSearchParams(location.search).get('novo')==='1'),[kind,setKind]=useState<SupportKind|''>(''),[subject,setSubject]=useState(''),[body,setBody]=useState(''),[composeError,setComposeError]=useState('');
+ const [compose,setCompose]=useState(false),[kind,setKind]=useState<SupportKind|''>(''),[subject,setSubject]=useState(''),[body,setBody]=useState(''),[composeError,setComposeError]=useState('');
  const dialog=useRef<HTMLDialogElement>(null),createKey=useRef({signature:'',key:''}),replyKey=useRef({signature:'',key:''}),generation=useRef(0),detailGeneration=useRef(0),trigger=useRef<HTMLElement|null>(null);
  const load=useCallback(async()=>{const id=++generation.current;setLoading(true);try{const query=new URLSearchParams({page:String(page)});if(status)query.set('status',status);if(kindFilter)query.set('kind',kindFilter);const result=await request('?'+query);if(id!==generation.current)return;setList(result);setError(false);}catch(reason){if(id===generation.current){setError(true);setNotice(reason instanceof Error?reason.message:'Não foi possível carregar.');}}finally{if(id===generation.current)setLoading(false);}},[page,status,kindFilter]);
  useEffect(()=>{void load();},[load]);
  useEffect(()=>{if(compose&&!dialog.current?.open)dialog.current?.showModal();},[compose]);
  function clearComposeUrl(){const url=new URL(location.href);if(url.searchParams.has('novo')){url.searchParams.delete('novo');history.replaceState(null,'',url);}}
- function close(){if(busy)return;if((subject.trim()||body.trim())&&!confirm('Descartar o chamado ainda não enviado?'))return;dialog.current?.close();setCompose(false);setSubject('');setBody('');setKind('');createKey.current={signature:'',key:''};clearComposeUrl();trigger.current?.focus({preventScroll:true});}
+ function close(){if(busy)return;if((subject.trim()||body.trim())&&!confirm('Descartar o chamado ainda não enviado?'))return;dialog.current?.close();setCompose(false);setComposeError('');setSubject('');setBody('');setKind('');createKey.current={signature:'',key:''};clearComposeUrl();trigger.current?.focus({preventScroll:true});}
  async function openTicket(id:number){
   if(busy)return;if(ticket?.id!==id&&reply.trim()&&!confirm('Descartar a mensagem ainda não enviada?'))return;
   const current=++detailGeneration.current;setBusy(true);try{const result=await request('/'+id);if(current!==detailGeneration.current)return;if(ticket?.id!==id)setReply('');setTicket(result);setError(false);setNotice('');}catch(reason){setError(true);setNotice(reason instanceof Error?reason.message:'Não foi possível abrir o chamado.');}finally{if(current===detailGeneration.current)setBusy(false);}
@@ -32,7 +33,7 @@ export default function SupportHub({embedded=false}:{embedded?:boolean}){
  }
  const Wrapper=embedded?'div':'main';
  return <Wrapper className={embedded?'support-hub':'products-screen support-hub'}>{!embedded&&<><AreaNav active="configuracoes"/><h1>Suporte técnico</h1></>}
-  <p>Envie uma dúvida de uso ou relate um erro. As respostas e mudanças de status ficam registradas aqui.</p>
+  <Contribution/><p>Envie uma dúvida de uso ou relate um erro. As respostas e mudanças de status ficam registradas aqui.</p>
   <button type="button" disabled={busy} onClick={()=>{trigger.current=document.activeElement as HTMLElement;setCompose(true);setComposeError('');}}><BrandIcon name="plus"/>Abrir chamado</button>
   <p role={error?'alert':'status'} aria-live="polite">{notice}</p>
   <div className="support-filters"><label>Status<select aria-label="Filtrar chamados por status" value={status} onChange={event=>{setStatus(event.target.value);setPage(1);}}><option value="">Todos os status</option>{Object.entries(supportStatuses).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><label>Tipo<select aria-label="Filtrar chamados por tipo" value={kindFilter} onChange={event=>{setKindFilter(event.target.value);setPage(1);}}><option value="">Todos os tipos</option>{Object.entries(supportKinds).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><button type="button" disabled={loading||busy} onClick={()=>void load()}>Atualizar chamados</button></div>

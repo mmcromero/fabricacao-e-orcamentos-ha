@@ -1,3 +1,4 @@
+import {engagementSql,resourceSql} from '../evolution-schema.js';
 import {shippingSql} from '../shipping-schema.js';
 import {attentionSql} from '../attention-schema.js';
 import {distributionSql} from '../distribution-schema.js';
@@ -25,7 +26,7 @@ CREATE INDEX operation_audit_source ON operation_audit(action,source_id,id);
 CREATE TRIGGER operation_audit_no_update BEFORE UPDATE ON operation_audit BEGIN SELECT RAISE(ABORT,'Histórico imutável'); END;
 CREATE TRIGGER operation_audit_no_delete BEFORE DELETE ON operation_audit BEGIN SELECT RAISE(ABORT,'Histórico imutável'); END;`;
 export const migrations:Record<DatabaseScope,readonly Migration[]>={
- tenant:[{version:1,name:'fundacao-operacoes',sql:operations},{version:2,name:'consolidacao-legada',sql:legacySql.tenant,upId:'tenant-legacy-v1',up:upgradeTenant},{version:3,name:'materiais-compras',sql:materialLedgerSql},{version:4,name:'estoque-produtos-fabricacao',sql:productStockSql},{version:5,name:'pedidos-reservas',sql:orderSql},{version:6,name:'financeiro-liquidacoes',sql:financeSql},{version:7,name:'vendas-cupons-divergencias',sql:saleSql},{version:8,name:'sessoes-consignacoes',sql:distributionSql},{version:9,name:'central-pendencias',sql:attentionSql},{version:10,name:'preparo-expedicao',sql:shippingSql}],
+ tenant:[{version:1,name:'fundacao-operacoes',sql:operations},{version:2,name:'consolidacao-legada',sql:legacySql.tenant,upId:'tenant-legacy-v1',up:upgradeTenant},{version:3,name:'materiais-compras',sql:materialLedgerSql},{version:4,name:'estoque-produtos-fabricacao',sql:productStockSql},{version:5,name:'pedidos-reservas',sql:orderSql},{version:6,name:'financeiro-liquidacoes',sql:financeSql},{version:7,name:'vendas-cupons-divergencias',sql:saleSql},{version:8,name:'sessoes-consignacoes',sql:distributionSql},{version:9,name:'central-pendencias',sql:attentionSql},{version:10,name:'preparo-expedicao',sql:shippingSql},{version:11,name:'clientes-visitantes-rastreabilidade',sql:engagementSql}],
  control:[{version:1,name:'fundacao-controle',sql:'SELECT 1;'},
  {version:2,name:'administracao-local-debian',sql:`CREATE TABLE local_admin(
  id INTEGER PRIMARY KEY CHECK(id=1),email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,
@@ -34,7 +35,7 @@ export const migrations:Record<DatabaseScope,readonly Migration[]>={
  CREATE TABLE installation_distribution(id INTEGER PRIMARY KEY CHECK(id=1),distribution TEXT NOT NULL CHECK(distribution IN ('home-assistant','debian')));`},{version:3,name:'consolidacao-legada',sql:legacySql.control,upId:'control-legacy-v1',up:upgradeControl}],
  interest:[{version:1,name:'fundacao-interesses',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.interest}],
  support:[{version:1,name:'fundacao-suporte',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.support}],
- legal:[{version:1,name:'fundacao-legal',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.legal}]
+ legal:[{version:1,name:'fundacao-legal',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.legal},{version:3,name:'documentos-manuais-contribuicao',sql:resourceSql}]
 };
 export const schemaVersions=Object.fromEntries(Object.entries(migrations).map(([scope,list])=>[scope,list.at(-1)?.version??0]));
 const checksum=(m:Migration)=>createHash('sha256').update(JSON.stringify(m.up?[m.version,m.name,m.sql,m.upId]:[m.version,m.name,m.sql])).digest('hex');

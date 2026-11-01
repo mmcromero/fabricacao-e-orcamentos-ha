@@ -65,7 +65,7 @@ export function sessionScript(prefix:string,csrfCookie:string){
    const headers=new Headers(request.headers);
    if(context)headers.set('X-Pilot-Context',context);
    if(csrf&&!['GET','HEAD','OPTIONS'].includes(request.method))headers.set('X-Pilot-CSRF',csrf);
-   return original(new Request(request,{headers,cache:'no-store'}));
+   return original(new Request(request,{headers,cache:'no-store'})).then(async response=>{if(response.status===428){try{if((await response.clone().json()).code==='LEGAL_REQUIRED')window.dispatchEvent(new Event('artesao-legal-required'));}catch{}}return response;});
   }
   return original(request);
  };

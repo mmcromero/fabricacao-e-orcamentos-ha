@@ -1,3 +1,14 @@
+# 0.2.0-dev.12 — suporte, documentos dinâmicos e sessões
+
+- Suporte abre a listagem; formulário somente por ação explícita, sem erros iniciais.
+- Administração dinâmica de documentos/rascunhos/publicações/histórico e manual PDF.
+- Termos obrigatórios por API e interface; auditoria de aceite/ciência/recusa imutável.
+- Pix opcional administrável em Suporte e Ajuda.
+- Visitantes manuais por sessão com eventos, idempotência, preferência e conversão estimada.
+- Clientes: tipo informativo, origem e sessão de captação preservadas; novos contatos.
+- Migrações tenant 11/legal 3; sem mudanças de preços históricos ou dados reais.
+- [Instruções administrativas](../distribution/docs/ADMINISTRACAO-DINAMICA.md).
+
 ## 0.2.0-dev.11 — C3 preparação Raspberry Pi 4
 
 - Build cruzado e guard de dependências produtivas portáveis; schema comum preservado.

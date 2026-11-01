@@ -1,5 +1,6 @@
-export type BrandIconName='vendas'|'financeiro'|'pedidos'|'estoque'|'produtos'|'clientes'|'orcamentos'|'configuracoes'|'menu'|'close'|'plus';
+export type BrandIconName='vendas'|'financeiro'|'pedidos'|'estoque'|'produtos'|'clientes'|'orcamentos'|'configuracoes'|'menu'|'close'|'plus'|'ajuda';
 const paths:Record<Exclude<BrandIconName,'estoque'|'pedidos'|'financeiro'|'vendas'>,string>={
+ ajuda:'M9 9a3 3 0 1 1 5 2c-2 1-2 2-2 3M12 18h.01M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z',
  produtos:'M12 3 3 7.5v9L12 21l9-4.5v-9L12 3ZM3 7.5l9 4.5 9-4.5M12 12v9M7.5 5.25l9 4.5',
  clientes:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
  orcamentos:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6M8 13h8M8 17h6',

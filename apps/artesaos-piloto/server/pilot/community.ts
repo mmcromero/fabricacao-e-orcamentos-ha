@@ -1,3 +1,5 @@
+import {registerResourceAdmin} from './resource-routes.js';
+import type {LegalStore} from './legal.js';
 import {LocalAdmin} from './local-admin.js';
 import {registerLocalAdmin} from './local-admin-ui.js';
 import {registerInvitationAdmin} from './invitation-admin.js';
@@ -16,8 +18,8 @@ import {InterestStore,parseInterest} from './interest.js';
 import {interestForm,interestScript,adminScript} from './community-ui.js';
 const ADMIN='__Secure-artesaos_admin_session',CSRF='__Secure-artesaos_admin_csrf',INTEREST='__Secure-artesaos_interest',FLOW='__Secure-artesaos_flow';
 type Cookies=(header:string|undefined,name:string)=>string;
-export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:PilotStore,provider:IdentityProvider,readCookie:Cookies,browserTag:string,footer:string,support:SupportStore,mailer:InvitationMailer|null=null){
- footer=footer.replace('?view=suporte&amp;novo=1','admin/support').replace('Suporte técnico','Central de suporte');
+export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:PilotStore,provider:IdentityProvider,readCookie:Cookies,browserTag:string,footer:string,support:SupportStore,mailer:InvitationMailer|null=null,legal?:LegalStore){
+ footer=footer.replace('?view=suporte','admin/support').replace('Suporte técnico','Central de suporte');
  const prefix=config.prefix,base=prefix+'admin/',allowed=(config.adminEmails??[]),interests=new InterestStore(config.dataDir);
  const adminCookie=(name:string,value:string,httpOnly=true,age=3600)=>`${name}=${encodeURIComponent(value)}; Path=${base}; Secure; SameSite=Lax; Max-Age=${age}${httpOnly?'; HttpOnly':''}`;
  const local=config.distribution==='debian'?new LocalAdmin(store):null;
@@ -95,6 +97,11 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
   const admin=current(req);if(!admin){if(req.method==='GET'&&req.url.split('?')[0]===base+'invitations')reply.redirect(base+'login');else reply.code(401).send({message:'Acesso administrativo necessário.'});return null;}
   if(req.url.startsWith(base+'api/')&&req.headers['x-pilot-admin-context']!==admin.context){reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});return null;}
   if(write&&!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),admin.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida.'});return null;}return admin;
+ },page);
+ if(legal)registerResourceAdmin(app,base,legal,(req,reply,write)=>{
+  const a=current(req);if(!a){reply.code(401).send({message:'Acesso administrativo necessário.'});return null;}
+  if(req.url.startsWith(base+'api/')&&req.headers['x-pilot-admin-context']!==a.context){reply.code(409).send({message:'A conta desta aba mudou.'});return null;}
+  if(write&&!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),a.csrfHash)){reply.code(403).send({message:'Confirmação inválida.'});return null;}return a;
  },page);
  app.all(base+'*',(_req,reply)=>reply.code(404).send({message:'Página administrativa não encontrada.'}));
  return {interestForm:()=>available()?interestForm():'<p>A lista de interesse está temporariamente indisponível.</p>',async completeAdmin(identity:Identity,req:{headers:{cookie?:string}},reply:FastifyReply){

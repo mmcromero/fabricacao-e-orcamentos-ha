@@ -10,7 +10,7 @@ const examples: Client[] = [
   { ...emptyClient(), id: 2, name: 'Empresa de demonstração', contact: 'Contato de exemplo' },
 ];
 
-export default function ClientPicker({ selected, onSelect, persistent=false }: { selected: Client | null; onSelect: (client: Client | null) => void; persistent?:boolean }) {
+export default function ClientPicker({ selected, onSelect, persistent=false,context='quote',sessionId }: { selected: Client | null; onSelect: (client: Client | null) => void; persistent?:boolean;context?:'quote'|'sale';sessionId?:string }) {
   const [clients, setClients] = useState<Client[]>(persistent?[]:examples);
   const [draft, setDraft] = useState<ClientDraft>(emptyClient);
   const [editing, setEditing] = useState<number | null>(null);
@@ -34,7 +34,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
   function open(client?: Client) {
     setOpenCycle(n=>n+1);setLookupBusy(false);
     trigger.current = document.activeElement as HTMLElement;
-    const value=client ? clientDraft(client) : emptyClient();initial.current=JSON.stringify(value);setDraft(value);
+    const value=client ? clientDraft(client) : {...emptyClient(),commercialType:context==='quote'?'wholesale':'retail'};initial.current=JSON.stringify(value);setDraft(value);
     setEditing(client?.id ?? null); setDirty(false); setError('');
     dialog.current?.showModal();
   }
@@ -54,12 +54,12 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     if(persistent){
       setBusy(true);
       try{
-        const body={...clientDraft(draft),name:draft.name.trim(),contact:draft.contact.trim()};
+        const body={...clientDraft(draft),...(editing===null?{registrationOrigin:context,...(context==='sale'&&sessionId?{captureSessionId:sessionId}:{})}:{}),name:draft.name.trim(),contact:draft.contact.trim()};
         const result=await clientRequest(editing===null?'api/clients':`api/clients/${editing}`,editing===null?'POST':'PUT',body);
         const list:Client[]=await clientRequest('api/clients');setClients(list);
         if(editing===null)focusCard.current=true;
         onSelect(list.find(c=>c.id===(editing??result.id))??null);
-        setMessage('Cliente salvo no cadastro e selecionado neste orçamento.');close(true);
+        setMessage('Cliente salvo no cadastro e selecionado nesta operação.');close(true);
       }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar.');}finally{setBusy(false);}
       return;
     }
@@ -67,20 +67,20 @@ export default function ClientPicker({ selected, onSelect, persistent=false }: {
     setClients(previous => editing === null ? [...previous, client] : previous.map(c => c.id === editing ? client : c));
     if(editing===null)focusCard.current=true;
     onSelect(client);
-    setMessage(editing === null ? 'Cliente adicionado à lista simulada e selecionado neste orçamento.' : 'Cadastro simulado atualizado. Os itens do orçamento foram preservados.');
+    setMessage(editing === null ? 'Cliente adicionado à lista simulada e selecionado nesta operação.' : 'Cadastro simulado atualizado. Os itens do orçamento foram preservados.');
     close(true);
   }
   return <div className="wf-client-picker">
-    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente{persistent&&<RequiredMark/>}</label><select aria-required={persistent||undefined} data-required-for="finalize" aria-describedby={persistent?'quote-finalize-hint':undefined} ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>}
+    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente{persistent&&context==='quote'&&<RequiredMark/>}</label><select aria-required={persistent&&context==='quote'||undefined} data-required-for={context==='quote'?'finalize':undefined} aria-describedby={persistent?'quote-finalize-hint':undefined} ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><button type="button" onClick={() => open()}>+ Novo cliente</button></div>}
     {selected ? <div ref={card} tabIndex={-1} className="wf-selected-client"><strong>{clientLabel(selected)}</strong><p>Contato: {selected.contact || 'a informar'} · CEP: {selected.postal || 'pendente'}</p><details><summary>Ver dados do cliente</summary><dl className="wf-client-details">{([
       ['Nome da empresa', selected.name], ['Nome do contato', selected.contact],
       ['Telefone', selected.phone], ['E-mail', selected.email], ['CPF ou CNPJ', selected.taxDocument], ['CEP de entrega', selected.postal],['Rua / logradouro',selected.street],['Número',selected.number],['Complemento',selected.complement],['Bairro',selected.district],['Cidade',selected.city],['Estado (UF)',selected.state],
     ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl><p className="wf-muted">Dados para consulta. CPF/CNPJ ainda não validado neste protótipo.</p></details><button type="button" className="wf-quiet" onClick={() => open(selected)}>Editar cadastro do cliente</button><button type="button" className="wf-secondary" onClick={changeClient}>Trocar cliente</button></div>
-      : <p className="wf-pending">Cliente a selecionar. O orçamento pode continuar como rascunho.</p>}
-    <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. Salve o orçamento para guardar a seleção.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
+      : <p className="wf-pending">Cliente a selecionar. {context==='quote'?'O orçamento pode continuar como rascunho.':'A venda pode continuar sem identificação.'}</p>}
+    <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. A seleção é utilizada nesta operação.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
     <p role="status">{message}</p>
     <dialog ref={dialog} className="wf-dialog" aria-labelledby="wf-client-modal-title" onCancel={e => { e.preventDefault(); e.stopPropagation(); close(); }} onClick={e => { if (e.target === e.currentTarget) close(); }}>
-      <ValidatedForm noValidate onSubmit={save}><div className="wf-modal-header"><div><small>CADASTRO SEM SAIR DO ORÇAMENTO</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><ModalClose onClose={()=>close()} disabled={busy}/></div>
+      <ValidatedForm noValidate onSubmit={save}><div className="wf-modal-header"><div><small>{context==='quote'?'CADASTRO SEM SAIR DO ORÇAMENTO':'CADASTRO SEM SAIR DA VENDA'}</small><h2 id="wf-client-modal-title">{editing === null ? 'Novo cliente' : 'Editar cliente'}</h2></div><ModalClose onClose={()=>close()} disabled={busy}/></div>
         <div className="wf-modal-body"><p>Os produtos, embalagens e observações do pedido continuam preservados.</p>{error && <div className="wf-error" role="alert">{error}</div>}
           <ClientFields key={openCycle} draft={draft} prefix="wf-client" update={update} busy={busy} onLookupBusy={setLookupBusy}/>
           <p className="wf-muted">CPF/CNPJ será necessário para preparar o envio, sem bloquear o rascunho ou a cotação. Validação fiscal e consulta de frete ainda não implementadas.</p>

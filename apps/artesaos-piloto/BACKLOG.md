@@ -1,3 +1,28 @@
+# Prioridades posteriores à 0.2.0-dev.12 — registrar, não implementar
+
+## Alta: auditoria abrangente
+
+LGPD, segurança, bases legais, retenção, exclusão, exportação e tratamento de dados
+pessoais. Revisão jurídica dos textos iniciais beta e processos reais da instalação.
+Revisar armazenamento, backups, permissões e segurança de arquivos enviados.
+
+## Central de Resultados e Indicadores
+
+Gráficos de faturamento/evolução, custos/despesas/resultados, produtos, feiras/eventos,
+visitantes/conversão, novos contatos por evento, origem e retorno de contatos captados.
+Usar eventos/IDs/snapshots históricos; não recalcular vendas antigas com preços atuais.
+Nenhum gráfico entregue neste pacote.
+
+## Catálogos personalizados
+
+Escolher tabela de preços ao gerar catálogo (atacado/varejo/outra disponível),
+independentemente da classificação informativa do cliente.
+
+Backlog anterior preservado abaixo (fretes, notificações, licenciamento, imagens, PWA
+etc.); itens não promovidos expressamente continuam fora do escopo.
+
+---
+
 # Backlog do Artesão Digital
 
 ## Regras

@@ -23,7 +23,7 @@ async function fixture(){
  function account(name:string){const invite=control.invite(name+'@example.test');const id=control.activate({issuer:'https://accounts.google.com',subject:name,email:name+'@example.test',verified:true},digest(invite),5);const s=control.session(id,8);return {id,headers:{cookie:'__Secure-artesaos_session='+s.value,'x-pilot-context':id,'x-pilot-csrf':s.csrf}};}
  const a=account('a'),b=account('b');let app=await createPilotApp(config);
  const request=(path:string,who=a,method='GET',payload?:unknown)=>app.inject({method:method as any,url:prefix+path,headers:{host:new URL(origin).host,origin,...who.headers},...(payload===undefined?{}:{payload:payload as any})});
- async function ready(who:typeof a){await request('api/company',who,'PUT',{data:company,expectedRevision:0});const tenant=String(control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(who.id)!.tenant_id);const db=new DatabaseSync(join(dir,'tenants',tenant,'validation.sqlite'));db.prepare('INSERT INTO pilot_onboarding VALUES(1,?)').run(new Date().toISOString());db.close();return join(dir,'tenants',tenant,'validation.sqlite');}
+ async function ready(who:typeof a){const ls=(await request('api/legal/status',who)).json();await request('api/legal/accept',who,'POST',{version:ls.version,termsHash:ls.termsHash,accepted:true});await request('api/company',who,'PUT',{data:company,expectedRevision:0});const tenant=String(control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(who.id)!.tenant_id);const db=new DatabaseSync(join(dir,'tenants',tenant,'validation.sqlite'));db.prepare('INSERT INTO pilot_onboarding VALUES(1,?)').run(new Date().toISOString());db.close();return join(dir,'tenants',tenant,'validation.sqlite');}
  return {dir,config,control,a,b,request,ready,restart:async()=>{await app.close();app=await createPilotApp(config);},close:async()=>{await app.close();control.close();rmSync(dir,{recursive:true,force:true});}};
 }
 test('logo única: valida PNG, transparência, concorrência, remoção, reinício e proteção entre contas',async()=>{
@@ -64,9 +64,9 @@ test('PDF: valores e empresa imutáveis por edição, logo atual, histórico, is
   assert.equal((await f.request('api/quotes',f.a,'POST',{data:quote,expectedRevision:0})).statusCode,500);assert.equal(db.prepare('SELECT COUNT(*) n FROM quotes').get()!.n,count);db.close();
  }finally{await f.close();}
 });
-test('aceite legal desativado por padrão e bloqueio no servidor antes de dados e suporte',async()=>{
+test('aceite legal obrigatório por padrão e bloqueio no servidor antes de dados e suporte',async()=>{
  const f=await fixture();try{
-  assert.equal((await f.request('api/legal/status')).json().enabled,false);
+  assert.equal((await f.request('api/legal/status')).json().enabled,true);
   const doc={version:'test-1',effectiveAt:'2026-01-01',text:'Documento fictício de teste <script>não executar</script>'};
   const config={enabled:true,reviewed:true,terms:doc,privacy:doc,cookies:doc};writeFileSync(join(f.dir,'legal-config.json'),JSON.stringify(config));await f.restart();
   assert.equal((await f.request('api/company')).statusCode,428);assert.equal((await f.request('api/support')).statusCode,428);

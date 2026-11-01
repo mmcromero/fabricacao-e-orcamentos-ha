@@ -1,15 +1,15 @@
 {
-  "version": "0.2.0-dev.11",
-  "stage": "C3-preparacao",
+  "version": "0.2.0-dev.12",
+  "stage": "evolucao-suporte-documentos-sessoes",
   "distributions": [
     "home-assistant",
     "debian"
   ],
   "schemaVersions": {
-    "tenant": 10,
+    "tenant": 11,
     "control": 3,
     "interest": 2,
     "support": 2,
-    "legal": 2
+    "legal": 3
   }
 }

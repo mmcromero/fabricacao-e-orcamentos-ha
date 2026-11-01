@@ -33,7 +33,7 @@ test('checkpoint: backup frio sintético completo restaura chaves, sessões, doc
    db.exec('DELETE FROM schema_migrations WHERE version>=2');db.close();
    const interest=new InterestStore(source);interest.add({name:'Pessoa sintética',email:'interest@example.test',whatsapp:''});interest.db.exec('DELETE FROM schema_migrations WHERE version>=2');interest.close();
    const support=new SupportStore(source);const ticket=support.create(user,'u@example.test',{kind:'question',subject:'Teste',body:'Mensagem preservada',requestKey:'request-support'});support.db.exec('DELETE FROM schema_migrations WHERE version>=2');support.close();
-   const legal=new LegalStore(source);legal.db.prepare('INSERT INTO documents VALUES(?,?,?)').run('terms','v1','{}');legal.db.prepare('INSERT INTO acceptances VALUES(?,?,?)').run(user,'v1','2026-01-01');legal.db.exec('DELETE FROM schema_migrations WHERE version>=2');legal.close();
+   const legal=new LegalStore(source);legal.db.prepare('INSERT INTO documents VALUES(?,?,?)').run('terms','v1','{}');legal.db.prepare('INSERT INTO acceptances VALUES(?,?,?)').run(user,'v1','2026-01-01');for(const table of ['resource_events','resource_active','resource_versions','contribution_config'])legal.db.exec('DROP TABLE '+table);legal.db.exec('DELETE FROM schema_migrations WHERE version>=2');legal.close();
    store.db.exec('DELETE FROM schema_migrations WHERE version>=3');invites.close();store.close();
    cpSync(source,restored,{recursive:true});
    for(const file of ['pilot-invitations.key','pilot-interest.key'])assert.deepEqual(readFileSync(join(restored,file)),readFileSync(join(source,file)));
@@ -56,12 +56,12 @@ test('checkpoint: transformação com falha reverte DDL/dados e admite retentati
  const {migrations}=await import('../server/foundation/migrations.js');
  const db=new DatabaseSync(':memory:');try{
   migrate(db,'legal');
-  const next={version:3,name:'teste-falha',upId:'teste-v1',sql:'CREATE TABLE tentative(id INTEGER);',up:(d:DatabaseSync)=>{d.prepare('INSERT INTO documents VALUES(?,?,?)').run('x','v1','{}');throw Error('interrupção simulada');}};
+  const next={version:migrations.legal.length+1,name:'teste-falha',upId:'teste-v1',sql:'CREATE TABLE tentative(id INTEGER);',up:(d:DatabaseSync)=>{d.prepare('INSERT INTO documents VALUES(?,?,?)').run('x','v1','{}');throw Error('interrupção simulada');}};
   assert.throws(()=>migrate(db,'legal',[...migrations.legal,next]),/interrupção/);
   assert.equal(db.prepare("SELECT 1 FROM sqlite_master WHERE name='tentative'").get(),undefined);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM documents').get()!.n,0);
-  assert.equal(db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,2);
+  assert.equal(db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,migrations.legal.length);
   migrate(db,'legal',[...migrations.legal,{...next,up:()=>{}}]);
-  assert.equal(db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,3);
+  assert.equal(db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,migrations.legal.length+1);
  }finally{db.close();}
 });

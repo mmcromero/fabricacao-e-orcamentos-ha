@@ -1,3 +1,8 @@
+> Versão corrente: **0.2.0-dev.12**. Ver [administração dinâmica](ADMINISTRACAO-DINAMICA.md).
+> Migrações tenant 11/legal 3, demais schemas preservados. Backup integral inclui
+> documentos, aceites e PDFs em pilot-legal.sqlite. Não fazer downgrade sobre banco
+> migrado. Instruções/evidências de versões anteriores abaixo são históricas.
+
 ## C3 — identidade reconciliada e publicação autorizada
 
 O operador forneceu `/config/app/f6379561_artesaos_piloto/info`: slug completo

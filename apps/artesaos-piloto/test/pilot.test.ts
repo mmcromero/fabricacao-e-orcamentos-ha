@@ -29,7 +29,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   return callback;
  }
  function session(response:any){const cookies=response.cookies;const csrf=cookies.find((c:any)=>c.name==='__Secure-artesaos_csrf')!.value;return {cookie:cookies.filter((c:any)=>c.name!=='__Secure-artesaos_flow').map((c:any)=>`${c.name}=${c.value}`).join('; '),origin,'x-pilot-csrf':csrf} as Record<string,string>;}
- async function prepare(headers:Record<string,string>){
+ async function prepare(headers:Record<string,string>){const l=(await request('api/legal/status',headers)).json();await request('api/legal/accept',headers,'POST',{version:l.version,termsHash:l.termsHash,accepted:true});
   const result=await request('api/materials',headers,'POST',{name:'Material inicial',mode:'quantity',purchaseQuantity:1,purchasePrice:20,purchaseUnit:'kg',customUnit:''});assert.equal(result.statusCode,200,result.body);
   const settings=(await request('api/settings/fabricacao',headers)).json();assert.equal((await request('api/settings/fabricacao',headers,'PUT',{data:{...settings.data,humanHour:'20',productiveHours:'160',otherCost:'100'},expectedRevision:settings.revision})).statusCode,200);
   assert.equal((await request('api/onboarding/complete',headers,'POST')).statusCode,200);
@@ -48,7 +48,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   assert.equal((await request('login',{host:'evil.example'})).statusCode,421);
   const inviteA=admin.invite('a@example.test');const invalid=await login('wrong@example.test','wrong',inviteA);assert.equal(invalid.statusCode,403);
   const aLogin=await login('a@example.test','a',inviteA);assert.equal(aLogin.statusCode,200,aLogin.body);assert.match(aLogin.body,/auth\/finish.js/);assert.equal(aLogin.headers['referrer-policy'],'no-referrer');assert.ok(!aLogin.body.includes('synthetic-code'));const a=session(aLogin);assert.ok(aLogin.cookies.find(c=>c.name==='__Secure-artesaos_session')!.httpOnly);assert.ok(aLogin.cookies.every(c=>c.secure));
-  a['x-pilot-context']=(await request('api/pilot/session',a)).json().context;
+  a['x-pilot-context']=(await request('api/pilot/session',a)).json().context;{const l=(await request('api/legal/status',a)).json();await request('api/legal/accept',a,'POST',{version:l.version,termsHash:l.termsHash,accepted:true});}
   const authenticatedEntry=await request('login',a);assert.equal(authenticatedEntry.statusCode,302);assert.equal(authenticatedEntry.headers.location,prefix+'?view=produtos');
   const finish=await request('auth/finish',a);assert.equal(finish.statusCode,200);const finishScript=await request('auth/finish.js',a);assert.match(finishScript.body,/history.replaceState/);assert.match(finishScript.body,/api\/pilot\/session/);assert.match(finishScript.body,/view=produtos/);
   const company={name:'Ateliê A',responsible:'Pessoa A',phone:'+55 (11) 99999-0000',email:'contato@example.test'};
@@ -65,7 +65,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   assert.equal((await request('api/clients',a,'POST',{name:'Cliente A',contact:'',phone:'',email:'',taxDocument:'',postal:''})).statusCode,200);
   assert.equal((await request('api/quotes',a,'POST',{data:{title:'Pedido A',client:null,items:[],notes:''},expectedRevision:0})).statusCode,200);
   assert.equal((await request('api/settings/produtos',a,'PUT',{data:{productsPerPage:'20'},expectedRevision:0})).statusCode,200);
-  const bLogin=await login('b@example.test','b',admin.invite('b@example.test'));assert.equal(bLogin.statusCode,200,bLogin.body);const b=session(bLogin);b['x-pilot-context']=(await request('api/pilot/session',b)).json().context;
+  const bLogin=await login('b@example.test','b',admin.invite('b@example.test'));assert.equal(bLogin.statusCode,200,bLogin.body);const b=session(bLogin);b['x-pilot-context']=(await request('api/pilot/session',b)).json().context;{const l=(await request('api/legal/status',b)).json();await request('api/legal/accept',b,'POST',{version:l.version,termsHash:l.termsHash,accepted:true});}
   assert.equal((await request('api/company',b)).json().revision,0);
   const companyB={name:'Ateliê B',responsible:'Pessoa B',phone:'11999990000',email:'b@example.test'};
   assert.equal((await request('api/company',b,'PUT',{data:companyB,expectedRevision:0})).statusCode,200);

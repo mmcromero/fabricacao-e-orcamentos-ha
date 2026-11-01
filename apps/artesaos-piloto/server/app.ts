@@ -1,3 +1,4 @@
+import {registerSessionEngagement} from './session-engagement.js';
 import {registerShipping} from './shipping.js';
 import {registerAttentionCenter} from './attention-center.js';
 import {registerDistribution} from './distribution.js';
@@ -61,7 +62,8 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   if(options.pilotFeatures){registerShipping(app,db,options.actorId??'local-development');registerMaterialLedger(app,db,options.actorId??'local-development');registerProductStock(app,db,options.actorId??'local-development');registerOrders(app,db,options.actorId??'local-development');registerFinance(app,db,options.actorId??'local-development');registerSales(app,db,options.actorId??'local-development');registerDistribution(app,db,options.actorId??'local-development');registerAttentionCenter(app,db,options.actorId??'local-development');}
   registerProducts(app, db,options.pilotFeatures??false);
   registerCategories(app, db);
-  registerClients(app, db);
+  registerClients(app, db,options.pilotFeatures??false);
+  if(options.pilotFeatures)registerSessionEngagement(app,db,options.actorId??'local-development');
   registerSettings(app, db,options.pilotFeatures??false);
   registerManufacturing(app, db,options.pilotFeatures??false);
   registerQuotes(app, db,options.pilotFeatures??false);
