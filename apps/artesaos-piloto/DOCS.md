@@ -2,6 +2,10 @@
 
 Aplicativo experimental independente, baseado no núcleo Fabricação e Orçamentos 0.1.23. Não substitui, atualiza ou compartilha o volume do aplicativo principal. A imagem desta rodada foi construída/testada em amd64; aarch64 ainda depende da instalação real. Primeiro teste restrito ao responsável com duas contas Google próprias e dados fictícios; não convidar terceiros ainda.
 
+## Manutenção e independência do principal
+
+O Artesão Digital funciona com o aplicativo principal parado. Consulte [MANUTENCAO.md](MANUTENCAO.md) para parada, futura desinstalação com preservação de dados e recuperação de acesso após mudanças de IP interno no proxy.
+
 ## O que está implementado
 
 Login Google OpenID Connect com Authorization Code, PKCE S256, state e nonce; verificação de assinatura, emissor, audiência, validade e e-mail verificado. Convites individuais vinculados ao e-mail, uso único e validade de 24 horas. Limite de cinco participantes. Sessões com token aleatório de 256 bits armazenado como hash, cookies Secure/HttpOnly/SameSite, oito horas absolutas e trinta minutos de inatividade. Alterações exigem origem exata e token CSRF; a página fica vinculada à conta para bloquear abas antigas após troca de usuário. Logout invalida a sessão no servidor; revogação invalida sessões e convites.
@@ -230,3 +234,20 @@ Guarde a cópia efetivamente entregue: PDFs são gerados em memória, sem arquiv
 **Jurídico:** /legal tem contato público sem login e informa preparação. Aceite e textos definitivos ficam desativados por padrão. Minutas reconstruídas estão em legal-drafts, com dados do responsável e pendências; não foram juridicamente aprovadas. Ativação futura por legal-config.json local e reinício; ver legal-drafts/05-plano-de-implementacao.md. Após Google/convite, o aceite precede boas-vindas e APIs comerciais/suporte. Administração continua separada.
 
 Este pacote não conclui o primeiro release piloto. Google/HA, celular físico, servidor efetivo, backup e recuperação, exportação completa/saída, retenção/incidentes/fornecedores e revisão jurídica permanecem pendentes. Evidências locais em VALIDACAO-0.1.15.md.
+
+
+## Atualização 0.1.16 — administração e convites
+
+A administração mantém Interessados no piloto e Chamados de suporte e acrescenta Usuários cadastrados e Convites. A primeira mostra contas ativadas, e-mail Google e acesso autorizado/revogado (não presença online). Exibir dados consulta a identificação da empresa e, para novos convites, os contatos de origem. Dados ainda não preenchidos são informados como ausentes.
+
+Em Convites, informe nome, e-mail e/ou WhatsApp e escolha o canal. Salvar registra o convite e gera automaticamente o código, válido por 24 horas. A mensagem pronta inclui o código. Sem SMTP, use Abrir no meu e-mail ou Copiar mensagem; no WhatsApp, use Abrir no WhatsApp para revisar e enviar. Não há status nem confirmação de envio no produto. Com SMTP configurado, Salvar no canal e-mail tenta o envio automático; nenhum provedor vem configurado. Consulte CONVITES.md para campos, TLS, credenciais e limites.
+
+**Regra nova, aprovada pelo responsável:** o contato não precisa ser e-mail Google. O primeiro uso válido vincula o código a uma única conta Google verificada, que passa a ser usada nos próximos logins. Convites emitidos pelas opções/CLI anteriormente conservam a restrição original por e-mail. Não convertemos seus códigos nem inventamos nomes/datas ausentes. Convites aceitos saem da lista padrão e a conta aparece em Usuários cadastrados; a página visível atualiza a lista em até 15 segundos quando não houver formulário em edição, além de atualização manual.
+
+**Atualização/recuperação:** novos campos no controle de convites, tabelas de metadados/controle técnico e arquivo pilot-invitations.key. Inclua banco e chave no backup completo e protegido, com aplicativo parado. Ainda não existe rotina real de backup configurada: antes de atualizar, produza e valide a cópia da instalação. Para reverter, restaure volume/configurações anteriores completos e o código correspondente. A perda da chave impede recuperar códigos cifrados; o servidor não a substitui silenciosamente sobre dados existentes.
+
+O limite de cinco contas é preservado; convites válidos reservam vagas. Código completo é visível somente ao administrador ao abrir o convite, não na listagem nem nos dados de usuário. Nome, telefone e código ficam cifrados; o e-mail permanece no controle existente. Uma chave no mesmo volume não protege contra comprometimento de ambos. Retenção e descarte ainda precisam de definição jurídica/operacional.
+
+O principal pode permanecer parado sem afetar o piloto. Mantenha o Nginx, que encaminha o acesso. O responsável confirmou recuperação do login após reiniciar o proxy quando o IP do piloto mudou; veja MANUTENCAO.md. Esta atualização não altera automaticamente sua rede, proxy, Google ou configurações pessoais.
+
+Validações e limites em VALIDACAO-0.1.16.md. SMTP real, Google real, telefone físico e Home Assistant/hardware final ainda precisam de conferência. Textos jurídicos definitivos permanecem desativados; a versão continua experimental.

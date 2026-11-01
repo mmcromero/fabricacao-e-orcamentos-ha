@@ -11,3 +11,8 @@ Novas tabelas individuais: company_logo (uma linha com imagem atual e revisão; 
 PDF usa Noto Sans incorporada por subconjunto, A4, paginação, limite de 40 páginas e duas gerações simultâneas por processo. Não há arquivo temporário no servidor. Logo validada/regravada PNG pelo servidor, até 1024 pixels por dimensão e 500 KB; navegador aceita PNG/JPEG/WebP até 5 MB para otimização. Arquivos do PDF baixados pelo usuário estão fora do armazenamento do aplicativo.
 
 Versões jurídicas e aceites são centrais e separados das contas comerciais. O arquivo local controla ativação após reinício. Não existe migração automática da base principal, integração de envio ou backup da infraestrutura nesta entrega.
+
+
+Na versão 0.1.16 experimental, a administração passa a consultar dados cadastrais dos usuários e contatos dos convites. Novos convites são autorizados pelo código e vinculados à primeira conta Google que o consumir. Nome/telefone/código recuperável ficam cifrados com pilot-invitations.key; e-mail de contato continua no controle existente. O histórico aceito é preservado mesmo saindo da lista padrão. Definir retenção/descarte desses dados.
+
+E-mail automático depende de SMTP opcional e provedor efetivamente configurado. Link do WhatsApp leva texto e código ao serviço quando o administrador o abre; não é envio por API oficial. Esses fluxos e fornecedores devem ser incorporados ao inventário e aos textos definitivos conforme o uso real. Nenhum serviço foi configurado na instalação pessoal nesta sessão.

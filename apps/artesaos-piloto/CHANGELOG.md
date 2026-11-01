@@ -1,3 +1,14 @@
+# 0.1.16 — administração e convites (experimental)
+
+- Acrescenta Usuários cadastrados à administração: contas realmente ativadas, situação do acesso e Exibir dados cadastrais, com consulta restrita e leitura sem criar cadastros ausentes.
+- Acrescenta Convites com nome, e-mail, WhatsApp e escolha do canal. Salvar gera automaticamente código de uso único e mensagem; sem estado nem confirmação de envio na lista.
+- Novos convites vinculam à primeira conta Google verificada que usar o código válido. Contatos podem ser diferentes do login ou somente telefone. Convites antigos conservam o vínculo por e-mail.
+- Convites aceitos saem da lista e aparecem em Usuários cadastrados; Exibir dados preserva os contatos informados no convite, separados dos dados da empresa.
+- Prepara WhatsApp por link com mensagem e código preenchidos; e-mail manual ou SMTP opcional, desativado sem configuração. Nenhuma integração automática com a API WhatsApp Business.
+- Cifra nome/telefone/código recuperável com chave própria, preserva o hash de autenticação, limite de contas, expiração e idempotência de registro. Protege consulta/gravação por administração, contexto, origem e CSRF.
+- Documenta manutenção do principal independente e recuperação do acesso por reinício do Nginx após mudança de IP interno. Preserva base 0.1.23 e aplicativo principal.
+- Aceite jurídico definitivo continua desativado. Não é primeiro release estável; consulte VALIDACAO-0.1.16.md.
+
 # 0.1.15 — pacote experimental de testes
 
 - Acrescenta logo opcional por conta, com prévia, otimização, substituição e remoção sem histórico de imagens no aplicativo.

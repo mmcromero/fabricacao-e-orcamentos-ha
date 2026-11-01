@@ -1,3 +1,4 @@
+import {smtpInvitationMailer,type InvitationMailer} from './invitation-mail.js';
 import {LegalStore} from './legal.js';
 import {SupportStore} from './support-store.js';
 import {registerSupportRoutes} from './support-routes.js';
@@ -16,7 +17,7 @@ import {googleProvider,type IdentityProvider} from './google.js';
 import {PilotStore,token,digest,equal} from './store.js';
 const SESSION='__Secure-artesaos_session',CSRF='__Secure-artesaos_csrf',FLOW='__Secure-artesaos_flow';
 function cookie(header:string|undefined,name:string){try{const entries=(header??'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(name+'='));return entries.length===1?decodeURIComponent(entries[0].slice(name.length+1)):'';}catch{return '';}}
-export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config)){
+export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config),mailer:InvitationMailer|null=smtpInvitationMailer(config)){
  const app=Fastify({logger:{redact:['req.headers.cookie','req.headers.authorization','res.headers.set-cookie']},disableRequestLogging:true,bodyLimit:2*1024*1024,trustProxy:false});
  const store=new PilotStore(config.dataDir);try{for(const invite of config.initialInvites??[])store.bootstrap(invite.email,invite.code);}catch(e){store.close();throw e;}const tenants=new Map<string,Promise<FastifyInstance>>();const prefix=config.prefix;
  let support:SupportStore;try{support=new SupportStore(config.dataDir);}catch(error){store.close();throw error;}
@@ -27,7 +28,7 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  const versionFooter=`<footer id="pilot-build-info" aria-label="Versões do aplicativo"><span>Artesão Digital v${buildInfo.pilotVersion}</span><span>Base: Fabricação e Orçamentos v${buildInfo.coreVersion}</span><a class="pilot-support-link" href="${prefix}?view=suporte&amp;novo=1">Suporte técnico</a><a href="${prefix}legal">Termos e privacidade</a></footer>`;
  const finishPage=()=>`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Concluindo acesso — Artesão Digital</title><link rel="stylesheet" href="${prefix}pilot.css">${browserTag}<script defer src="${prefix}auth/finish.js?v=${buildInfo.pilotVersion}"></script></head><body><main class="pilot-auth"><div data-pilot-brand>Artesão Digital</div><h1>Concluindo acesso</h1><p id="finish-status" role="status">Confirmando sua sessão antes de abrir o aplicativo…</p><a id="finish-continue" href="${destination}" hidden>Continuar para Produtos</a><a id="finish-login" href="${prefix}login" hidden>Entrar novamente</a></main>${versionFooter}</body></html>`;
  const setCookie=(name:string,value:string,httpOnly=true,maxAge=28800)=>`${name}=${encodeURIComponent(value)}; Path=${prefix}; Secure; SameSite=Lax; Max-Age=${maxAge}${httpOnly?'; HttpOnly':''}`;
- let community:ReturnType<typeof registerCommunity>;try{community=registerCommunity(app,config,store,provider,cookie,browserTag,versionFooter,support);}catch(e){support.close();store.close();throw e;}
+ let community:ReturnType<typeof registerCommunity>;try{community=registerCommunity(app,config,store,provider,cookie,browserTag,versionFooter,support,mailer);}catch(e){support.close();store.close();throw e;}
  function session(req:{headers:{cookie?:string}}){return store.getSession(cookie(req.headers.cookie,SESSION),config.idleMinutes);}
  app.addContentTypeParser('application/x-www-form-urlencoded',{parseAs:'string',bodyLimit:4096},(_req,body,done)=>{const entries=new URLSearchParams(String(body));if([...entries.keys()].some((k,i,all)=>all.indexOf(k)!==i)){done(Error('Formulário inválido.'));return;}done(null,Object.fromEntries(entries));});
  app.addHook('onRequest',async(req,reply)=>{
