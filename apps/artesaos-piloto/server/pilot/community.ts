@@ -58,10 +58,10 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
   const query=req.query as Record<string,unknown>,n=query.page===undefined?1:Number(query.page);if(!Number.isSafeInteger(n)||n<1||n>100000)return reply.code(400).send({message:'Página inválida.'});
   return interests.list(n);
  });
- app.get(base+'api/users',async(req,reply)=>{
+ app.get<{Querystring:{page?:number;search?:string}}>(base+'api/users',{schema:{querystring:{type:'object',additionalProperties:false,properties:{page:{type:'integer',minimum:1,maximum:100000},search:{type:'string',maxLength:254}}}}},async(req,reply)=>{
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
   if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});
-  return store.listUsers();
+  return store.listUsers(req.query.page??1,req.query.search??'');
  });
  app.get<{Params:{id:string}}>(base+'api/users/:id',{schema:{params:{type:'object',required:['id'],properties:{id:{type:'string',pattern:'^[0-9a-f-]{36}$'}}}}},async(req,reply)=>{
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});

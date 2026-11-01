@@ -1,3 +1,4 @@
+import {PilotStore} from '../server/pilot/store.ts';
 import http from 'node:http';
 import https from 'node:https';
 // Test harness only. Never used by the production entrypoint or copied into its runtime image.
@@ -8,7 +9,8 @@ import {createPilotApp} from '../server/pilot/app.ts';
 if(process.env.PILOT_BROWSER_TEST!=='1')throw Error('Explicit disposable test mode required');
 const dir=mkdtempSync(join(tmpdir(),'pilot-browser-'));
 const origin='https://127.0.0.1:8298';
-const config={publicUrl:new URL(origin+'/artesaos-piloto/'),prefix:'/artesaos-piloto/',dataDir:dir,staticDir:resolve('dist'),clientId:'synthetic',clientSecret:'synthetic',sessionHours:8,idleMinutes:30,maxUsers:5,adminEmails:['admin@example.test'],initialInvites:[{email:'a@example.test',code:'synthetic-invite-a-01234567890123456789'},{email:'b@example.test',code:'synthetic-invite-b-01234567890123456789'}]};
+const config={publicUrl:new URL(origin+'/artesaos-piloto/'),prefix:'/artesaos-piloto/',dataDir:dir,staticDir:resolve('dist'),clientId:'synthetic',clientSecret:'synthetic',sessionHours:8,idleMinutes:30,maxUsers:null,adminEmails:['admin@example.test']};
+const seeds=new PilotStore(dir);for(const account of ['a','b'])seeds.bootstrap(account+'@example.test','synthetic-invite-'+account+'-01234567890123456789');seeds.close();
 const provider={async start(state){return 'https://accounts.google.com/test?state='+state;},async complete(url){const subject=url.searchParams.get('code');if(!['a','b','c','admin'].includes(subject))throw Error('Unknown fixture');return {issuer:'https://accounts.google.com',subject,email:subject+'@example.test',verified:true};}};
 if(process.env.PILOT_TEST_LEGAL==='1'){const doc={version:'fixture-1',effectiveAt:'2026-01-01',text:'Documento fictício de teste. Não é texto jurídico publicado.'};writeFileSync(join(dir,'legal-config.json'),JSON.stringify({enabled:true,reviewed:true,terms:doc,privacy:doc,cookies:doc}));}
 const app=await createPilotApp(config,provider);

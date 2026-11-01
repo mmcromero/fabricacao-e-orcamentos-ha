@@ -19,19 +19,32 @@ export class PilotStore{
  const inviteColumns=this.db.prepare('PRAGMA table_info(pilot_invites)').all();
  if(!inviteColumns.some(r=>r.name==='binding_mode'))this.db.exec("ALTER TABLE pilot_invites ADD COLUMN binding_mode TEXT NOT NULL DEFAULT 'email'");
  if(!inviteColumns.some(r=>r.name==='accepted_user_id'))this.db.exec('ALTER TABLE pilot_invites ADD COLUMN accepted_user_id TEXT');
+ if(!inviteColumns.some(r=>r.name==='no_expiry')){
+  this.db.exec('BEGIN IMMEDIATE');try{this.db.exec('ALTER TABLE pilot_invites ADD COLUMN no_expiry INTEGER NOT NULL DEFAULT 0');this.db.prepare('UPDATE pilot_invites SET no_expiry=1 WHERE used_at IS NULL AND revoked=0 AND expires_at>?').run(Date.now());this.db.exec('COMMIT');}catch(e){this.db.exec('ROLLBACK');throw e;}
  }
- listUsers(){const records=this.db.prepare('SELECT id,email,disabled FROM pilot_users ORDER BY email,id').all().map(row=>({id:String(row.id),email:String(row.email),disabled:Boolean(row.disabled)}));return {records,total:records.length};}
+ this.db.exec('CREATE INDEX IF NOT EXISTS pilot_users_email_idx ON pilot_users(email,id); CREATE INDEX IF NOT EXISTS pilot_invites_contact_idx ON pilot_invites(email,used_at,revoked);');
+ }
+ listUsers(page=1,search=''){
+  const pattern='%'+search.trim().toLowerCase().replace(/[!%_]/g,'!$&')+'%',total=Number(this.db.prepare("SELECT COUNT(*) n FROM pilot_users WHERE email LIKE ? ESCAPE '!'").get(pattern)!.n),pages=Math.max(1,Math.ceil(total/25)),current=Math.min(page,pages);
+  const records=this.db.prepare("SELECT id,email,disabled FROM pilot_users WHERE email LIKE ? ESCAPE '!' ORDER BY email,id LIMIT 25 OFFSET ?").all(pattern,(current-1)*25).map(row=>({id:String(row.id),email:String(row.email),disabled:Boolean(row.disabled)}));return {records,total,page:current,pages};
+ }
  invite(email:string,hours=24){email=email.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||hours<1||hours>168)throw Error('E-mail ou validade inválidos.');const code=token();this.db.prepare('INSERT INTO pilot_invites(hash,email,expires_at) VALUES (?,?,?)').run(digest(code),email,Date.now()+hours*3600000);return code;}
  flow(state:string,browser:string,verifier:string,nonce:string,invite:string,purpose:'user'|'admin'='user'){const now=Date.now();this.db.prepare('DELETE FROM pilot_flows WHERE expires_at<?').run(now);this.db.prepare('INSERT INTO pilot_flows(hash,browser_hash,verifier,nonce,invite_hash,expires_at,purpose) VALUES (?,?,?,?,?,?,?)').run(digest(state),digest(browser),verifier,nonce,invite?digest(invite):'',now+600000,purpose);}
  takeFlow(state:string,browser:string){const hash=digest(state);const row=this.db.prepare('SELECT * FROM pilot_flows WHERE hash=?').get(hash);if(!row||Number(row.expires_at)<Date.now()||!equal(String(row.browser_hash),digest(browser)))return null;this.db.prepare('DELETE FROM pilot_flows WHERE hash=?').run(hash);return {verifier:String(row.verifier),nonce:String(row.nonce),inviteHash:String(row.invite_hash),purpose:String(row.purpose)};}
- activate(identity:Identity,inviteHash:string,maxUsers:number){
+ activate(identity:Identity,inviteHash:string,maxUsers:number|null){
   if(identity.issuer!=='https://accounts.google.com'||!identity.subject||!identity.verified||!identity.email)throw Error('Identidade Google não confirmada.');
   const email=identity.email.toLowerCase();const old=this.db.prepare('SELECT * FROM pilot_users WHERE issuer=? AND subject=?').get(identity.issuer,identity.subject);
-  if(old){if(old.disabled)throw Error('Acesso revogado.');return String(old.id);}
+  if(old){
+   if(old.disabled)throw Error('Acesso revogado.');
+   // A returning account may explicitly consume a fresh invitation without
+   // creating a duplicate account. Empty/old codes do not affect normal login.
+   if(inviteHash){const now=Date.now();this.db.prepare("UPDATE pilot_invites SET used_at=?,accepted_user_id=? WHERE hash=? AND used_at IS NULL AND revoked=0 AND (no_expiry=1 OR expires_at>?) AND (binding_mode='first_google' OR email=?)").run(now,String(old.id),inviteHash,now,email);}
+   return String(old.id);
+  }
   this.db.exec('BEGIN IMMEDIATE');try{
    const invite=this.db.prepare('SELECT * FROM pilot_invites WHERE hash=?').get(inviteHash);
-   if(!invite||(invite.binding_mode!=='first_google'&&invite.email!==email)||invite.used_at||invite.revoked||Number(invite.expires_at)<Date.now())throw Error('Convite inválido, expirado ou não autorizado para esta conta.');
-   if(Number(this.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n)>=maxUsers)throw Error('Limite de participantes atingido.');
+   if(!invite||(invite.binding_mode!=='first_google'&&invite.email!==email)||invite.used_at||invite.revoked||!invite.no_expiry&&Number(invite.expires_at)<Date.now())throw Error('Convite inválido, expirado ou não autorizado para esta conta.');
+   if(maxUsers!==null&&Number(this.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n)>=maxUsers)throw Error('Limite de participantes atingido.');
    const id=randomUUID();this.db.prepare('INSERT INTO pilot_users(id,issuer,subject,email,tenant_id) VALUES (?,?,?,?,?)').run(id,identity.issuer,identity.subject,email,randomUUID());this.db.prepare('UPDATE pilot_invites SET used_at=?,accepted_user_id=? WHERE hash=?').run(Date.now(),id,inviteHash);this.db.exec('COMMIT');return id;
   }catch(e){this.db.exec('ROLLBACK');throw e;}
  }

@@ -16,7 +16,7 @@ test('admin consulta somente contas ativadas e dados cadastrais; convite pendent
  const headers={cookie:'__Secure-artesaos_admin_session='+admin.value,'x-pilot-admin-context':adminSession.context};
  const request=(path:string,h:Record<string,string>=headers)=>app.inject({url:prefix+path,headers:{host:new URL(origin).host,...h}});
  try{
-  assert.deepEqual((await request('admin/api/users')).json(),{records:[],total:0});
+  assert.deepEqual((await request('admin/api/users')).json(),{records:[],total:0,page:1,pages:1});
   store.invite('pending@example.test');
   assert.equal((await request('admin/api/users')).json().total,0);
   const invite=store.invite('registered@example.test'),id=store.activate(identity('registered'),digest(invite),5);

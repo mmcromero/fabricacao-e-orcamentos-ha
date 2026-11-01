@@ -1,3 +1,4 @@
+import {TenantCache,TenantCapacityError} from './tenant-cache.js';
 import {smtpInvitationMailer,type InvitationMailer} from './invitation-mail.js';
 import {LegalStore} from './legal.js';
 import {SupportStore} from './support-store.js';
@@ -19,7 +20,7 @@ const SESSION='__Secure-artesaos_session',CSRF='__Secure-artesaos_csrf',FLOW='__
 function cookie(header:string|undefined,name:string){try{const entries=(header??'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(name+'='));return entries.length===1?decodeURIComponent(entries[0].slice(name.length+1)):'';}catch{return '';}}
 export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config),mailer:InvitationMailer|null=smtpInvitationMailer(config)){
  const app=Fastify({logger:{redact:['req.headers.cookie','req.headers.authorization','res.headers.set-cookie']},disableRequestLogging:true,bodyLimit:2*1024*1024,trustProxy:false});
- const store=new PilotStore(config.dataDir);try{for(const invite of config.initialInvites??[])store.bootstrap(invite.email,invite.code);}catch(e){store.close();throw e;}const tenants=new Map<string,Promise<FastifyInstance>>();const prefix=config.prefix;
+ const store=new PilotStore(config.dataDir);const tenants=new TenantCache(id=>createApp({dataDir:join(config.dataDir,'tenants',id),staticDir:config.staticDir,mode:'local',logRequests:false,pilotFeatures:true}));const prefix=config.prefix;
  let support:SupportStore;try{support=new SupportStore(config.dataDir);}catch(error){store.close();throw error;}
  const legal=new LegalStore(config.dataDir);
  const destination=prefix+'?view=produtos';
@@ -91,15 +92,15 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(req.url.slice(prefix.length).startsWith('api/')&&req.headers['x-pilot-context']!==current.userId)return reply.code(409).send({message:'A conta desta janela mudou. Reabra a página antes de continuar.'});
   if(!['GET','HEAD','OPTIONS'].includes(req.method)&&!equal(digest(String(req.headers['x-pilot-csrf']??'')),current.csrfHash))return reply.code(403).send({message:'Confirmação de segurança inválida. Reabra a página.'});
   if(req.url.slice(prefix.length).startsWith('api/')&&legalRequired(current.userId))return reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});
-  let tenant=tenants.get(current.tenantId);if(!tenant){tenant=createApp({dataDir:join(config.dataDir,'tenants',current.tenantId),staticDir:config.staticDir,mode:'local',logRequests:false,pilotFeatures:true});tenants.set(current.tenantId,tenant);tenant.catch(()=>tenants.delete(current.tenantId));}
-  const inner=await tenant;const path='/'+req.raw.url!.slice(prefix.length);
-  const response=await inner.inject({method:req.method as HTTPMethods,url:path,headers:{...(req.headers['content-type']?{'content-type':req.headers['content-type']}:{}),...(typeof req.headers['x-expected-updated-at']==='string'?{'x-expected-updated-at':req.headers['x-expected-updated-at']}:{})},...(req.body===undefined?{}:{payload:typeof req.body==='string'?req.body:JSON.stringify(req.body)})});
+  const path='/'+req.raw.url!.slice(prefix.length);
+  let response;
+  try{response=await tenants.use(current.tenantId,inner=>inner.inject({method:req.method as HTTPMethods,url:path,headers:{...(req.headers['content-type']?{'content-type':req.headers['content-type']}:{}),...(typeof req.headers['x-expected-updated-at']==='string'?{'x-expected-updated-at':req.headers['x-expected-updated-at']}:{})},...(req.body===undefined?{}:{payload:typeof req.body==='string'?req.body:JSON.stringify(req.body)})}));}catch(error){if(error instanceof TenantCapacityError)return reply.code(503).send({message:error.message});throw error;}
   reply.code(response.statusCode);for(const header of ['content-type','content-disposition'])if(response.headers[header])reply.header(header,response.headers[header]);
   let body:Buffer|string=response.rawPayload;if((response.headers['content-type']??'').toString().startsWith('text/html'))body=response.body.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/g,(_,src)=>`<script type="application/json" data-pilot-module="${src}"></script>`).replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/g,(_,href)=>`<link rel="stylesheet" data-pilot-href="${href}">`).replace('<html ', '<html data-app-name="Artesão Digital" ').replace(/<title>[^<]*<\/title>/,'<title>Artesão Digital</title>').replace('</head>',`${browserTag}<meta name="pilot-context" content="${current.userId}"><link rel="stylesheet" href="${prefix}pilot.css"><script src="${prefix}pilot-session.js?v=${buildInfo.pilotVersion}"></script></head>`).replace('</body>',versionFooter+'</body>');
   return reply.send(body);
  });
  app.get('/artesaos-piloto',(_req,reply)=>reply.redirect(prefix));
- app.addHook('onClose',async()=>{await Promise.all([...tenants.values()].map(async t=>(await t).close()));support.close();legal.close();store.close();});
+ app.addHook('onClose',async()=>{await tenants.close();support.close();legal.close();store.close();});
  await app.register(staticFiles,{root:join(config.staticDir,'assets'),prefix:prefix+'assets/',decorateReply:false,index:false,cacheControl:false,etag:false,lastModified:false});
  return app;
 }

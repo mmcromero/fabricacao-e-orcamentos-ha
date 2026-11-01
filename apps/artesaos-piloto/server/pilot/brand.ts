@@ -105,10 +105,10 @@ export const identityCss=`
 :root #user-details dt,:root .invitations-admin dt{font-weight:700}
 :root #user-details dd,:root .invitations-admin dd{margin:0 0 16px;overflow-wrap:anywhere}
 :root .invitations-admin code{display:block;overflow-wrap:anywhere;margin-bottom:16px}
-:root .invitations-admin label{display:block;margin:16px 0}
-:root .invitations-admin input,:root .invitations-admin select,:root .invitations-admin textarea{box-sizing:border-box;max-width:100%;width:100%;padding:10px}
+:root .users-admin label,:root .invitations-admin label{display:block;margin:16px 0}
+:root .users-admin input,:root .invitations-admin input,:root .invitations-admin select,:root .invitations-admin textarea{box-sizing:border-box;max-width:100%;width:100%;padding:10px}
 :root .invitations-admin button,:root .invitations-admin #invitation-detail a{margin:8px 12px 8px 0}
-:root #invitations-pagination:not([hidden]){display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+:root #users-pagination:not([hidden]),:root #invitations-pagination:not([hidden]){display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 :root #support-pagination{display:flex;gap:16px;align-items:center;margin-top:20px}
 :root #support-pagination[hidden]{display:none}
 :root .support-admin #support-detail[hidden]{display:none}

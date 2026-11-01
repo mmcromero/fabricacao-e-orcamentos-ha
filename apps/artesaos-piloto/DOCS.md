@@ -8,7 +8,7 @@ O Artesão Digital funciona com o aplicativo principal parado. Consulte [MANUTEN
 
 ## O que está implementado
 
-Login Google OpenID Connect com Authorization Code, PKCE S256, state e nonce; verificação de assinatura, emissor, audiência, validade e e-mail verificado. Convites individuais vinculados ao e-mail, uso único e validade de 24 horas. Limite de cinco participantes. Sessões com token aleatório de 256 bits armazenado como hash, cookies Secure/HttpOnly/SameSite, oito horas absolutas e trinta minutos de inatividade. Alterações exigem origem exata e token CSRF; a página fica vinculada à conta para bloquear abas antigas após troca de usuário. Logout invalida a sessão no servidor; revogação invalida sessões e convites.
+Login Google OpenID Connect com Authorization Code, PKCE S256, state e nonce; verificação de assinatura, emissor, audiência, validade e e-mail verificado. Na versão atual, convites são gerenciados pela administração Web, sem teto fixo de cinco contas. Novos códigos são de uso único, sem vencimento e vinculam-se à primeira conta Google verificada que os usar; convites antigos mantêm sua regra de vínculo. Há revogação e reativação com novo código. Sessões com token aleatório de 256 bits armazenado como hash, cookies Secure/HttpOnly/SameSite, oito horas absolutas e trinta minutos de inatividade. Alterações exigem origem exata e token CSRF; a página fica vinculada à conta para bloquear abas antigas após troca de usuário. Logout invalida a sessão no servidor; revogação invalida sessões e convites.
 
 Cada usuário recebe um banco SQLite separado. O servidor escolhe esse banco pela sessão autenticada, nunca por um identificador de conta enviado pelo navegador. As APIs comuns, categorias, parâmetros, importação, exportação e arquivamento usam a mesma separação. O login do Home Assistant não autentica o piloto.
 
@@ -27,7 +27,7 @@ HTTPS protege o trajeto navegador–Nginx. A rede interna Nginx–aplicativo usa
 
 ## Cliente Google
 
-Crie um cliente OAuth de tipo aplicativo da Web no Google Cloud/Google Auth Platform. Para o piloto restrito, mantenha a audiência em modo de teste e adicione o e-mail Google de cada participante autorizado, até cinco contas no aplicativo. Essa lista do Google é separada dos convites individuais do aplicativo. Os nomes e rótulos da interface do Google podem variar.
+Crie um cliente OAuth de tipo aplicativo da Web no Google Cloud/Google Auth Platform. Para o piloto restrito, mantenha a audiência em modo de teste e adicione o e-mail Google de cada participante autorizado conforme as restrições do Google. A remoção do limite do aplicativo não altera a audiência/restrições do provedor. Essa lista do Google é separada dos convites individuais do aplicativo. Os nomes e rótulos da interface do Google podem variar.
 
 Para uma URL pública `https://seu-dominio:porta/artesaos-piloto/`, cadastre exatamente:
 
@@ -40,11 +40,12 @@ Solicitamos somente openid e email; não acesso ao Gmail. Configure Client ID e 
 
 - `public_url`: endereço HTTPS completo, terminando em `/artesaos-piloto/`. Use sempre este mesmo endereço, inclusive em casa.
 - `google_client_id` e `google_client_secret`: cliente Web configurado no Google.
-- `test_email_1`/`test_invite_1` até `test_email_5`/`test_invite_5`: até cinco pares de e-mail e convite. Os pares ainda não usados podem ficar com os dois campos vazios. Ao preencher um par, informe o e-mail Google autorizado e um código aleatório exclusivo de no mínimo 32 caracteres. Gerar códigos com um gerenciador de senhas; não usar a senha das contas Google. Os primeiros dois pares existentes permanecem compatíveis.
+- `admin_emails`: contas Google autorizadas a administrar o aplicativo.
+- `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`, `smtp_from`: envio automático opcional. Deixe todos vazios para envio manual; ver CONVITES.md.
 
-A primeira inicialização registra os convites por hash com validade de 24 horas. Reiniciar não renova convites já usados ou expirados. Se necessário, use um novo código aleatório nas opções para criar outro convite. Uma conta já ativada entra novamente sem código. Se o e-mail Google não corresponder ao convite, a ativação é recusada.
+Os campos antigos test_email/test_invite foram removidos a partir de 0.1.17. Seus valores restantes em opções antigas são ignorados pelo aplicativo; não recriam convites ao reiniciar. Os convites já gravados no controle são preservados. Gerencie pessoas e códigos exclusivamente na aba Convites da administração. O comando CLI invite foi desativado; permanece apenas o comando emergencial de revogação de conta, não o fluxo comum de convites.
 
-A administração técnica também oferece `npm run pilot:admin -- invite EMAIL` e `npm run pilot:admin -- revoke EMAIL`, executados dentro do contêiner do piloto com o mesmo DATA_DIR. O primeiro mostra um código uma única vez; não o publique. Não há painel administrativo nesta revisão.
+As seções históricas abaixo descrevem versões anteriores. Para a operação atual, consulte CONVITES.md e Atualização 0.1.17. Se o OAuth continua em modo Teste no Google, as permissões de testadores do Google continuam independentes dos convites do aplicativo.
 
 ## Rota no NGINX Home Assistant SSL proxy
 
@@ -251,3 +252,20 @@ O limite de cinco contas é preservado; convites válidos reservam vagas. Códig
 O principal pode permanecer parado sem afetar o piloto. Mantenha o Nginx, que encaminha o acesso. O responsável confirmou recuperação do login após reiniciar o proxy quando o IP do piloto mudou; veja MANUTENCAO.md. Esta atualização não altera automaticamente sua rede, proxy, Google ou configurações pessoais.
 
 Validações e limites em VALIDACAO-0.1.16.md. SMTP real, Google real, telefone físico e Home Assistant/hardware final ainda precisam de conferência. Textos jurídicos definitivos permanecem desativados; a versão continua experimental.
+
+
+## Atualização 0.1.17 — convites centralizados, sem vencimento
+
+Não preencha mais convites nas opções do aplicativo. Administre-os em Convites na interface Web, com nome, e-mail/WhatsApp, canal e Salvar. Não há teto fixo de cinco cadastros; o servidor mantém limites temporários de frequência, mensagens e recursos para proteger a instalação.
+
+Novos convites não possuem vencimento. Os ativos na atualização também passam a não vencer. Códigos expirados ou revogados anteriormente continuam inativos. A posse de um código ativo permite à primeira conta Google verificada usá-lo; códigos sem vencimento exigem cuidado com encaminhamento e devem ser revogados quando não forem mais desejados. Uso único, geração aleatória forte e armazenamento cifrado permanecem.
+
+Em Exibir convite, Revogar impede seu uso. Ativar novamente abre o formulário para conferir contato/nome; Salvar gera novo código e nova mensagem. O anterior continua inválido, inclusive após reinício. Para legados sem nome, informe-o agora; não inventamos identificação histórica. A mensagem nova precisa ser enviada (WhatsApp manual ou e-mail conforme configuração). Não há estado de envio na lista. Ações em convite aceito não revogam uma conta já ativada.
+
+Busca por e-mail/telefone e filtros de situação ajudam a localizar convites. Usuários cadastrados tem busca por e-mail e paginação. Bancos de contas são abertos sob demanda; até oito instâncias simultâneas permanecem no cache e as ociosas são fechadas/reabertas preservando dados. Se todas estiverem ocupadas, uma nova conta em uso pode receber uma resposta temporária para tentar novamente. Isso não limita o total de usuários registrados nem garante capacidade ilimitada do hardware.
+
+Migração acrescenta indicador de ausência de vencimento, vínculos de substituição e índices HMAC de telefone derivados da chave existente. Preserva bancos, sessões, empresa, convites, chave e código dos convites ativos. Antes de atualizar, produza cópia completa e protegida do volume/opções com o aplicativo parado, incluindo as chaves. Para reverter, restaure a cópia anterior completa e seu código correspondente. O responsável informou que ainda não tem uma rotina real de backup configurada.
+
+O esquema público atual do Supervisor ignora/remove opções desconhecidas ao validar. O aplicativo também ignora os campos antigos, sem alterar URL, credenciais Google, administradores ou SMTP. A instalação real ainda precisa de conferência após atualizar; eventuais avisos de opções antigas não devem motivar reinstalação/apagamento de dados.
+
+Validações e limites em VALIDACAO-0.1.17.md. Não é release estável; Google/HA/ARM/celular físico, SMTP real, backup e revisão jurídica/operacional continuam pendentes.

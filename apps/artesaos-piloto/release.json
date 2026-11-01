@@ -1,13 +1,13 @@
 {
-  "pilotVersion": "0.1.16",
-  "sourceCommit": "acec80dc6f7c2d71e298132bb9911d63f795176b",
+  "pilotVersion": "0.1.17",
+  "sourceCommit": "df769be2ecf2bde0ee1ff9a0875dfc59394bf94f",
   "coreBase": {
     "version": "0.1.23",
     "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
   },
   "releaseKind": "experimental-test-package",
   "stable": false,
-  "validationReport": "VALIDACAO-0.1.16.md",
+  "validationReport": "VALIDACAO-0.1.17.md",
   "legalDocumentsActiveByDefault": false,
   "pending": [
     "Real Google, Home Assistant/Supervisor, physical phone and target hardware validation",

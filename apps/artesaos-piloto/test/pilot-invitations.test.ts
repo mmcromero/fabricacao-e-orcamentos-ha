@@ -10,12 +10,12 @@ import {Invitations} from '../server/pilot/invitations.js';
 import {pilotConfig,type PilotConfig} from '../server/pilot/config.js';
 import {invitationText,type InvitationMailer,type InvitationMail} from '../server/pilot/invitation-mail.js';
 const origin='https://invitations.example.test',prefix='/artesaos-piloto/';
-async function fixture(mailer:InvitationMailer|null=null){
- const dir=mkdtempSync(join(tmpdir(),'pilot-invitations-'));const config:PilotConfig={publicUrl:new URL(origin+prefix),prefix,dataDir:dir,staticDir:resolve('dist'),clientId:'fixture',clientSecret:'fixture',sessionHours:8,idleMinutes:30,maxUsers:5,adminEmails:['admin@example.test']};
+async function fixture(mailer:InvitationMailer|null=null,maxUsers:number|null=5){
+ const dir=mkdtempSync(join(tmpdir(),'pilot-invitations-'));const config:PilotConfig={publicUrl:new URL(origin+prefix),prefix,dataDir:dir,staticDir:resolve('dist'),clientId:'fixture',clientSecret:'fixture',sessionHours:8,idleMinutes:30,maxUsers,adminEmails:['admin@example.test']};
  const store=new PilotStore(dir),session=store.adminSession({issuer:'https://accounts.google.com',subject:'admin',email:'admin@example.test',verified:true}),admin=store.getAdmin(session.value,config.adminEmails!)!;
  const headers={cookie:'__Secure-artesaos_admin_session='+session.value,'x-pilot-admin-context':admin.context,'x-pilot-admin-csrf':session.csrf};let app=await createPilotApp(config,undefined,mailer);
  const request=(path='',method='GET',payload?:unknown,h:Record<string,string>=headers)=>app.inject({url:prefix+'admin/api/invitations'+path,method:method as any,headers:{host:new URL(origin).host,origin,...h},...(payload===undefined?{}:{payload:payload as any})});
- return {dir,store,headers,request,userDetails:(id:string)=>app.inject({url:prefix+'admin/api/users/'+id,headers:{host:new URL(origin).host,...headers}}),create:async(email='person@example.test',extra:Record<string,unknown>={})=>request('','POST',{name:'Pessoa de teste',email,requestKey:randomUUID(),...extra}),restart:async()=>{await app.close();app=await createPilotApp(config,undefined,mailer);},close:async()=>{await app.close();store.close();rmSync(dir,{recursive:true,force:true});}};
+ return {dir,store,headers,request,users:(query='')=>app.inject({url:prefix+'admin/api/users'+query,headers:{host:new URL(origin).host,...headers}}),userDetails:(id:string)=>app.inject({url:prefix+'admin/api/users/'+id,headers:{host:new URL(origin).host,...headers}}),create:async(email='person@example.test',extra:Record<string,unknown>={})=>request('','POST',{name:'Pessoa de teste',email,requestKey:randomUUID(),...extra}),restart:async()=>{await app.close();app=await createPilotApp(config,undefined,mailer);},close:async()=>{await app.close();store.close();rmSync(dir,{recursive:true,force:true});}};
 }
 test('Salvar gera código cifrado, idempotente, sem status de envio; primeiro Google aceita e some dos convites',async()=>{
  const f=await fixture();try{
@@ -81,4 +81,49 @@ test('adaptador SMTP usa TLS obrigatório, remetente configurado e mensagem com 
  const mailer=smtpInvitationMailer(config)!;await mailer.send({to:'contact@example.test',name:'Pessoa',code:'synthetic-code',expiresAt:Date.now()+86400000,loginUrl:origin+prefix+'login'});
  assert.equal(options[0].secure,false);assert.equal(options[0].requireTLS,true);assert.equal(options[0].logger,false);assert.equal(options[0].debug,false);assert.equal(messages[0].from.address,'sender@example.test');assert.equal(messages[0].disableFileAccess,true);assert.equal(messages[0].disableUrlAccess,true);assert.match(messages[0].text,/synthetic-code/);assert.match(messages[0].text,/primeira conta Google/);
  const tls=smtpInvitationMailer({...config,smtp:{...config.smtp!,port:465}})!;assert.equal(options[1].secure,true);accept=false;await assert.rejects(()=>tls.send({to:'contact@example.test',name:'Pessoa',code:'synthetic-code',expiresAt:Date.now(),loginUrl:origin+prefix+'login'}));mailer.close?.();tls.close?.();assert.equal(closed,2);
+});
+test('sem teto de cinco: 65 convites/contas, listas paginadas e busca sem decifrar o cadastro inteiro',async()=>{
+ const f=await fixture(null,null);try{
+  assert.equal((await f.request()).json().maxUsers,null);
+  for(let n=0;n<65;n++){
+   const phone='55119'+String(n).padStart(8,'0'),created=await f.create('bulk'+String(n).padStart(3,'0')+'@example.test',{phone});assert.equal(created.statusCode,200,created.body);const item=created.json();assert.equal(item.expiresAt,null);
+   f.store.activate({issuer:'https://accounts.google.com',subject:'bulk-'+n,email:'login'+String(n).padStart(3,'0')+'@example.test',verified:true},digest(item.code),null);
+  }
+  let users=(await f.users()).json();assert.equal(users.total,65);assert.equal(users.records.length,25);assert.equal(users.pages,3);users=(await f.users('?page=3')).json();assert.equal(users.records.length,15);assert.equal(users.page,3);
+  const found=(await f.users('?search=login064')).json();assert.equal(found.total,1);assert.equal(found.records[0].email,'login064@example.test');assert.equal((await f.users('?page=0')).statusCode,400);
+  assert.equal((await f.request()).json().total,0);assert.equal((await f.request('?status=accepted&page=3')).json().records.length,15);
+  const phone=(await f.request('?status=accepted&search=5511900000064')).json();assert.equal(phone.total,1);assert.equal(phone.records[0].email,'bulk064@example.test');assert.equal((await f.request('?status=accepted&search=bulk064')).json().total,1);
+ }finally{await f.close();}
+});
+test('sem vencimento: revogar bloqueia, reativar cria outro código e pedido repetido não duplica',async()=>{
+ const f=await fixture(null,null);try{
+  const original=(await f.create('restore@example.test')).json();assert.equal(original.expiresAt,null);assert.match((await f.request('/'+original.id)).json().messageText,/não possui vencimento/);
+  f.store.db.prepare('UPDATE pilot_invites SET expires_at=0 WHERE hash=?').run(original.id);assert.equal((await f.request('/'+original.id)).json().status,'pending');
+  assert.equal((await f.request('/'+original.id+'/revoke','POST',{}, {...f.headers,'x-pilot-admin-csrf':'wrong'})).statusCode,403);
+  assert.equal((await f.request('/'+original.id+'/revoke','POST',{})).json().status,'revoked');
+  assert.throws(()=>f.store.activate({issuer:'https://accounts.google.com',subject:'blocked',email:'blocked@example.test',verified:true},digest(original.code),null));
+  const input={name:original.name,email:original.email,channel:original.channel,phone:original.phone??'',requestKey:randomUUID()};const renewed=await f.request('/'+original.id+'/reactivate','POST',input);assert.equal(renewed.statusCode,200,renewed.body);const next=renewed.json();assert.notEqual(next.code,original.code);assert.equal(next.expiresAt,null);assert.equal(next.previousId,original.id);
+  assert.equal((await f.request('/'+original.id+'/reactivate','POST',input)).json().id,next.id);assert.equal((await f.request('/'+original.id+'/reactivate','POST',{...input,email:'changed@example.test'})).statusCode,409);assert.equal((await f.request()).json().total,1);assert.equal((await f.request()).json().records[0].id,next.id);
+  assert.equal((await f.request('/'+original.id)).json().replacementId,next.id);assert.throws(()=>f.store.activate({issuer:'https://accounts.google.com',subject:'blocked-again',email:'blocked@example.test',verified:true},digest(original.code),null));
+  const id=f.store.activate({issuer:'https://accounts.google.com',subject:'restored',email:'actual@example.test',verified:true},digest(next.code),null);assert.ok(id);
+  assert.equal((await f.request('/'+next.id+'/revoke','POST',{})).statusCode,409);assert.equal((await f.request('/'+next.id+'/reactivate','POST',{...input,requestKey:randomUUID()})).statusCode,409);
+  await f.restart();assert.equal((await f.request()).json().total,0);assert.equal((await f.request('/'+original.id)).json().status,'revoked');assert.equal((await f.request('/'+next.id)).json().acceptedGoogleEmail,'actual@example.test');
+ }finally{await f.close();}
+});
+test('reativar legado exige nome real informado e não inventa data de cadastro nem permite o código antigo',async()=>{
+ const f=await fixture(null,null);try{
+  const old=f.store.invite('old-contact@example.test');f.store.db.prepare('UPDATE pilot_invites SET expires_at=0 WHERE hash=?').run(digest(old));
+  assert.equal((await f.request('/'+digest(old))).json().status,'expired');
+  const input={name:'Pessoa identificada agora',email:'new-contact@example.test',channel:'email',requestKey:randomUUID()};const response=await f.request('/'+digest(old)+'/reactivate','POST',input);assert.equal(response.statusCode,200,response.body);
+  const historical=(await f.request('/'+digest(old))).json();assert.equal(historical.createdAt,null);assert.equal(historical.name,null);assert.equal(historical.code,null);assert.equal(historical.legacy,true);assert.equal(historical.status,'revoked');assert.equal((await f.request()).json().total,1);
+  assert.throws(()=>f.store.activate({issuer:'https://accounts.google.com',subject:'old-bad',email:'old-contact@example.test',verified:true},digest(old),null));
+ }finally{await f.close();}
+});
+test('conta existente consome convite novo sem duplicar usuário; login normal não reabre código antigo',async()=>{
+ const f=await fixture(null,null);try{
+  const first=(await f.create('first-contact@example.test')).json(),identity={issuer:'https://accounts.google.com',subject:'returning',email:'returning@example.test',verified:true};const id=f.store.activate(identity,digest(first.code),null);
+  const next=(await f.create('second-contact@example.test')).json();assert.equal(f.store.activate(identity,digest(next.code),null),id);assert.equal(f.store.listUsers().total,1);assert.equal((await f.request()).json().total,0);assert.equal((await f.request('/'+next.id)).json().acceptedGoogleEmail,identity.email);
+  assert.equal(f.store.activate(identity,'',null),id);assert.equal(f.store.activate(identity,digest(first.code),null),id);assert.equal((await f.request('/'+next.id)).json().status,'accepted');
+  assert.throws(()=>f.store.activate({...identity,subject:'intruder',email:'other@example.test'},digest(next.code),null));
+ }finally{await f.close();}
 });

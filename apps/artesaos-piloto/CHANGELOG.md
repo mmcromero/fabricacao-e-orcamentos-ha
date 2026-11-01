@@ -1,3 +1,13 @@
+# 0.1.17 — gestão centralizada e convites sem vencimento (experimental)
+
+- Remove os cinco pares e-mail/código das opções do Home Assistant e deixa de gerar convites por opções/variáveis antigas. Criação e gestão passam pela administração Web; contas, dados e convites persistidos são preservados.
+- Remove o teto fixo de cinco contas/convites no modo de produção. Listas de usuários e convites usam paginação de 25 itens e busca. Consultas de telefone usam índice de identificação derivado por HMAC, sem decifrar todos os contatos.
+- Novos convites não têm vencimento e continuam de uso único, vinculados à primeira conta Google verificada que usar o código. Convites existentes ainda ativos perdem o vencimento; expirados ou revogados não são reativados automaticamente. Os antigos mantêm sua regra de conta Google/e-mail.
+- Acrescenta Revogar convite e Ativar novamente. A reativação gera outro código e nova mensagem; o código anterior permanece inválido. Contas já ativadas não são desativadas/reabertas por essas ações de convite.
+- Preserva contatos, chave e histórico; mostra somente o código atual na lista operacional quando houver substituição. Reinício não reverte revogação nem a troca de código.
+- Limita instâncias/bancos de contas abertos simultaneamente, reabrindo sob demanda e preservando os dados. Isso é controle temporário de recursos, não limite de cadastro.
+- Mantém SMTP opcional, WhatsApp com mensagem pronta, base 0.1.23, aplicativo principal e textos jurídicos definitivos desativados. Entrega experimental; consulte VALIDACAO-0.1.17.md.
+
 # 0.1.16 — administração e convites (experimental)
 
 - Acrescenta Usuários cadastrados à administração: contas realmente ativadas, situação do acesso e Exibir dados cadastrais, com consulta restrita e leitura sem criar cadastros ausentes.

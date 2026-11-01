@@ -1,4 +1,4 @@
-# Convites — pacote experimental 0.1.16
+# Convites — pacote experimental 0.1.17
 
 O responsável autorizou fechar e publicar este pacote experimental após a preparação. A instalação continua manual; a publicação não configura credenciais nem envia mensagens reais.
 
@@ -9,8 +9,8 @@ Na administração, Convites fica depois das abas Interessados no piloto, Chamad
 - Campos: nome da pessoa, e-mail de contato, WhatsApp com DDI/DDD e canal escolhido (e-mail ou WhatsApp).
 - Nome e contato do canal escolhido são obrigatórios. Pode preencher os dois contatos. No canal WhatsApp, não é necessário e-mail.
 - O botão é **Salvar**. Ele registra a pessoa e gera um código aleatório automaticamente, incluído na mensagem pronta. Não há campo para inventar o código, status Enviado ou confirmação manual de envio.
-- Código individual, de uso único, válido por 24 horas. A validade existente foi preservada; salvar não prolonga um código anterior. Repetir a mesma solicitação não cria outro registro.
-- A lista padrão contém somente convites ainda não aceitos. Convites expirados/revogados continuam identificados pela validade; não oferecem link de novo envio com código vencido.
+- Código individual, de uso único, sem vencimento. Os convites ativos existentes passam a não vencer; expirados/revogados permanecem inativos. Repetir a mesma solicitação não cria outro registro.
+- A lista padrão contém somente convites ainda não aceitos. Convites expirados anteriores/revogados continuam identificados pela situação; não oferecem link de novo envio com código vencido.
 - Quando um convite é aceito, ele sai da lista e a conta aparece em **Usuários cadastrados**. Na tela aberta, a lista atualiza ao receber foco ou a cada 15 segundos enquanto visível e sem formulário em edição; também existe Atualizar convites.
 - Os dados históricos não são apagados ao esconder o convite aceito. Isso permite auditar o vínculo e preservar os contatos em Exibir dados do usuário ativado. Ainda é necessário definir retenção/descarte no pacote jurídico.
 
@@ -20,7 +20,7 @@ Por decisão expressa do usuário, **os novos convites são autorizados pelo có
 
 A ativação é atômica: somente uma conta pode consumir o código. O sistema registra qual conta o aceitou e cria o banco individual da conta, mantendo o isolamento. A conta Google continua necessária para autenticar e para os próximos logins.
 
-Convites anteriores à mudança, inclusive os das opções/CLI, conservam sua regra de vinculação ao e-mail; não são convertidos para primeira conta. Seus códigos estavam armazenados somente como hash e não podem ser reconstruídos, nem são inventadas datas ou nomes históricos. A administração mostra essa ausência explicitamente.
+Convites anteriores à mudança, inclusive os das antigas opções/CLI, conservam sua regra de vinculação ao e-mail; não são convertidos para primeira conta. Seus códigos estavam armazenados somente como hash e não podem ser reconstruídos, nem são inventadas datas ou nomes históricos. A administração mostra essa ausência explicitamente.
 
 ## WhatsApp
 
@@ -50,7 +50,7 @@ Para o piloto pequeno, SMTP de uma conta existente é a opção inicial recomend
 
 ## Dados, atualização e limites
 
-O limite atual de cinco contas permanece. Convites válidos reservam vagas; expirados e revogados deixam de reservar. Salvar além da capacidade ou criar outro convite válido para o mesmo contato pede consultar o registro existente.
+Não existe mais teto fixo de cinco cadastros no modo de produção. O formulário de convites substitui os pares fixos nas opções; variáveis/opções antigas não criam convites e o comando CLI invite está desativado. Um contato não pode ter dois códigos ativos simultâneos. As listas são paginadas em 25 registros; busca de telefone completo usa índice derivado por HMAC, sem expor o telefone em claro no índice.
 
 A atualização cria campos binding_mode e accepted_user_id no controle de convites e tabelas de metadados/controle técnico. Novos códigos, nome e telefone são cifrados com AES-256-GCM e chave local **pilot-invitations.key**. E-mails permanecem na tabela de controle existente. A chave no mesmo volume não protege contra comprometimento de ambos.
 
@@ -61,3 +61,12 @@ As rotas são exclusivas da administração, com sessão e contexto de aba; grav
 ## Limites da validação
 
 Testes de código e navegador usam identidades, contatos e envios sintéticos. Nenhum e-mail/WhatsApp real foi enviado. SMTP real, o aplicativo nativo do WhatsApp no telefone, Google real, Home Assistant e hardware final permanecem dependentes da configuração e validação do responsável.
+
+
+## Revogar e ativar novamente
+
+Revogar bloqueia um código não usado. A operação é administrativa, exige origem/CSRF/contexto e não desativa uma conta já cadastrada. Ativar novamente gera um código diferente após confirmar o formulário; o anterior permanece revogado e seu vínculo de substituição fica preservado. A lista operacional mostra o registro atual, evitando duplicar a mesma pessoa com códigos substituídos. Uma repetição da mesma solicitação não gera múltiplos códigos.
+
+A nova mensagem precisa ser enviada à pessoa. WhatsApp abre o texto/código atual; SMTP, se configurado, é tentado após Salvar. Não existe estado de envio do produto. Sem vencimento, um código vazado pode ser usado no futuro enquanto não tiver sido consumido/revogado; esse é o motivo para proteger mensagens e oferecer a revogação. Não há promessa de validade de códigos anteriormente expirados.
+
+As limitações da audiência em modo Teste no Google continuam sendo do provedor. A remoção do teto do aplicativo não publica o OAuth nem adiciona testadores no console Google automaticamente. O hardware também continua limitando memória, concorrência e armazenamento; o cache de bancos e os limites temporários de frequência não são limite de usuários cadastrados.

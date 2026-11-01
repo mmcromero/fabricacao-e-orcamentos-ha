@@ -20,6 +20,14 @@
 - Manutenção: documentar parada/desinstalação futura do principal e recuperação do acesso por reinício do Nginx.
 - Fechamento/publicação autorizados expressamente após estimativa de 10 a 20 minutos. Outras ideias futuras não são promovidas por esta autorização.
 
+## Pacote experimental 0.1.17 — autorizado
+
+- Convites somente pela administração; retirada dos cinco pares das opções e da trava de cinco contas em produção.
+- Sem vencimento nos novos/atuais ativos; antigos expirados/revogados não são reativados automaticamente.
+- Revogar e Ativar novamente com novo código, mantendo anterior inválido; preservação de contas, contatos e chave.
+- Busca/paginação e bancos abertos sob demanda, sem limite fixo de cadastro.
+- Fechamento/publicação autorizados pelo usuário; outras ideias futuras não foram promovidas.
+
 ## Próximo Pacote — legal e operação
 
 - Revisar e ativar documentos públicos, identificação/contato, aceite antes das boas-vindas e informação de cookies da instalação.

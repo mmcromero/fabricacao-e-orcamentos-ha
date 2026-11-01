@@ -108,36 +108,17 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));
  }finally{await app.close();admin.close();rmSync(dir,{recursive:true,force:true});}
 });
-test('opções aceitam cinco pares, preservam dois antigos e não reativam convites consumidos',async()=>{
- const dir=mkdtempSync(join(tmpdir(),'pilot-five-'));const optionsFile=join(dir,'options.json');
- const options:Record<string,string>={public_url:origin+prefix,google_client_id:'fixture',google_client_secret:'fixture'};
- const env={PILOT_OPTIONS_FILE:optionsFile,DATA_DIR:dir};
+test('opções antigas de convite são ignoradas; administração é a origem e produção não limita a cinco',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'pilot-admin-only-')),optionsFile=join(dir,'options.json');const options:Record<string,string>={public_url:origin+prefix,google_client_id:'fixture',google_client_secret:'fixture'};
+ for(let n=1;n<=5;n++){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
+ writeFileSync(optionsFile,JSON.stringify(options));const env={PILOT_OPTIONS_FILE:optionsFile,DATA_DIR:dir,PILOT_TEST_EMAIL_5:'override@example.test',PILOT_TEST_INVITE_5:'synthetic-override-01234567890123456789'},settings=pilotConfig(env);assert.equal(settings.maxUsers,null);assert.equal('initialInvites' in settings,false);
+ const manifest=readFileSync(resolve('pilot/config.yaml'),'utf8');assert.ok(!/test_(?:email|invite)_\d/.test(manifest));
  const provider:IdentityProvider={async start(){throw Error('Not used');},async complete(){throw Error('Not used');}};
- try{
-  for(const n of [1,2]){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
-  writeFileSync(optionsFile,JSON.stringify(options));assert.equal(pilotConfig(env).initialInvites!.length,2);
-  for(const n of [3,4,5]){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
-  writeFileSync(optionsFile,JSON.stringify(options));const settings=pilotConfig(env);assert.equal(settings.initialInvites!.length,5);assert.equal(settings.maxUsers,5);
-  const overridden=pilotConfig({...env,PILOT_TEST_EMAIL_5:'override@example.test',PILOT_TEST_INVITE_5:'synthetic-override-01234567890123456789'});
-  assert.equal(overridden.initialInvites![4].email,'override@example.test');
-  const manifest=readFileSync(resolve('pilot/config.yaml'),'utf8');
-  for(const n of [1,2,3,4,5]){assert.ok(manifest.includes(`  test_email_${n}: ""`));assert.ok(manifest.includes(`  test_invite_${n}: password`));}
-  const app=await createPilotApp(settings,provider);await app.close();
-  const store=new PilotStore(dir);
-  try{
-   assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_invites').get()!.n,5);
-   for(const n of [1,2,3,4,5]){
-    const user=store.activate({issuer:'https://accounts.google.com',subject:'subject'+n,email:`account${n}@example.test`,verified:true},digest(options['test_invite_'+n]),settings.maxUsers);
-    assert.ok(user);
-   }
-   const extra=store.invite('extra@example.test');
-   assert.throws(()=>store.activate({issuer:'https://accounts.google.com',subject:'sixth',email:'extra@example.test',verified:true},digest(extra),settings.maxUsers),/Limite/);
-   const before=store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all();
-   const restarted=await createPilotApp(settings,provider);await restarted.close();
-   assert.deepEqual(store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all(),before);
-   assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n,5);
-  }finally{store.close();}
- }finally{rmSync(dir,{recursive:true,force:true});}
+ const app=await createPilotApp(settings,provider);await app.close();const store=new PilotStore(dir);
+ try{assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_invites').get()!.n,0,'Opções antigas não geram nem renovam convites');
+  for(let n=1;n<=7;n++){const code=store.invite(`account${n}@example.test`);assert.ok(store.activate({issuer:'https://accounts.google.com',subject:'subject'+n,email:`account${n}@example.test`,verified:true},digest(code),settings.maxUsers));}
+  const before=store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all();const restarted=await createPilotApp(settings,provider);await restarted.close();assert.deepEqual(store.db.prepare('SELECT hash,used_at,expires_at FROM pilot_invites ORDER BY hash').all(),before);assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n,7);
+ }finally{store.close();rmSync(dir,{recursive:true,force:true});}
 });
 test('estados e convites expiram, não são reutilizados e limite de participantes é aplicado',()=>{
  const dir=mkdtempSync(join(tmpdir(),'pilot-store-'));const store=new PilotStore(dir);

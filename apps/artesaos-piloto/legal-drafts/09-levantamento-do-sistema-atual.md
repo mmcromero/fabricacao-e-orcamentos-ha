@@ -16,3 +16,6 @@ Versões jurídicas e aceites são centrais e separados das contas comerciais. O
 Na versão 0.1.16 experimental, a administração passa a consultar dados cadastrais dos usuários e contatos dos convites. Novos convites são autorizados pelo código e vinculados à primeira conta Google que o consumir. Nome/telefone/código recuperável ficam cifrados com pilot-invitations.key; e-mail de contato continua no controle existente. O histórico aceito é preservado mesmo saindo da lista padrão. Definir retenção/descarte desses dados.
 
 E-mail automático depende de SMTP opcional e provedor efetivamente configurado. Link do WhatsApp leva texto e código ao serviço quando o administrador o abre; não é envio por API oficial. Esses fluxos e fornecedores devem ser incorporados ao inventário e aos textos definitivos conforme o uso real. Nenhum serviço foi configurado na instalação pessoal nesta sessão.
+
+
+Na 0.1.17, novos convites e os ainda ativos não possuem vencimento. Revogação e reativação são administrativas; reativar troca o código e mantém o anterior inválido. Convites expirados/revogados anteriores não voltam automaticamente. Retenção de registros/chaves e comunicação sobre uso de códigos sem vencimento precisam integrar a revisão jurídica. Não há limite fixo de cinco contas, e as listas/cache de bancos têm limites operacionais de recursos. Nenhuma minuta foi ativada.
