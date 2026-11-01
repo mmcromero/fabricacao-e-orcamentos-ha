@@ -1,3 +1,12 @@
+/** Normalize Brazilian national phones and formatted international phones only. */
+export function normalizePixKey(value:string){
+ const key=value.trim();if(!/^[+\d ().-]+$/.test(key))return key;
+ const digits=key.replace(/\D/g,'');if(key.startsWith('+'))return '+'+digits;
+ if((digits.length===11||digits.length===14)&&validPixKey(digits))return digits;
+ if((digits.length===10&&/^[1-9]\d[2-5]/.test(digits))||(digits.length===11&&/^[1-9]\d9/.test(digits)))return '+55'+digits;
+ if((digits.length===12||digits.length===13)&&digits.startsWith('55'))return '+'+digits;
+ return key;
+}
 /** Format checks only; ownership and bank availability require administrator verification. */
 export function validPixKey(value:string){
  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))return true;

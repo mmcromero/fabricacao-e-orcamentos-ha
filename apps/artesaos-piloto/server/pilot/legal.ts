@@ -1,4 +1,4 @@
-import {validPixKey} from './pix.js';
+import {validPixKey,normalizePixKey} from './pix.js';
 import {initializeDatabase} from '../foundation/migrations.js';
 import {DatabaseSync} from 'node:sqlite';
 import {existsSync,readFileSync,chmodSync} from 'node:fs';
@@ -55,8 +55,14 @@ export class LegalStore{
   this.db.prepare('INSERT INTO resource_events(account,tenant,document_id,action,created_at,session_context,manual_id) VALUES(?,?,?,?,?,?,?)').run(account,tenant,id,action,new Date().toISOString(),digest(context),this.active('manual')?.id??null);
  }
  audit(account?:string,page=1){if(!Number.isSafeInteger(page)||page<1||page>100000)throw Error('Página inválida.');return this.db.prepare('SELECT e.*,v.kind,v.version,v.hash FROM resource_events e JOIN resource_versions v ON v.id=e.document_id'+(account?' WHERE e.account=?':'')+' ORDER BY e.id DESC LIMIT 500 OFFSET ?').all(...(account?[account]:[]),(page-1)*500);}
- contribution(){const c:any=this.db.prepare('SELECT * FROM contribution_config WHERE id=1').get();return c.enabled&&c.pix_key&&c.beneficiary?{enabled:true,key:c.pix_key,beneficiary:c.beneficiary,message:c.message}:{enabled:false};}
- configurePix(input:any){if(typeof input.enabled!=='boolean'||!['key','beneficiary','message'].every(k=>typeof input[k]==='string')||input.key.length>254||input.beneficiary.length>200||input.message.length>1000||input.enabled&&(!validPixKey(input.key.trim())||!input.beneficiary.trim()||/[\x00-\x1f\s]/.test(input.key)))throw Error('Informe chave Pix válida (CPF/CNPJ, telefone com +DDI, e-mail ou chave aleatória) e beneficiário; limites 254/200/1000 caracteres.');this.db.prepare('UPDATE contribution_config SET enabled=?,pix_key=?,beneficiary=?,message=? WHERE id=1').run(input.enabled?1:0,input.key.trim(),input.beneficiary.trim(),input.message.trim());return {ok:true};}
+ contribution(){const c:any=this.db.prepare('SELECT * FROM contribution_config WHERE id=1').get();return c.enabled&&validPixKey(c.pix_key)&&c.beneficiary.trim()?{enabled:true,key:c.pix_key,beneficiary:c.beneficiary,message:c.message}:{enabled:false};}
+ configurePix(input:any){
+  if(!input||typeof input.enabled!=='boolean'||!['key','beneficiary','message'].every(k=>typeof input[k]==='string')||input.key.length>254||input.beneficiary.length>200||input.message.length>1000)throw Error('Confira chave Pix, beneficiário e mensagem (limites: 254, 200 e 1000 caracteres).');
+  const key=normalizePixKey(input.key);if(input.enabled&&(!validPixKey(key)||!input.beneficiary.trim()))throw Error('Informe uma chave Pix válida e o nome do beneficiário. Para telefone brasileiro, use DDD e número; CPF/CNPJ devem ter dígitos válidos.');
+  if(/[\x00-\x1f\x7f]/.test(key))throw Error('A chave Pix contém caracteres inválidos.');
+  const saved:any=this.db.prepare('INSERT INTO contribution_config(id,enabled,pix_key,beneficiary,message) VALUES(1,?,?,?,?) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,pix_key=excluded.pix_key,beneficiary=excluded.beneficiary,message=excluded.message RETURNING *').get(input.enabled?1:0,key,input.beneficiary.trim(),input.message.trim());if(!saved)throw Error('Salvamento não confirmado pelo armazenamento.');return {ok:true,config:{enabled:!!saved.enabled,key:saved.pix_key,beneficiary:saved.beneficiary,message:saved.message}};
+ }
+
  publicPage(prefix:string){return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Documentos — Artesão Digital</title><link rel="stylesheet" href="${prefix}pilot.css"></head><body><main class="pilot-auth"><h1>Artesão Digital — Tudoe3d</h1><p>Documentos iniciais sujeitos a revisão jurídica.</p>${(['terms','privacy','cookies'] as const).map((kind,i)=>{const d=this.active(kind);return `<section id="${kind}"><h2>${['Termos de Uso','Política de Privacidade','Política de Cookies'][i]}</h2><p>Versão ${escape(d.version)} · ${escape(d.published_at)}</p><div style="white-space:pre-wrap;overflow-wrap:anywhere">${escape(d.content)}</div></section>`;}).join('')}<h2>Histórico publicado</h2>${this.list().filter((d:any)=>d.published_at&&d.kind!=='manual').map((d:any)=>`<details><summary>${escape(d.kind)} — ${escape(d.version)}</summary><p style="white-space:pre-wrap">${escape(d.content)}</p></details>`).join('')}<a href="${prefix}login">Voltar ao acesso</a></main></body></html>`;}
  close(){this.db.close();}
 }

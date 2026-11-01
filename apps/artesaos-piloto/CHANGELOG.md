@@ -1,3 +1,13 @@
+# 0.2.0-dev.13 — estabilização e convites
+
+- Pix: telefone BR, persistência/recarga, confirmação/erro junto ao botão, espera
+  independente e proteção contra sobrescrita pela leitura inicial atrasada.
+- Rodapé: links primeiro, versão própria automática centralizada na última linha;
+  referência visual à base removida, metadados internos preservados.
+- Interessados: geração/reutilização de convite com vínculo histórico e sem duplicar;
+  mensagem/código/link prontos, cópia, WhatsApp e SMTP existente com estados reais.
+- Migração incremental control4, sem datas retroativas e sem alteração de instalações.
+
 # 0.2.0-dev.12 — suporte, documentos dinâmicos e sessões
 
 - Suporte abre a listagem; formulário somente por ação explícita, sem erros iniciais.

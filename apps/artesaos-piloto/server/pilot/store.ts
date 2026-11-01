@@ -33,7 +33,7 @@ export class PilotStore{
    const invite=this.db.prepare('SELECT * FROM pilot_invites WHERE hash=?').get(inviteHash);
    if(!invite||(invite.binding_mode!=='first_google'&&invite.email!==email)||invite.used_at||invite.revoked||!invite.no_expiry&&Number(invite.expires_at)<Date.now())throw Error('Convite inválido, expirado ou não autorizado para esta conta.');
    if(maxUsers!==null&&Number(this.db.prepare('SELECT COUNT(*) n FROM pilot_users').get()!.n)>=maxUsers)throw Error('Limite de participantes atingido.');
-   const id=randomUUID();this.db.prepare('INSERT INTO pilot_users(id,issuer,subject,email,tenant_id) VALUES (?,?,?,?,?)').run(id,identity.issuer,identity.subject,email,randomUUID());this.db.prepare('UPDATE pilot_invites SET used_at=?,accepted_user_id=? WHERE hash=?').run(Date.now(),id,inviteHash);this.db.exec('COMMIT');return id;
+   const id=randomUUID();this.db.prepare('INSERT INTO pilot_users(id,issuer,subject,email,tenant_id) VALUES (?,?,?,?,?)').run(id,identity.issuer,identity.subject,email,randomUUID());this.db.prepare('INSERT INTO pilot_account_registrations VALUES(?,?)').run(id,Date.now());this.db.prepare('UPDATE pilot_invites SET used_at=?,accepted_user_id=? WHERE hash=?').run(Date.now(),id,inviteHash);this.db.exec('COMMIT');return id;
   }catch(e){this.db.exec('ROLLBACK');throw e;}
  }
  bootstrap(email:string,code:string){if(!email&&!code)return;if(code.length<32||code.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Convite inicial inválido.');this.db.prepare('INSERT OR IGNORE INTO pilot_invites(hash,email,expires_at) VALUES (?,?,?)').run(digest(code),email.trim().toLowerCase(),Date.now()+86400000);}

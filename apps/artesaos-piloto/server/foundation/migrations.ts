@@ -32,7 +32,16 @@ export const migrations:Record<DatabaseScope,readonly Migration[]>={
  id INTEGER PRIMARY KEY CHECK(id=1),email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,
  revision INTEGER NOT NULL CHECK(revision>=1),updated_at TEXT NOT NULL);
  CREATE TABLE local_admin_activation(id INTEGER PRIMARY KEY CHECK(id=1),purpose TEXT NOT NULL CHECK(purpose IN ('setup','recovery')),code_hash TEXT NOT NULL,expires_at INTEGER NOT NULL);
- CREATE TABLE installation_distribution(id INTEGER PRIMARY KEY CHECK(id=1),distribution TEXT NOT NULL CHECK(distribution IN ('home-assistant','debian')));`},{version:3,name:'consolidacao-legada',sql:legacySql.control,upId:'control-legacy-v1',up:upgradeControl}],
+ CREATE TABLE installation_distribution(id INTEGER PRIMARY KEY CHECK(id=1),distribution TEXT NOT NULL CHECK(distribution IN ('home-assistant','debian')));`},{version:3,name:'consolidacao-legada',sql:legacySql.control,upId:'control-legacy-v1',up:upgradeControl},{version:4,name:'interessados-convites-rastreaveis',sql:`
+ CREATE TABLE pilot_interest_invitation_links(interest_id TEXT NOT NULL,invitation_hash TEXT NOT NULL REFERENCES pilot_invites(hash),registered_at INTEGER NOT NULL,linked_at INTEGER NOT NULL,actor TEXT NOT NULL,channel TEXT NOT NULL,PRIMARY KEY(interest_id,invitation_hash));
+ CREATE TABLE pilot_invitation_share_events(request_key TEXT PRIMARY KEY,invitation_hash TEXT NOT NULL REFERENCES pilot_invites(hash),actor TEXT NOT NULL,event TEXT NOT NULL,created_at INTEGER NOT NULL);
+ CREATE TRIGGER invitation_share_no_update BEFORE UPDATE ON pilot_invitation_share_events BEGIN SELECT RAISE(ABORT,'Compartilhamento imutável'); END;
+ CREATE TRIGGER invitation_share_no_delete BEFORE DELETE ON pilot_invitation_share_events BEGIN SELECT RAISE(ABORT,'Compartilhamento imutável'); END;
+ CREATE TABLE pilot_account_registrations(user_id TEXT PRIMARY KEY REFERENCES pilot_users(id),registered_at INTEGER NOT NULL);
+ CREATE TRIGGER interest_links_no_update BEFORE UPDATE ON pilot_interest_invitation_links BEGIN SELECT RAISE(ABORT,'Vínculo histórico imutável'); END;
+ CREATE TRIGGER interest_links_no_delete BEFORE DELETE ON pilot_interest_invitation_links BEGIN SELECT RAISE(ABORT,'Vínculo histórico imutável'); END;
+ CREATE TRIGGER account_registration_no_update BEFORE UPDATE ON pilot_account_registrations BEGIN SELECT RAISE(ABORT,'Data original imutável'); END;
+ CREATE TRIGGER account_registration_no_delete BEFORE DELETE ON pilot_account_registrations BEGIN SELECT RAISE(ABORT,'Data original imutável'); END;`}],
  interest:[{version:1,name:'fundacao-interesses',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.interest}],
  support:[{version:1,name:'fundacao-suporte',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.support}],
  legal:[{version:1,name:'fundacao-legal',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.legal},{version:3,name:'documentos-manuais-contribuicao',sql:resourceSql}]

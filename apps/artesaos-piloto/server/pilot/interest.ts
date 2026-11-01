@@ -48,6 +48,7 @@ export class InterestStore{
   const id=randomUUID(),createdAt=Date.now(),c=this.encrypt(JSON.stringify(data),id+':'+createdAt);
   this.db.prepare('INSERT OR IGNORE INTO interests VALUES (?,?,?,?,?,?,?)').run(id,createdAt,data.email?this.hash('email:'+data.email):null,data.whatsapp?this.hash('phone:'+data.whatsapp):null,c.iv,c.tag,c.payload);
  }
+ get(id:string){const row=this.db.prepare('SELECT * FROM interests WHERE id=? AND created_at>=?').get(id,Date.now()-90*86400000);return row?{id:String(row.id),createdAt:Number(row.created_at),...JSON.parse(this.decrypt(row,String(row.id)+':'+row.created_at)) as Interest}:null;}
  list(page:number){this.prune();const total=Number(this.db.prepare('SELECT COUNT(*) n FROM interests').get()!.n),pages=Math.max(1,Math.ceil(total/25)),current=Math.min(page,pages);const records=this.db.prepare('SELECT * FROM interests ORDER BY created_at DESC,id DESC LIMIT 25 OFFSET ?').all((current-1)*25).map(row=>({id:String(row.id),createdAt:Number(row.created_at),...JSON.parse(this.decrypt(row,String(row.id)+':'+row.created_at)) as Interest}));return {records,total,page:current,pages};}
  close(){this.db.close();this.key.fill(0);this.macKey.fill(0);}
 }

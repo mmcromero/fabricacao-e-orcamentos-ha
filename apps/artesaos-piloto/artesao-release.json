@@ -1,13 +1,13 @@
 {
-  "version": "0.2.0-dev.12",
-  "stage": "evolucao-suporte-documentos-sessoes",
+  "version": "0.2.0-dev.13",
+  "stage": "estabilizacao-pix-rodape-convites",
   "distributions": [
     "home-assistant",
     "debian"
   ],
   "schemaVersions": {
     "tenant": 11,
-    "control": 3,
+    "control": 4,
     "interest": 2,
     "support": 2,
     "legal": 3

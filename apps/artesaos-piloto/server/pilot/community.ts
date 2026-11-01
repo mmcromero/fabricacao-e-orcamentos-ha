@@ -1,3 +1,5 @@
+import {InterestInvitations} from './interest-invitations.js';
+import {InvitationError} from './invitations.js';
 import {registerResourceAdmin} from './resource-routes.js';
 import type {LegalStore} from './legal.js';
 import {LocalAdmin} from './local-admin.js';
@@ -62,7 +64,7 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
   if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});
   const query=req.query as Record<string,unknown>,n=query.page===undefined?1:Number(query.page);if(!Number.isSafeInteger(n)||n<1||n>100000)return reply.code(400).send({message:'Página inválida.'});
-  return interests.list(n);
+  const list=interests.list(n);return {...list,records:list.records.map(r=>({...r,invitation:interestInvitations.status(r)}))};
  });
  app.get<{Querystring:{page?:number;search?:string}}>(base+'api/users',{schema:{querystring:{type:'object',additionalProperties:false,properties:{page:{type:'integer',minimum:1,maximum:100000},search:{type:'string',maxLength:254}}}}},async(req,reply)=>{
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
@@ -82,7 +84,7 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
  });
  const adminPage=async(req:{headers:{cookie?:string}},reply:FastifyReply)=>{
   const admin=current(req);if(!admin)return reply.redirect(base+'login');
-  return reply.type('text/html').send(page('Interessados no piloto',`<main class="pilot-admin">${adminNavigation(base,'interests')}<h1>Interessados no piloto</h1><p>Lista restrita à administração. O registro de interesse não cria conta nem libera acesso.</p><p id="admin-total"></p><p id="admin-status" role="status" aria-live="polite"></p><div class="pilot-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Recebido em</th></tr></thead><tbody id="interest-rows"></tbody></table></div><nav id="admin-pagination" aria-label="Paginação de interessados" hidden><button id="admin-previous">Anterior</button><span id="admin-page"></span><button id="admin-next">Próxima</button></nav></main>`,`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script>`));
+  return reply.type('text/html').send(page('Interessados no piloto',`<main class="pilot-admin">${adminNavigation(base,'interests')}<h1>Interessados no piloto</h1><p>Lista restrita à administração. O registro de interesse não cria conta nem libera acesso.</p><p id="admin-total"></p><p id="admin-status" role="status" aria-live="polite"></p><div class="pilot-table"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Recebido em</th><th>Situação</th><th>Ações</th></tr></thead><tbody id="interest-rows"></tbody></table></div><nav id="admin-pagination" aria-label="Paginação de interessados" hidden><button id="admin-previous">Anterior</button><span id="admin-page"></span><button id="admin-next">Próxima</button></nav></main>`,`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script>`));
  };
  app.get(base,adminPage);app.get(prefix+'admin',(_req,reply)=>reply.redirect(base));
  registerSupportRoutes(app,base+'api/support',support,true,(req,reply)=>{
@@ -98,6 +100,14 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
   if(req.url.startsWith(base+'api/')&&req.headers['x-pilot-admin-context']!==admin.context){reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});return null;}
   if(write&&!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),admin.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida.'});return null;}return admin;
  },page);
+ const interestInvitations=new InterestInvitations(interests,store,invitationControl);
+ app.post<{Params:{id:string}}>(base+'api/interests/:id/invite',{bodyLimit:1024,schema:{params:{type:'object',required:['id'],properties:{id:{type:'string',pattern:'^[a-f0-9-]{36}$'}}}}},(req,reply)=>{
+  const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
+  if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou.'});
+  if(!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),admin.csrfHash))return reply.code(403).send({message:'Confirmação inválida.'});
+  if(store.limited('interest-convert:'+admin.email,100))return reply.code(429).send({message:'Aguarde antes de converter outros interessados.'});
+  try{return interestInvitations.convert(req.params.id,admin.email,config.maxUsers);}catch(error){return reply.code(error instanceof InvitationError?error.status:503).send({message:error instanceof InvitationError?error.message:'Não foi possível gerar o convite. Tente novamente.'});}
+ });
  if(legal)registerResourceAdmin(app,base,legal,(req,reply,write)=>{
   const a=current(req);if(!a){reply.code(401).send({message:'Acesso administrativo necessário.'});return null;}
   if(req.url.startsWith(base+'api/')&&req.headers['x-pilot-admin-context']!==a.context){reply.code(409).send({message:'A conta desta aba mudou.'});return null;}

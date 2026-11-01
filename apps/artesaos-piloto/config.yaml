@@ -1,5 +1,5 @@
 name: "Artesão Digital — Testes"
-version: "0.2.0-dev.12"
+version: "0.2.0-dev.13"
 slug: artesaos_piloto
 description: "Teste separado de login Google, convites e contas isoladas. Somente dados fictícios."
 arch:

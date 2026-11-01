@@ -1,3 +1,9 @@
+> Versão corrente: **0.2.0-dev.13**. Ver [estabilização e convites](ESTABILIZACAO-CONVITES.md).
+> Pix aceita telefone BR com DDD; confirmação/erro aparece junto ao formulário.
+> Migração incremental control4; demais schemas preservados. Manuais/evidências
+> de versões anteriores abaixo são históricos. Não atualizar instalações reais
+> sem autorização específica e backup consistente.
+
 > Versão corrente: **0.2.0-dev.12**. Ver [administração dinâmica](ADMINISTRACAO-DINAMICA.md).
 > Migrações tenant 11/legal 3, demais schemas preservados. Backup integral inclui
 > documentos, aceites e PDFs em pilot-legal.sqlite. Não fazer downgrade sobre banco

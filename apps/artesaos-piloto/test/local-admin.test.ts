@@ -159,11 +159,11 @@ test('migração B1 para B2 preserva sessão Google administrativa e não cria a
   const identity={issuer:'https://accounts.google.com',subject:'admin-google',email,verified:true};
   const session=store.adminSession(identity),context=store.getAdmin(session.value,[email])!.context;
   // Fixture sintética do schema B1: somente estruturas da nova migração são retiradas.
-  store.db.exec('DROP TABLE local_admin; DROP TABLE local_admin_activation; DROP TABLE installation_distribution; DELETE FROM schema_migrations WHERE version>=2;');
+  store.db.exec('DROP TABLE pilot_interest_invitation_links; DROP TABLE pilot_invitation_share_events; DROP TABLE pilot_account_registrations; DROP TABLE local_admin; DROP TABLE local_admin_activation; DROP TABLE installation_distribution; DELETE FROM schema_migrations WHERE version>=2;');
   store.close();store=new PilotStore(dir);bindDistribution(store,'home-assistant');
   assert.equal(store.getAdmin(session.value,[email])!.context,context);
   assert.equal(store.db.prepare('SELECT COUNT(*) n FROM local_admin').get()!.n,0);
-  assert.equal(store.db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,3);
+  assert.equal(store.db.prepare('SELECT MAX(version) n FROM schema_migrations').get()!.n,4);
  }finally{store.close();rmSync(dir,{recursive:true,force:true});}
 });
 

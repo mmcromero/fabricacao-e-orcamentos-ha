@@ -92,7 +92,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   assert.equal((await request('api/clients',a)).json()[0].name,'Cliente A');assert.equal((await request('api/clients',b)).json().length,0);
   assert.deepEqual((await request('api/company',a)).json().data,company);
   assert.equal((await request('api/company',b)).json().data.name,'Ateliê B');
-  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.match(html.body,/data-pilot-module/);assert.ok(!html.body.includes('<script type="module"'),'Interface deve esperar o isolamento de cache antes de carregar JavaScript');assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(html.body.includes('Fabricação e Orçamentos v'+buildInfo.coreVersion));
+  const html=await request('',a);assert.equal(html.statusCode,200);assert.match(html.body,/pilot-context/);assert.match(html.body,/pilot-session.js/);assert.match(html.body,/data-pilot-module/);assert.ok(!html.body.includes('<script type="module"'),'Interface deve esperar o isolamento de cache antes de carregar JavaScript');assert.ok(html.body.includes('Artesão Digital v'+buildInfo.pilotVersion));assert.ok(!html.body.includes('Base: Fabricação e Orçamentos'));
   // A stale tab must not revoke a valid session without CSRF/context proof.
   const refused=await request('auth/logout',{...b,'x-pilot-csrf':'wrong'},'POST');assert.equal(refused.statusCode,403);assert.equal(refused.headers['set-cookie'],undefined);
   assert.equal((await request('api/products',b)).statusCode,200);
