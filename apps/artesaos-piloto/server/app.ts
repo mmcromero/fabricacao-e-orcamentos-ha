@@ -1,3 +1,13 @@
+import {registerShipping} from './shipping.js';
+import {registerAttentionCenter} from './attention-center.js';
+import {registerDistribution} from './distribution.js';
+import {registerSales} from './sales.js';
+import {registerFinance} from './finance.js';
+import {registerOrders} from './orders.js';
+import {registerProductStock} from './product-stock.js';
+import {registerMaterialLedger} from './material-ledger.js';
+import {initializeLegacyBase} from './foundation/legacy-schema.js';
+import {initializeDatabase} from './foundation/migrations.js';
 import {registerCompanyLogo} from './pilot/company-logo.js';
 import {registerQuoteDocuments} from './pilot/quote-document.js';
 import {registerOnboarding} from './pilot/onboarding.js';
@@ -21,11 +31,12 @@ import { resolve } from 'node:path';
 import { registerHomeAssistantAccess } from './adapters/home-assistant.js';
 import type { AppMode } from './config.js';
 
-export async function createApp(options: { dataDir: string; staticDir: string; mode: AppMode; logRequests?:boolean;pilotFeatures?:boolean }) {
+export async function createApp(options: { dataDir: string; staticDir: string; mode: AppMode; logRequests?:boolean;pilotFeatures?:boolean;actorId?:string }) {
   const { dataDir, staticDir, mode } = options;
   mkdirSync(dataDir, { recursive: true });
   const db = new DatabaseSync(resolve(dataDir, 'validation.sqlite'));
-  db.exec('CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, text TEXT NOT NULL, updated_at TEXT NOT NULL)');
+  if(options.pilotFeatures)initializeDatabase(db,'tenant');else initializeLegacyBase(db);
+
   const app = Fastify({ logger: options.logRequests??true, bodyLimit: 4096, trustProxy: false });
   if (mode === 'home-assistant') registerHomeAssistantAccess(app);
   app.addHook('onSend', async (_request, reply, payload) => {
@@ -46,7 +57,8 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
     return { text: request.body.text, updated_at: updatedAt };
   });
   if(options.pilotFeatures)registerCompany(app,db);
-  registerMaterials(app, db);
+  registerMaterials(app, db,options.pilotFeatures??false);
+  if(options.pilotFeatures){registerShipping(app,db,options.actorId??'local-development');registerMaterialLedger(app,db,options.actorId??'local-development');registerProductStock(app,db,options.actorId??'local-development');registerOrders(app,db,options.actorId??'local-development');registerFinance(app,db,options.actorId??'local-development');registerSales(app,db,options.actorId??'local-development');registerDistribution(app,db,options.actorId??'local-development');registerAttentionCenter(app,db,options.actorId??'local-development');}
   registerProducts(app, db,options.pilotFeatures??false);
   registerCategories(app, db);
   registerClients(app, db);
@@ -55,7 +67,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   registerQuotes(app, db,options.pilotFeatures??false);
   if(options.pilotFeatures){registerCompanyLogo(app,db);registerQuoteDocuments(app,db);}
   registerReconciliation(app, db,options.pilotFeatures??false);
-  registerProductEditor(app, db,options.pilotFeatures??false);
+  registerProductEditor(app, db,options.pilotFeatures??false,options.actorId??'local-development');
   registerRecordActions(app, db,options.pilotFeatures??false);
   registerLegacyMaterialUpgrade(app, db);
   if(options.pilotFeatures)registerOnboarding(app,db);

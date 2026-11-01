@@ -2,7 +2,8 @@ import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
 import {PNG} from 'pngjs';
 export function registerCompanyLogo(app:FastifyInstance,db:DatabaseSync){
- db.exec('PRAGMA secure_delete=ON; CREATE TABLE IF NOT EXISTS company_logo(id INTEGER PRIMARY KEY CHECK(id=1), image BLOB, revision INTEGER NOT NULL)');
+ db.exec('PRAGMA secure_delete=ON;');
+
  const current=()=>db.prepare('SELECT image,revision FROM company_logo WHERE id=1').get();
  app.get('/api/company/logo/meta',()=>{const row=current();return {present:!!row?.image,revision:Number(row?.revision??0)};});
  app.get('/api/company/logo',(_req,reply)=>{const row=current();return row?.image?reply.type('image/png').send(Buffer.from(row.image as Uint8Array)):reply.code(404).send({message:'Sem logo.'});});

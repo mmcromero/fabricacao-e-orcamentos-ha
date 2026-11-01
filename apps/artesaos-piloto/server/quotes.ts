@@ -1,6 +1,6 @@
-import {ensureDocuments,captureDocument} from './pilot/quote-document.js';
+import {captureDocument} from './pilot/quote-document.js';
 import {CLIENT_CATEGORY} from './product-category.js';
-import {ensureQuoteSearch,quoteSearchText,quoteListQuerySchema,pagedQuotes,type QuoteListQuery} from './quote-pagination.js';
+import {quoteSearchText,quoteListQuerySchema,pagedQuotes,type QuoteListQuery} from './quote-pagination.js';
 import {isDeepStrictEqual} from 'node:util';
 import {clientSchema} from './client-data.js';
 import type {FastifyInstance} from 'fastify';
@@ -51,13 +51,13 @@ function completionIssues(data:QuoteData){
 }
 const content=(data:QuoteData)=>{const {status,...rest}=normalized(data);return rest;};
 export function registerQuotes(app:FastifyInstance,db:DatabaseSync,pilot=false){
- if(pilot)ensureDocuments(db);
- db.exec(`CREATE TABLE IF NOT EXISTS quotes (id INTEGER PRIMARY KEY, data TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0);
- CREATE TABLE IF NOT EXISTS quote_versions (quote_id INTEGER NOT NULL, revision INTEGER NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(quote_id,revision));`);
- ensureQuoteSearch(db);
+
+
+
  const body={type:'object',additionalProperties:false,required:['data','expectedRevision'],properties:{data:dataSchema,expectedRevision:{type:'integer',minimum:0}}};
- const decode=(row:Record<string,unknown>)=>{const data=normalized(JSON.parse(row.data as string));return {id:row.id,data,revision:row.revision,updatedAt:row.updated_at,totals:quoteTotals(data.items,data.delivery)};};
- app.get<{Querystring:QuoteListQuery}>('/api/quotes',{schema:{querystring:quoteListQuerySchema}},req=>req.query.pageSize?pagedQuotes(db,req.query):db.prepare('SELECT * FROM quotes WHERE archived=0 ORDER BY id DESC').all().map(decode));
+ const link=(quoteId:unknown)=>pilot?db.prepare('SELECT id,status FROM orders WHERE quote_id=?').get(Number(quoteId)):undefined;
+ const decode=(row:Record<string,unknown>)=>{const order=link(row.id);const data=normalized(JSON.parse(row.data as string));return {id:row.id,data,orderId:order?.id??null,orderStatus:order?.status??null,revision:row.revision,updatedAt:row.updated_at,totals:quoteTotals(data.items,data.delivery)};};
+ app.get<{Querystring:QuoteListQuery}>('/api/quotes',{schema:{querystring:quoteListQuerySchema}},req=>req.query.pageSize?pagedQuotes(db,req.query,pilot):db.prepare('SELECT * FROM quotes WHERE archived=0 ORDER BY id DESC').all().map(decode));
  app.get<{Params:{id:string}}>('/api/quotes/:id',(req,reply)=>{const row=db.prepare('SELECT * FROM quotes WHERE id=? AND archived=0').get(req.params.id);return row?decode(row):reply.code(404).send({message:'Orçamento não encontrado.'});});
  function archivedReference(data:QuoteData,old?:QuoteData){
   if(data.client?.id!==old?.client?.id&&data.client?.id&&db.prepare('SELECT archived FROM clients WHERE id=?').get(Number(data.client.id))?.archived===1)return true;
@@ -85,6 +85,7 @@ export function registerQuotes(app:FastifyInstance,db:DatabaseSync,pilot=false){
   if(!unique(data.items))return reply.code(400).send({message:'Identificador de item repetido.'});
   const row=db.prepare('SELECT * FROM quotes WHERE id=? AND archived=0').get(req.params.id);
   if(!row||Number(row.revision)!==req.body.expectedRevision)return reply.code(409).send({message:'Este orçamento foi alterado em outra janela. Preserve suas alterações e reabra a versão salva antes de continuar.'});
+  if(link(row.id))return reply.code(409).send({message:'Orçamento aprovado preservado como histórico. Edite o pedido vinculado.'});
   const old=normalized(JSON.parse(row.data as string));
   if(archivedReference(data,old))return reply.code(400).send({message:'Produto ou cliente arquivado não pode ser incluído no orçamento. Atualize a seleção.'});
   if(data.status==='sent'&&old.status!=='finalized'&&old.status!=='sent')return reply.code(400).send({message:'Finalize o orçamento antes de marcar como enviado ao cliente.'});

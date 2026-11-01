@@ -2,7 +2,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {FastifyInstance} from 'fastify';
 import {renderQuotePdf} from './quote-pdf.js';
 export type DocumentData={company:Record<string,string>;quote:{client:Record<string,unknown>;items:{name:string;quantity:string;priceKey:string;prices:Record<string,number>;packaging:string;packagingIncluded:boolean;packagingAmount:string;packagingType?:string}[];notes:string;delivery:{mode:string;carrier:string;notes:string}};totals:{productCents:number;packagingCents:number;deliveryCents:number;totalCents:number}};
-export function ensureDocuments(db:DatabaseSync){db.exec('CREATE TABLE IF NOT EXISTS quote_documents(quote_id INTEGER NOT NULL, edition INTEGER NOT NULL, source_revision INTEGER NOT NULL, finalized_at TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(quote_id,edition))');}
+
 export function captureDocument(db:DatabaseSync,id:number,revision:number,quote:unknown,totals:unknown){
  const company=db.prepare('SELECT data FROM company_profile WHERE id=1').get();
  if(!company)throw Error('Salve os dados da empresa antes de finalizar.');
@@ -11,7 +11,7 @@ export function captureDocument(db:DatabaseSync,id:number,revision:number,quote:
 }
 let generating=0;
 export function registerQuoteDocuments(app:FastifyInstance,db:DatabaseSync){
- ensureDocuments(db);
+
  app.get<{Params:{id:string}}>('/api/quotes/:id/documents',(req,reply)=>{
   if(!db.prepare('SELECT 1 FROM quotes WHERE id=? AND archived=0').get(req.params.id))return reply.code(404).send({message:'Orçamento não encontrado.'});
   return db.prepare('SELECT edition,source_revision AS sourceRevision,finalized_at AS finalizedAt FROM quote_documents WHERE quote_id=? ORDER BY edition DESC').all(req.params.id);

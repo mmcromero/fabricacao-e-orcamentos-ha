@@ -1,3 +1,4 @@
+import {currentProduction} from './material-current-cost.js';
 import {rememberMaterialUses} from './materials.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
@@ -10,7 +11,7 @@ export function registerManufacturing(app:FastifyInstance,db:DatabaseSync,pilotF
   const config=db.prepare("SELECT data,revision FROM area_settings WHERE area='fabricacao'").get();
   if(Number(config?.revision??0)!==req.body.expectedSettingsRevision)return reply.code(409).send({message:'As configurações mudaram. Recarregue e revise os preços antes de criar o produto.'});
   if(!categoryAllowed(req.body.origin,req.body.category))return reply.code(400).send({message:'Produtos de cliente é reservada à origem de cliente. Escolha outra categoria ou deixe em branco.'});
-  const result=calculateManufacturing(req.body.manufacturing,config?JSON.parse(config.data as string):{},pilotFeatures);
+  const result=calculateManufacturing(pilotFeatures?currentProduction(db,req.body.manufacturing):req.body.manufacturing,config?JSON.parse(config.data as string):{},pilotFeatures);
   if(!result.prices)return reply.code(400).send({message:'Complete os dados e configurações para criar um produto com preços calculados.'});
   const data=normalizedProduct({name:req.body.name.trim(),sku:req.body.sku.trim(),category:req.body.category,origin:req.body.origin,manufacturing:req.body.manufacturing,publicAllowed:false,prices:result.prices,weightGrams:null,lengthCm:null,widthCm:null,heightCm:null,colors:[],sourceKeys:[],family:'',description:''});
   db.exec('BEGIN IMMEDIATE');try{
@@ -27,7 +28,7 @@ export function registerManufacturing(app:FastifyInstance,db:DatabaseSync,pilotF
   const config=db.prepare("SELECT data,revision FROM area_settings WHERE area='fabricacao'").get();
   if(Number(config?.revision??0)!==req.body.expectedSettingsRevision)return reply.code(409).send({message:'As configurações de fabricação mudaram. Recarregue e revise o resultado.'});
   if(!categoryAllowed(JSON.parse(String(row.data)).origin,req.body.category))return reply.code(400).send({message:'Produtos de cliente é reservada à origem de cliente. Escolha outra categoria ou deixe em branco.'});
-  const result=calculateManufacturing(req.body.manufacturing,config?JSON.parse(config.data as string):{},pilotFeatures);
+  const result=calculateManufacturing(pilotFeatures?currentProduction(db,req.body.manufacturing):req.body.manufacturing,config?JSON.parse(config.data as string):{},pilotFeatures);
   if(req.body.applyPrices&&!result.prices)return reply.code(400).send({message:'Complete os dados e configurações antes de aplicar preços.'});
   const data=normalizedProduct({...JSON.parse(row.data as string),name:req.body.name.trim(),sku:req.body.sku.trim(),category:req.body.category,manufacturing:req.body.manufacturing});
   if(req.body.applyPrices)data.prices=result.prices;

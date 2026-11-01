@@ -1,3 +1,5 @@
+import {removePostLegacyFixtureTables} from './synthetic-legacy.js';
+import {materialLedgerSql} from '../server/material-ledger-schema.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync} from 'node:fs';
@@ -41,6 +43,8 @@ test('boas-vindas bloqueia atalhos, valida mínimos, persiste conclusão e corri
   const created=await app.inject({method:'POST',url:'/api/products/editor',payload:{product:base,applyPrices:false}});assert.equal(created.statusCode,200,created.body);assert.equal(created.json().catalogVisible,false);
   const row=created.json();const batch=await app.inject({method:'POST',url:'/api/records/products/actions',payload:{action:'catalog_include',records:[{id:row.id,updatedAt:row.updatedAt}],confirm:true}});assert.equal(batch.json().skipped,1);assert.equal(batch.json().affected,0);
   await app.close();const db=new DatabaseSync(join(dir,'validation.sqlite'));
+  removePostLegacyFixtureTables(db);
+  db.exec('DELETE FROM schema_migrations WHERE version>=2'); // fixture de versão anterior, antes da migração consolidada
   db.prepare("UPDATE area_settings SET data=json_set(json_remove(data,'$.retailMarkup'),'$.wholesaleMarkup','0','$.factoryMarkup','-1') WHERE area='fabricacao'").run();
   db.prepare("UPDATE products SET data=json_set(data,'$.catalogVisible',json('true'))").run();db.close();
   app=await createApp(options);assert.equal((await app.inject('/api/onboarding')).json().complete,true);

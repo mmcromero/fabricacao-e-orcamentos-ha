@@ -104,7 +104,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
     expect(menu).to_be_hidden();expect(toggle).to_have_attribute('aria-expanded','false');toggle.click()
     expect(menu).to_be_visible();expect(shell.get_by_role('button',name='Fechar menu',exact=True)).to_have_attribute('aria-expanded','true')
    else:expect(toggle).to_be_hidden()
-   links=menu.get_by_role('link');assert links.all_text_contents()==['Produtos','Clientes','Orçamentos','Configurações']
+   links=menu.get_by_role('link');assert links.all_text_contents()==['Produtos','Clientes','Orçamentos','Pedidos','Estoque','Vendas','Financeiro','Configurações']
    assert menu.get_by_role('link',name='Fabricação',exact=True).count()==0
    assert menu.bounding_box()['y']>=bb['height']-1
    if page.viewport_size['width']>700:
@@ -165,7 +165,7 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
 
   pa.get_by_role('link',name='Suporte técnico',exact=True).click();form=pa.get_by_role('dialog',name='Abrir chamado de suporte',exact=True);form.get_by_label(re.compile('^Motivo do contato')).select_option('bug');form.get_by_label(re.compile('^Assunto')).fill('Erro de teste no cadastro');form.get_by_label(re.compile('^Descrição da dúvida ou erro')).fill('Descrição literal <img src=x onerror=alert(1)>\nPassos para reproduzir.');form.get_by_role('button',name='Enviar chamado',exact=True).click();expect(form).to_have_count(0);expect(pa.locator('.support-conversation')).to_contain_text('Erro de teste no cadastro');assert pa.locator('.support-conversation img').count()==0
   support_id=pa.evaluate("async()=>(await (await fetch(new URL('api/support',document.baseURI))).json()).items.find(item=>item.subject==='Erro de teste no cadastro').id")
-  pb.goto(origin+prefix+'?view=configuracoes&area=suporte');panel=pb.get_by_role('tabpanel',name='Meus chamados',exact=True);expect(panel).to_be_visible();expect(panel).to_contain_text('Nenhum chamado encontrado.');assert pb.evaluate("async id=>(await fetch(new URL('api/support/'+id,document.baseURI))).status",support_id)==404
+  pb.goto(origin+prefix+'?view=configuracoes&area=suporte');panel=pb.locator('#config-support');expect(panel).to_be_visible();expect(panel).to_contain_text('Nenhum chamado encontrado.');assert pb.evaluate("async id=>(await fetch(new URL('api/support/'+id,document.baseURI))).status",support_id)==404
   for page,account in [(pa,'a'),(pb,'b')]:
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
@@ -178,21 +178,21 @@ self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(even
    page.get_by_role('button',name='Sair',exact=True).click();expect(page.get_by_role('button',name='Entrar com Google',exact=True)).to_be_visible()
   def enter_settings(page):
    page.goto(origin+prefix+'?view=configuracoes');expect(page.get_by_role('heading',name='Configurações',exact=True)).to_be_visible()
-  # General data stays in the existing fabrication namespace; tabs keep drafts mounted.
+  # Five groups reuse existing namespaces; collapsing details preserves drafts.
   # A has logged out at this point: authenticate again without repeating an invitation.
   pa.get_by_role('button',name='Entrar com Google',exact=True).click();expect(pa).to_have_url(origin+prefix+'?view=produtos')
   enter_settings(pa);company=pa.get_by_role('region',name='Dados da empresa',exact=True)
   company.get_by_label(re.compile(r'^Nome\ da\ empresa(?:\s|$)')).fill('Ateliê de teste A');company.get_by_label(re.compile(r'^Nome\ da\ pessoa\ responsável(?:\s|$)')).fill('Responsável A');company.get_by_label(re.compile(r'^Telefone\ para\ contato(?:\s|$)')).fill('(11) 99999-0000');company.get_by_label(re.compile(r'^E\-mail\ para\ contato(?:\s|$)')).fill('atelie-a@example.test');company.get_by_role('button',name='Salvar dados da empresa',exact=True).click();expect(company.get_by_role('status')).to_contain_text('Dados da empresa salvos')
-  general=pa.locator('.pilot-general');expect(general.get_by_label('Valor da hora humana (R$)',exact=True)).to_be_visible()
-  general.get_by_label('Valor da hora humana (R$)',exact=True).fill('23.50');general.get_by_role('button',name='Salvar configurações gerais',exact=True).click();expect(general.locator('.settings-content > p[role=status]')).to_contain_text('Configurações salvas')
-  pa.get_by_role('tab',name='Clientes',exact=True).click();panel=pa.get_by_role('tabpanel',name='Clientes',exact=True);panel.get_by_label('Registros por página',exact=True).select_option('30')
-  pa.get_by_role('tab',name='Produtos',exact=True).click();pa.get_by_role('tab',name='Clientes',exact=True).click();expect(panel.get_by_label('Registros por página',exact=True)).to_have_value('30')
+  general=pa.locator('#config-custos');expect(general.get_by_label('Valor da hora humana (R$)',exact=True)).to_be_visible()
+  general.get_by_label('Valor da hora humana (R$)',exact=True).fill('23.50');general.get_by_role('button',name='Salvar custos e precificação',exact=True).click();expect(general.locator('.settings-content > p[role=status]')).to_contain_text('Configurações salvas')
+  pa.locator('#config-clients > summary').click();panel=pa.locator('#config-clients');panel.get_by_label('Registros por página',exact=True).select_option('30')
+  pa.locator('#config-clients > summary').click();pa.locator('#config-clients > summary').click();expect(panel.get_by_label('Registros por página',exact=True)).to_have_value('30')
   panel.get_by_role('button',name='Salvar configurações de clientes',exact=True).click();expect(panel.get_by_role('status')).to_contain_text('Configurações salvas')
   pa.reload();expect(pa.get_by_label(re.compile(r'^Nome\ da\ empresa(?:\s|$)'))).to_have_value('Ateliê de teste A');expect(pa.get_by_label('Valor da hora humana (R$)',exact=True)).to_have_value('23.50')
-  pa.get_by_role('tab',name='Produtos',exact=True).focus();pa.get_by_role('tab',name='Produtos',exact=True).press('ArrowRight');expect(pa.get_by_role('tab',name='Clientes',exact=True)).to_have_attribute('aria-selected','true');expect(pa.get_by_role('tabpanel',name='Clientes',exact=True).get_by_label('Registros por página',exact=True)).to_have_value('30')
-  pa.get_by_role('tab',name='Produtos',exact=True).click();pa.evaluate('scrollTo(0,0)');pa.screenshot(path='/tmp/artesao-configuracoes.png')
+  pa.locator('#config-clients > summary').focus();pa.locator('#config-clients > summary').press('Enter');expect(pa.locator('#config-clients').get_by_label('Registros por página',exact=True)).to_have_value('30')
+  pa.evaluate('scrollTo(0,0)');pa.screenshot(path='/tmp/artesao-configuracoes.png')
   # B's values are unchanged by A's settings.
-  pb.get_by_role('button',name='Entrar com Google',exact=True).click();expect(pb).to_have_url(origin+prefix+'?view=produtos');enter_settings(pb);expect(pb.get_by_label(re.compile(r'^Nome\ da\ empresa(?:\s|$)'))).to_have_value('Ateliê inicial B');pb.get_by_role('tab',name='Clientes',exact=True).click();expect(pb.get_by_role('tabpanel',name='Clientes',exact=True).get_by_label('Registros por página',exact=True)).to_have_value('10')
+  pb.get_by_role('button',name='Entrar com Google',exact=True).click();expect(pb).to_have_url(origin+prefix+'?view=produtos');enter_settings(pb);expect(pb.get_by_label(re.compile(r'^Nome\ da\ empresa(?:\s|$)'))).to_have_value('Ateliê inicial B');pb.locator('#config-clients > summary').click();expect(pb.locator('#config-clients').get_by_label('Registros por página',exact=True)).to_have_value('10')
   expect(pb.get_by_label('Valor da hora humana (R$)',exact=True)).not_to_have_value('23.50')
   pb.evaluate('scrollTo(0,0)');pb.screenshot(path='/tmp/artesao-configuracoes-mobile.png')
   pa.get_by_role('button',name='Sair',exact=True).click();pb.get_by_role('button',name='Sair',exact=True).click()

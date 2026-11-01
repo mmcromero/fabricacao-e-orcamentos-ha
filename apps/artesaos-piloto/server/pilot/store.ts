@@ -1,3 +1,4 @@
+import {initializeDatabase} from '../foundation/migrations.js';
 import {DatabaseSync} from 'node:sqlite';
 import {randomBytes,randomUUID,createHash,timingSafeEqual} from 'node:crypto';
 import {mkdirSync} from 'node:fs';
@@ -9,20 +10,7 @@ export type Identity={issuer:string;subject:string;email:string;verified:boolean
 export type Session={userId:string;tenantId:string;email:string;csrfHash:string};
 export class PilotStore{
  readonly db:DatabaseSync;
- constructor(dir:string){mkdirSync(dir,{recursive:true,mode:0o700});this.db=new DatabaseSync(join(dir,'pilot-control.sqlite'));this.db.exec(`PRAGMA foreign_keys=ON;
- CREATE TABLE IF NOT EXISTS pilot_users(id TEXT PRIMARY KEY,issuer TEXT NOT NULL,subject TEXT NOT NULL,email TEXT NOT NULL,tenant_id TEXT UNIQUE NOT NULL,disabled INTEGER NOT NULL DEFAULT 0,UNIQUE(issuer,subject));
- CREATE TABLE IF NOT EXISTS pilot_invites(hash TEXT PRIMARY KEY,email TEXT NOT NULL,expires_at INTEGER NOT NULL,used_at INTEGER,revoked INTEGER NOT NULL DEFAULT 0);
- CREATE TABLE IF NOT EXISTS pilot_flows(hash TEXT PRIMARY KEY,browser_hash TEXT NOT NULL,verifier TEXT NOT NULL,nonce TEXT NOT NULL,invite_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,purpose TEXT NOT NULL DEFAULT 'user');
- CREATE TABLE IF NOT EXISTS pilot_sessions(hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES pilot_users(id),csrf_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,last_seen INTEGER NOT NULL);
- CREATE TABLE IF NOT EXISTS pilot_admin_sessions(hash TEXT PRIMARY KEY,email TEXT NOT NULL,subject TEXT NOT NULL,csrf_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,last_seen INTEGER NOT NULL);
- CREATE TABLE IF NOT EXISTS pilot_limits(key TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL);`);if(!this.db.prepare('PRAGMA table_info(pilot_flows)').all().some(r=>r.name==='purpose'))this.db.exec("ALTER TABLE pilot_flows ADD COLUMN purpose TEXT NOT NULL DEFAULT 'user'");
- const inviteColumns=this.db.prepare('PRAGMA table_info(pilot_invites)').all();
- if(!inviteColumns.some(r=>r.name==='binding_mode'))this.db.exec("ALTER TABLE pilot_invites ADD COLUMN binding_mode TEXT NOT NULL DEFAULT 'email'");
- if(!inviteColumns.some(r=>r.name==='accepted_user_id'))this.db.exec('ALTER TABLE pilot_invites ADD COLUMN accepted_user_id TEXT');
- if(!inviteColumns.some(r=>r.name==='no_expiry')){
-  this.db.exec('BEGIN IMMEDIATE');try{this.db.exec('ALTER TABLE pilot_invites ADD COLUMN no_expiry INTEGER NOT NULL DEFAULT 0');this.db.prepare('UPDATE pilot_invites SET no_expiry=1 WHERE used_at IS NULL AND revoked=0 AND expires_at>?').run(Date.now());this.db.exec('COMMIT');}catch(e){this.db.exec('ROLLBACK');throw e;}
- }
- this.db.exec('CREATE INDEX IF NOT EXISTS pilot_users_email_idx ON pilot_users(email,id); CREATE INDEX IF NOT EXISTS pilot_invites_contact_idx ON pilot_invites(email,used_at,revoked);');
+ constructor(dir:string){mkdirSync(dir,{recursive:true,mode:0o700});this.db=new DatabaseSync(join(dir,'pilot-control.sqlite'));initializeDatabase(this.db,'control');
  }
  listUsers(page=1,search=''){
   const pattern='%'+search.trim().toLowerCase().replace(/[!%_]/g,'!$&')+'%',total=Number(this.db.prepare("SELECT COUNT(*) n FROM pilot_users WHERE email LIKE ? ESCAPE '!'").get(pattern)!.n),pages=Math.max(1,Math.ceil(total/25)),current=Math.min(page,pages);

@@ -3,7 +3,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import {configFields,operationFields,markupRanges,validMarkup} from '../manufacturing-model.js';
 import {materialDefinitionIssue,type MaterialDefinition} from '../material-model.js';
 export function registerOnboarding(app:FastifyInstance,db:DatabaseSync){
- db.exec('CREATE TABLE IF NOT EXISTS pilot_onboarding(id INTEGER PRIMARY KEY CHECK(id=1), completed_at TEXT NOT NULL)');
+
  const status=()=>{
   const completed=Boolean(db.prepare('SELECT 1 FROM pilot_onboarding WHERE id=1').get());
   const companyRow=db.prepare('SELECT data FROM company_profile WHERE id=1').get();const company=companyRow?JSON.parse(String(companyRow.data)):{};

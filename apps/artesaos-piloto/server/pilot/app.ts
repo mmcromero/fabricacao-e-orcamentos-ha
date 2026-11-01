@@ -1,3 +1,4 @@
+import {bindDistribution} from './local-admin.js';
 import {TenantCache,TenantCapacityError} from './tenant-cache.js';
 import {smtpInvitationMailer,type InvitationMailer} from './invitation-mail.js';
 import {LegalStore} from './legal.js';
@@ -20,7 +21,7 @@ const SESSION='__Secure-artesaos_session',CSRF='__Secure-artesaos_csrf',FLOW='__
 function cookie(header:string|undefined,name:string){try{const entries=(header??'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(name+'='));return entries.length===1?decodeURIComponent(entries[0].slice(name.length+1)):'';}catch{return '';}}
 export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config),mailer:InvitationMailer|null=smtpInvitationMailer(config)){
  const app=Fastify({logger:{redact:['req.headers.cookie','req.headers.authorization','res.headers.set-cookie']},disableRequestLogging:true,bodyLimit:2*1024*1024,trustProxy:false});
- const store=new PilotStore(config.dataDir);const tenants=new TenantCache(id=>createApp({dataDir:join(config.dataDir,'tenants',id),staticDir:config.staticDir,mode:'local',logRequests:false,pilotFeatures:true}));const prefix=config.prefix;
+ const store=new PilotStore(config.dataDir);try{bindDistribution(store,config.distribution??'home-assistant');}catch(error){store.close();throw error;}const tenants=new TenantCache(id=>createApp({dataDir:join(config.dataDir,'tenants',id),staticDir:config.staticDir,mode:'local',logRequests:false,pilotFeatures:true,actorId:'tenant:'+id}));const prefix=config.prefix;
  let support:SupportStore;try{support=new SupportStore(config.dataDir);}catch(error){store.close();throw error;}
  const legal=new LegalStore(config.dataDir);
  const destination=prefix+'?view=produtos';

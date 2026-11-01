@@ -1,3 +1,4 @@
+import {transaction} from './foundation/transaction.js';
 import type {DatabaseSync} from 'node:sqlite';
 import type {FastifyInstance} from 'fastify';
 import type {Production,ProductionStep} from './manufacturing-model.js';
@@ -22,20 +23,18 @@ export function applyLegacyMaterialUpgrade(db:DatabaseSync){
   if(step.extras!==0)materials.push({name:'Materiais extras (cadastro anterior)',mode:'direct',purchaseQuantity:null,purchasePrice:null,purchaseUnit:'un',customUnit:'',quantity:step.extras,unit:'un'});
   return {...step,materialGrams:0,extras:0,materials};
  };
- db.exec('BEGIN IMMEDIATE');try{
+ transaction(db,()=>{
   for(const row of rows){const data=JSON.parse(String(row.data));const production=data.manufacturing as Production;
    db.prepare('INSERT OR IGNORE INTO manufacturing_material_backup(product_id,data,updated_at) VALUES (?,?,?)').run(row.id,String(row.data),String(row.updated_at));
    data.manufacturing={...convert(production),...(production.base?{base:convert(production.base)}:{})};
    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(data),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),row.id);
   }
-  state.complete=true;state.changed+=rows.length;state.reason='';state.reference={id:Number(first.id),name:reference.name};save(db,state);db.exec('COMMIT');
- }catch(error){db.exec('ROLLBACK');throw error;}
+  state.complete=true;state.changed+=rows.length;state.reason='';state.reference={id:Number(first.id),name:reference.name};save(db,state);
+ });
  return state;
 }
 export function registerLegacyMaterialUpgrade(app:FastifyInstance,db:DatabaseSync){
- db.exec('CREATE TABLE IF NOT EXISTS manufacturing_material_upgrade(id INTEGER PRIMARY KEY CHECK(id=1),data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS manufacturing_material_backup(product_id INTEGER PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL)');
- if(!db.prepare('SELECT id FROM manufacturing_material_upgrade WHERE id=1').get())db.prepare('INSERT INTO manufacturing_material_upgrade VALUES (1,?)').run(JSON.stringify({cutoff:Number(db.prepare('SELECT COALESCE(MAX(id),0) AS cutoff FROM products').get()!.cutoff),complete:false,changed:0,reason:''}));
- applyLegacyMaterialUpgrade(db);
+
  app.get('/api/manufacturing/material-upgrade',()=>read(db));
  app.post('/api/manufacturing/material-upgrade',()=>applyLegacyMaterialUpgrade(db));
  app.addHook('onResponse',async(req,reply)=>{if(req.method!=='GET'&&reply.statusCode<400&&!read(db).complete){try{applyLegacyMaterialUpgrade(db);}catch(error){app.log.error(error,'Não foi possível concluir a atualização dos materiais antigos.');}}});

@@ -1,21 +1,7 @@
-# syntax=docker/dockerfile:1
-FROM node:24.19.0-bookworm-slim AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN --mount=type=secret,id=proxy_ca \
-    if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
-    npm ci --strict-ssl=true
-COPY . .
-RUN npm run build && npm prune --omit=dev
-
-FROM node:24.19.0-bookworm-slim
+FROM --platform=linux/arm64 node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
 WORKDIR /app
 ENV NODE_ENV=production DATA_DIR=/data HOST=0.0.0.0 PORT=8099 PILOT_OPTIONS_FILE=/data/options.json
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./
-COPY --from=build /app/pilot-build.json ./pilot-build.json
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/dist-server ./dist-server
-COPY --from=build /app/assets/fonts ./assets/fonts
+ADD runtime.tar.gz /app/
 EXPOSE 8099
 CMD ["node", "dist-server/pilot/index.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["node", "dist-server/pilot/healthcheck.js"]

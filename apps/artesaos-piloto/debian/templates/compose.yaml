@@ -1,0 +1,26 @@
+services:
+  artesao:
+    image: artesao-digital:__VERSION__
+    build:
+      context: ./app
+    user: "${ARTESAO_UID:-1000}:${ARTESAO_GID:-1000}"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 40s
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    environment:
+      ARTESAO_DISTRIBUTION: debian
+      DATA_DIR: /data
+      PILOT_OPTIONS_FILE: /config/options.json
+      HOST: 0.0.0.0
+      PORT: "8099"
+    ports:
+      - "127.0.0.1:${ARTESAO_PORT:-8099}:8099"
+    volumes:
+      - ./data:/data
+      - ./config:/config:ro
+      - ./private-codes:/run/private-codes

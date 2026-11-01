@@ -1,3 +1,4 @@
+import {initializeDatabase} from '../foundation/migrations.js';
 import {DatabaseSync} from 'node:sqlite';
 import {existsSync,readFileSync,chmodSync} from 'node:fs';
 import {join} from 'node:path';
@@ -9,8 +10,8 @@ export class LegalStore{
  readonly db:DatabaseSync;readonly config:LegalConfig|null;
  constructor(dir:string){
   const path=join(dir,'legal-config.json');this.config=existsSync(path)?JSON.parse(readFileSync(path,'utf8')):null;
-  this.db=new DatabaseSync(join(dir,'pilot-legal.sqlite'));chmodSync(join(dir,'pilot-legal.sqlite'),0o600);
-  this.db.exec('CREATE TABLE IF NOT EXISTS documents(kind TEXT NOT NULL,version TEXT NOT NULL,data TEXT NOT NULL,PRIMARY KEY(kind,version)); CREATE TABLE IF NOT EXISTS acceptances(account TEXT NOT NULL,version TEXT NOT NULL,accepted_at TEXT NOT NULL,PRIMARY KEY(account,version))');
+  this.db=new DatabaseSync(join(dir,'pilot-legal.sqlite'));initializeDatabase(this.db,'legal');chmodSync(join(dir,'pilot-legal.sqlite'),0o600);
+
   try{if(this.config?.enabled){
    if(this.config.reviewed!==true)throw Error('Documentos legais não revisados.');
    this.db.exec('BEGIN IMMEDIATE');

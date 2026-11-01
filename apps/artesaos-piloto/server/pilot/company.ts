@@ -4,7 +4,7 @@ type Company={name:string;responsible:string;phone:string;email:string};
 const empty:Company={name:'',responsible:'',phone:'',email:''};
 export function registerCompany(app:FastifyInstance,db:DatabaseSync){
  // Registered only by the pilot in each authenticated user's own database.
- db.exec('CREATE TABLE IF NOT EXISTS company_profile (id INTEGER PRIMARY KEY CHECK(id=1), data TEXT NOT NULL, revision INTEGER NOT NULL)');
+
  app.get('/api/company',()=>{const row=db.prepare('SELECT data,revision FROM company_profile WHERE id=1').get();return row?{data:JSON.parse(String(row.data)),revision:Number(row.revision)}:{data:empty,revision:0};});
  app.put<{Body:{data:Company;expectedRevision:number}}>('/api/company',{bodyLimit:4096,schema:{body:{type:'object',additionalProperties:false,required:['data','expectedRevision'],properties:{expectedRevision:{type:'integer',minimum:0},data:{type:'object',additionalProperties:false,required:['name','responsible','phone','email'],properties:{name:{type:'string',maxLength:200},responsible:{type:'string',maxLength:200},phone:{type:'string',maxLength:40},email:{type:'string',maxLength:254}}}}}}},(req,reply)=>{
   const data=Object.fromEntries(Object.entries(req.body.data).map(([key,value])=>[key,value.trim()])) as Company;

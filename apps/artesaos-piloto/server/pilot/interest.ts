@@ -1,3 +1,4 @@
+import {initializeDatabase} from '../foundation/migrations.js';
 import {DatabaseSync} from 'node:sqlite';
 import {randomBytes,randomUUID,createCipheriv,createDecipheriv,createHmac} from 'node:crypto';
 import {mkdirSync,existsSync,readFileSync,writeFileSync,chmodSync,lstatSync} from 'node:fs';
@@ -21,10 +22,7 @@ export class InterestStore{
  constructor(dir:string){
   mkdirSync(dir,{recursive:true,mode:0o700});
   const dbPath=join(dir,'pilot-interest.sqlite'),keyPath=join(dir,'pilot-interest.key');
-  this.db=new DatabaseSync(dbPath);this.db.exec(`PRAGMA secure_delete=ON;
-   CREATE TABLE IF NOT EXISTS interests(id TEXT PRIMARY KEY,created_at INTEGER NOT NULL,email_hash TEXT UNIQUE,phone_hash TEXT UNIQUE,iv BLOB NOT NULL,tag BLOB NOT NULL,payload BLOB NOT NULL);
-   CREATE TABLE IF NOT EXISTS metadata(id INTEGER PRIMARY KEY CHECK(id=1),iv BLOB NOT NULL,tag BLOB NOT NULL,payload BLOB NOT NULL);
-   CREATE TABLE IF NOT EXISTS form_tokens(hash TEXT PRIMARY KEY,browser_hash TEXT NOT NULL,expires_at INTEGER NOT NULL);`);
+  this.db=new DatabaseSync(dbPath);initializeDatabase(this.db,'interest');this.db.exec('PRAGMA secure_delete=ON;');
   try{
    chmodSync(dbPath,0o600);
    if(!existsSync(keyPath)){

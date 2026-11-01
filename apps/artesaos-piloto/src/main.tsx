@@ -15,6 +15,11 @@ import Clients from './Clients';
 import Products from './Products';
 import QuoteWireframe from './QuoteWireframe';
 
+const Sales=React.lazy(()=>import('./Sales'));
+const Finance=React.lazy(()=>import('./Finance'));
+const Orders=React.lazy(()=>import('./Orders'));
+const ProductInventory=React.lazy(()=>import('./ProductInventory'));
+
 async function request(path: string, options?: RequestInit) {
   const response = await fetch(new URL(path, document.baseURI), options);
   if (!response.ok) throw new Error('Não foi possível concluir a operação. Verifique os logs do aplicativo.');
@@ -62,6 +67,7 @@ declare const __APP_VERSION__: string;
 const query=new URLSearchParams(window.location.search);
 const view=query.get('view');
 const area=query.get('area');
-const pilotPage=view==='suporte'?<SupportHub/>:view==='configuracoes'?<PilotSettings/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Products/>;
-const page = appName==='Artesão Digital'?<LegalGate><PilotGate allowBeforeSetup={view==='suporte'}>{pilotPage}</PilotGate></LegalGate>:(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
+function StartupRoute({children}:{children:React.ReactNode}){const [ready,setReady]=useState(!!view);useEffect(()=>{if(view)return;let active=true;fetch(new URL('api/operational-preferences',document.baseURI)).then(async response=>{if(!response.ok)throw Error();return response.json();}).then(data=>{if(!active)return;const prefer=data.preferences.prioritize_sales&&data.openSession;const target=prefer?'vendas':data.preferences.home_view;if(target!=='produtos'){const url=new URL(location.href);url.searchParams.set('view',target);if(prefer)url.searchParams.set('session',data.openSession.id);location.replace(url.href);}else setReady(true);}).catch(()=>{if(active)setReady(true);});return()=>{active=false;};},[]);return ready?children:<main><p role="status">Carregando tela inicial…</p></main>;}
+const pilotPage=view==='vendas'?<Sales/>:view==='financeiro'?<Finance/>:view==='pedidos'?<Orders/>:view==='estoque'?<ProductInventory/>:view==='suporte'?<SupportHub/>:view==='configuracoes'?<PilotSettings/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Products/>;
+const page = appName==='Artesão Digital'?<LegalGate><PilotGate allowBeforeSetup={view==='suporte'}><StartupRoute><React.Suspense fallback={<main><p role="status">Carregando área…</p></main>}>{pilotPage}</React.Suspense></StartupRoute></PilotGate></LegalGate>:(view==='configuracoes'&&area&&Object.hasOwn(areaNames,area)?<Settings area={area as Area}/>:view==='fabricacao'?<Manufacturing/>:view==='orcamentos'?<Quotes/>:view==='clientes'?<Clients/>:view==='produtos'?<Products/>:view==='produto'?<QuoteWireframe/>:view==='diagnostico'?<App/>:<Quotes/>);
 createRoot(document.getElementById('root')!).render(<><small className="app-version" aria-label={`Versão ${__APP_VERSION__}`}>v{__APP_VERSION__}</small>{page}</>);

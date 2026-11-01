@@ -1,3 +1,4 @@
+import {protectStockOrigin,StockError} from './product-stock.js';
 import {rememberMaterialUses} from './materials.js';
 import {manufacturingSchema,type Production} from './manufacturing-model.js';
 import {storeCategory} from './categories.js';
@@ -19,10 +20,7 @@ export type Product = {manufacturing?:Production;sku?:string;imageUrl?:string;ca
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && categoryAllowed(p.origin,p.category) && !(p.origin==='client' && p.publicAllowed);}
 export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatures=false){
  const normalizedProduct=<T extends {origin:string;category?:string;catalogVisible?:boolean}>(product:T)=>normalizeProduct(product,pilotFeatures);
-  db.exec(`CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS product_sources (source_key TEXT PRIMARY KEY, product_id INTEGER NOT NULL REFERENCES products(id));`);
-  const categoryCorrections=db.prepare("SELECT id,data FROM products WHERE json_extract(data,'$.origin')='client'").all().map(row=>({row,product:JSON.parse(row.data as string) as Product})).filter(({product})=>product.category!==normalizedProduct(product).category||product.publicAllowed!==normalizedProduct(product).publicAllowed||product.catalogVisible!==normalizedProduct(product).catalogVisible);
-  if(categoryCorrections.length){db.exec('BEGIN IMMEDIATE');try{for(const {row,product} of categoryCorrections)db.prepare('UPDATE products SET data=? WHERE id=?').run(JSON.stringify(normalizedProduct(product)),row.id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}
+
   const list=()=>db.prepare('SELECT id,data,updated_at FROM products WHERE archived=0 ORDER BY id DESC').all().map(r=>({id:r.id,...normalizedProduct(JSON.parse(r.data as string)),updatedAt:r.updated_at}));
   const add=(input:Product)=>{
     const p=normalizedProduct(input);
@@ -44,6 +42,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatu
     if(!row) return reply.code(404).send({message:'Produto não encontrado.'});
     if(req.headers['x-expected-updated-at']&&req.headers['x-expected-updated-at']!==row.updated_at)return reply.code(409).send({message:'Este produto mudou em outra janela. Preserve sua edição e reabra o cadastro antes de salvar.'});
     if(!categoryAllowed(req.body.origin,req.body.category))return reply.code(400).send({message:'Produtos de cliente é uma categoria reservada. Para produto próprio, escolha outra categoria ou deixe em branco.'});
+    if(pilotFeatures){try{protectStockOrigin(db,Number(req.params.id),req.body.origin);}catch(e){return reply.code(e instanceof StockError?e.status:400).send({message:(e as Error).message});}}
     const old=JSON.parse(row.data as string) as Product;
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
     if(req.body.origin==='own'&&req.body.category)storeCategory(db,req.body.category);

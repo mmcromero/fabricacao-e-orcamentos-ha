@@ -13,11 +13,8 @@ export function storeCategory(db:DatabaseSync,path:string){
  }
 }
 export function registerCategories(app:FastifyInstance,db:DatabaseSync){
- db.exec('CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY,path TEXT NOT NULL,category_key TEXT NOT NULL UNIQUE,reserved INTEGER NOT NULL DEFAULT 0,revision INTEGER NOT NULL DEFAULT 1)');
+
  const add=(path:string)=>storeCategory(db,path);
- db.prepare('INSERT OR IGNORE INTO categories(path,category_key,reserved) VALUES (?,?,1)').run(CLIENT_CATEGORY,key(CLIENT_CATEGORY));
- // Seed all existing own categories, including archived products, without rewriting product data.
- for(const row of db.prepare("SELECT json_extract(data,'$.category') AS category FROM products WHERE json_extract(data,'$.origin')='own'").all())if(typeof row.category==='string'&&row.category.trim())add(row.category);
  const list=()=>db.prepare('SELECT id,path,reserved,revision FROM categories ORDER BY category_key').all();
  app.get('/api/categories',list);
  const body={type:'object',additionalProperties:false,required:['path'],properties:{path:{type:'string',minLength:1,maxLength:200},expectedRevision:{type:'integer',minimum:1}}};

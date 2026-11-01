@@ -6,17 +6,16 @@ export class InvitationError extends Error{constructor(readonly status:number,me
 export class Invitations{
  private key:Buffer;private phoneKey:Buffer;
  constructor(private store:PilotStore,dir:string){
-  store.db.exec(`CREATE TABLE IF NOT EXISTS pilot_invitation_details(hash TEXT PRIMARY KEY REFERENCES pilot_invites(hash),created_at INTEGER NOT NULL,created_by TEXT NOT NULL,request_key TEXT NOT NULL UNIQUE,iv BLOB NOT NULL,tag BLOB NOT NULL,payload BLOB NOT NULL);
-  CREATE TABLE IF NOT EXISTS pilot_invitation_deliveries(id TEXT PRIMARY KEY,invite_hash TEXT NOT NULL REFERENCES pilot_invites(hash),request_key TEXT NOT NULL UNIQUE,actor TEXT NOT NULL,started_at INTEGER NOT NULL,finished_at INTEGER,method TEXT NOT NULL,status TEXT NOT NULL);
-  CREATE TABLE IF NOT EXISTS pilot_invitation_keycheck(id INTEGER PRIMARY KEY CHECK(id=1),iv BLOB NOT NULL,tag BLOB NOT NULL,payload BLOB NOT NULL);`);
+
   const path=join(dir,'pilot-invitations.key');
   if(!existsSync(path)){if(store.db.prepare('SELECT 1 FROM pilot_invitation_keycheck').get()||store.db.prepare('SELECT 1 FROM pilot_invitation_details').get())throw Error('Chave dos convites ausente. Restaure a cópia completa do volume.');try{writeFileSync(path,randomBytes(32),{flag:'wx',mode:0o600});}catch(e){if(!existsSync(path))throw e;}}
   if(!lstatSync(path).isFile()||lstatSync(path).isSymbolicLink())throw Error('Chave dos convites inválida.');chmodSync(path,0o600);this.key=readFileSync(path);if(this.key.length!==32)throw Error('Chave dos convites inválida.');this.phoneKey=createHmac('sha256',this.key).update('pilot-invitation-phone-key-v1').digest();
   const check=store.db.prepare('SELECT * FROM pilot_invitation_keycheck WHERE id=1').get();if(check){if(this.decrypt(check,'keycheck')!=='pilot-invitations-v1')throw Error('Chave dos convites inválida.');}else{const c=this.encrypt('pilot-invitations-v1','keycheck');store.db.prepare('INSERT INTO pilot_invitation_keycheck VALUES(1,?,?,?)').run(c.iv,c.tag,c.payload);}
   this.transaction(()=>{
-   const columns=store.db.prepare('PRAGMA table_info(pilot_invitation_details)').all();for(const column of ['phone_hash','previous_hash','replacement_hash'])if(!columns.some(r=>r.name===column))store.db.exec('ALTER TABLE pilot_invitation_details ADD COLUMN '+column+' TEXT');
+   if(store.db.prepare('SELECT 1 FROM legacy_data_jobs WHERE name=?').get('invitation-phone-hash-v1'))return;
    const update=store.db.prepare('UPDATE pilot_invitation_details SET phone_hash=? WHERE hash=?');for(const row of store.db.prepare('SELECT * FROM pilot_invitation_details WHERE phone_hash IS NULL').iterate()){const saved=JSON.parse(this.decrypt(row,String(row.hash)));update.run(this.phoneHash(saved.phone||''),String(row.hash));}
-   store.db.exec('CREATE INDEX IF NOT EXISTS pilot_invitation_phone_idx ON pilot_invitation_details(phone_hash); CREATE INDEX IF NOT EXISTS pilot_invitation_user_idx ON pilot_invites(accepted_user_id); CREATE INDEX IF NOT EXISTS pilot_invitation_state_idx ON pilot_invites(used_at,revoked,no_expiry,expires_at);');
+
+   store.db.prepare('INSERT INTO legacy_data_jobs VALUES(?,?)').run('invitation-phone-hash-v1',new Date().toISOString());
   });
   store.db.prepare("UPDATE pilot_invitation_deliveries SET status='unconfirmed',finished_at=? WHERE status='sending'").run(Date.now());
  }

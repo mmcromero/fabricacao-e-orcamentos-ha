@@ -1,4 +1,4 @@
-import {minimumSettings,normalizeStoredMinimums} from './pilot/minimum-settings.js';
+import {minimumSettings} from './pilot/minimum-settings.js';
 import {configFields,operationFields,markupRanges,validMarkup} from './manufacturing-model.js';
 import type {FastifyInstance} from 'fastify';
 import type {DatabaseSync} from 'node:sqlite';
@@ -7,10 +7,10 @@ const params={type:'object',required:['area'],properties:{area:{enum:areas}}};
 const manufacturingFields=Object.fromEntries([...configFields,...operationFields].map(([key])=>[key,{type:'string',maxLength:20,pattern:'^(|[0-9]+([.,][0-9]+)?)$'}]));
 const fields={...manufacturingFields,filamentKgPrice:{type:'string',maxLength:20,pattern:'^(|[0-9]+([.,][0-9]+)?)$'},quotesPerPage:{enum:['10','15','20','30','40','50','all']},clientsPerPage:{enum:['10','20','30','40','50','all']},productsPerPage:{enum:['10','20','30','40','50','all']},originPostal:{type:'string',maxLength:20,pattern:'^(|[0-9]{5}-?[0-9]{3})$'},dailyCapacity:{type:'string',maxLength:1000},workDays:{type:'string',maxLength:1000},machines:{type:'string',maxLength:2000},queue:{type:'string',maxLength:2000},contingency:{type:'string',maxLength:1000}};
 export function registerSettings(app:FastifyInstance,db:DatabaseSync,pilotFeatures=false){
- db.exec('CREATE TABLE IF NOT EXISTS area_settings (area TEXT PRIMARY KEY, data TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 1)');
- if(pilotFeatures)normalizeStoredMinimums(db);
+
+
  app.get<{Params:{area:string}}>('/api/settings/:area',{schema:{params}},req=>{
-  if(pilotFeatures&&req.params.area==='fabricacao')normalizeStoredMinimums(db);
+
   const row=db.prepare('SELECT data,revision FROM area_settings WHERE area=?').get(req.params.area);
   if(!row)return {data:{},revision:0};const data=JSON.parse(String(row.data));if(req.params.area==='fabricacao')delete data.filamentKgPrice;return {data,revision:row.revision};
  });

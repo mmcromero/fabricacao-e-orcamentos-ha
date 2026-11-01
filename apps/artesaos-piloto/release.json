@@ -1,17 +1,36 @@
 {
-  "pilotVersion": "0.1.17",
-  "sourceCommit": "df769be2ecf2bde0ee1ff9a0875dfc59394bf94f",
-  "coreBase": {
-    "version": "0.1.23",
-    "commit": "f56f0e5707ad81f74f42c351171d4132f793cf9a"
+  "version": "0.2.0-dev.11",
+  "stage": "C3-preparacao",
+  "distributions": [
+    "home-assistant",
+    "debian"
+  ],
+  "schemaVersions": {
+    "tenant": 10,
+    "control": 3,
+    "interest": 2,
+    "support": 2,
+    "legal": 2
   },
-  "releaseKind": "experimental-test-package",
+  "releaseVersion": "0.2.0-dev.11",
+  "sourceCommit": "bdd6e35d2c49fec4d4839259f48085a9f5ab3d60",
+  "businessSourceSha256": "8396aec1f1baa1c773b2287bff1334835c22358768c50834ff06771ef06cf1d4",
+  "baseVersion": "0.1.23",
+  "physicalValidation": "pending",
   "stable": false,
-  "validationReport": "VALIDACAO-0.1.17.md",
-  "legalDocumentsActiveByDefault": false,
-  "pending": [
-    "Real Google, Home Assistant/Supervisor, physical phone and target hardware validation",
-    "Protected backup configuration and tested recovery on the actual installation",
-    "Legal review, retention, privacy procedures and current dependency advisories; see validation report"
-  ]
+  "validationReport": "manuals/C3-VALIDACAO.md",
+  "distribution": "home-assistant",
+  "packageKind": "home-assistant-precompiled-aarch64",
+  "architecture": "linux/arm64",
+  "supervisorArch": "aarch64",
+  "addonSlug": "artesaos_piloto",
+  "repositoryPath": "apps/artesaos-piloto",
+  "runtimeSourceCommit": "714b8baaea6eb6965de1047b437fabff6684579a",
+  "runtimeSourceImageId": "sha256:9c5412b27f43da111ad334482f7f32f46d9dd2d4b50e4d4da3956a65f4b41a57",
+  "runtimePayloadSha256": "59164004e06f5aa9aee1c9f688110fff4ee4bf8df76e576f4293d672d48ac950",
+  "runtimePayloadArchiveSha256": "ecc2f66098b4e592cca17c6f211219dfe0afbf16e37b3c513cbd5e3469335522",
+  "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
+  "physicalSupervisorValidation": "pending",
+  "dataMount": "/data",
+  "productionUpdateAuthorized": false
 }

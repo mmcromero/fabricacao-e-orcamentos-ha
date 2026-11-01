@@ -1,5 +1,11 @@
 # Artesão Digital — Testes
 
+Manual permanente de distribuição C1/C2: [Home Assistant](manuals/HOME-ASSISTANT.md),
+[Debian](manuals/DEBIAN.md), [recuperação](manuals/RECUPERACAO.md) e
+[atualizações](manuals/ATUALIZACOES.md) no pacote exportado. No repositório, esses
+arquivos estão em `distribution/docs/`. HA é o ambiente principal de homologação;
+Debian permanece alternativa independente. Instalação real exige autorização.
+
 Aplicativo experimental independente, baseado no núcleo Fabricação e Orçamentos 0.1.23. Não substitui, atualiza ou compartilha o volume do aplicativo principal. A imagem desta rodada foi construída/testada em amd64; aarch64 ainda depende da instalação real. Primeiro teste restrito ao responsável com duas contas Google próprias e dados fictícios; não convidar terceiros ainda.
 
 ## Manutenção e independência do principal

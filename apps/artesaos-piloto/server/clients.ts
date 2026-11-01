@@ -4,7 +4,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import {clientSchema as schema,normalizeClient,type ClientDraft} from './client-data.js';
 
 export function registerClients(app:FastifyInstance,db:DatabaseSync){
-  db.exec('CREATE TABLE IF NOT EXISTS clients (id INTEGER PRIMARY KEY, data TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)');
+
   app.get('/api/clients',()=>db.prepare('SELECT id,data,updated_at FROM clients WHERE archived=0 ORDER BY id DESC').all().map(row=>({id:row.id,...normalizeClient(JSON.parse(row.data as string)),updatedAt:row.updated_at})));
   app.post<{Body:ClientDraft}>('/api/clients',{bodyLimit:8192,schema:{body:schema}},req=>{
     const data=normalizeClient(req.body);

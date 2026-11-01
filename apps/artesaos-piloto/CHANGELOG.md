@@ -1,3 +1,86 @@
+## 0.2.0-dev.11 — C3 preparação Raspberry Pi 4
+
+- Build cruzado e guard de dependências produtivas portáveis; schema comum preservado.
+- Add-on aarch64 com runtime pré-compilado rastreável, sem npm/Vite no Pi.
+- 179 testes comuns, ARM64/QEMU Cortex-A72, upgrade 0.1.17, dados/sessões/chaves,
+  backup/restauração e reinício/falha isolados validados. Não certifica Pi/Supervisor.
+- Tutorial por identidade/origem e plano de recuperação; nenhuma promoção principal
+  ou atualização real. Debian acompanha a mesma versão de forma independente.
+
+## 0.2.0-dev.10 — C1/C2 distribuição
+
+- Add-on HA e pacote Debian Compose da mesma fonte/schema, com SHA256SUMS e imagem amd64.
+- Manuais permanentes de instalação/atualização e backup/recuperação; helper conservador.
+- Healthcheck preserva Host; assets imutáveis legíveis sem root e volumes privados mantidos.
+- 176 testes da fonte exportada + 8 do helper, runtimes/Compose/backup/restore/crash e
+  navegadores desktop/mobile aprovados em isolamento. Homologação real ainda pendente.
+- HA principal; Debian independente, sem bloquear novas versões pela falta do notebook.
+
+## 0.2.0-dev.10 — B10
+
+- Embalagem cadastrada ou custo manual na ficha; última compra e fabricação existentes.
+- Sugestão geométrica conservadora com orientação/folga e estimativa de massa/custo.
+- Preparo real integral por pedido: lotes, transação/idempotência, histórico e déficit.
+- Cotação sem baixa ou novo financeiro; embalagem incluída e peso real preservados.
+- Cinco grupos de Configurações com cadastros e serviços anteriores reutilizados.
+- 176 testes, build, navegador B3–B10 1280/390 e regressão de UI incluindo 320 px;
+  atualização/restauração sintéticas e paridade de cinco schemas aprovadas.
+- Etapa C depende de autorização; nenhum pacote instalável/deploy/produção alterado.
+
+## 0.2.0-dev.9 — B9 e fechamento B4–B9
+
+- Central de Pendências no cabeçalho, contador, filtros, agrupamento e histórico.
+- Correções por origem/local, resolução justificada e vencimentos sem duplicação.
+- Históricos antigos por cursor e PDF com quebra pela largura real da fonte existente.
+- 166 testes, build, navegador B3–B9, atualizações/restaurações sintéticas e paridade
+  dos cinco schemas aprovados. Nenhum servidor ou banco real alterado.
+- B10 e empacotamento/implantação final aguardam autorização conforme plano.
+
+## 0.2.0-dev.8 — B8
+
+- Sessões opcionais e conferência física independente do fechamento financeiro.
+- Consignados de terceiros, repasses fixos, remessas/acordos de parceiros e acertos.
+- Destinação explícita de excedentes privados e preferência de tela inicial.
+- Áreas carregadas sob demanda; 155 testes, build e navegador integrados aprovados.
+
+## 0.2.0-dev.7 — B7
+
+- Venda imediata multi-item com pagamentos, descontos/cupons e comprovante não fiscal.
+- Saldo insuficiente não bloqueia: saída e divergência persistem atomicamente.
+- Troco correto, cupom só conta na confirmação e histórico preservado.
+- 143 testes, build e navegador até venda/PDF aprovados em ambiente sintético.
+
+## 0.2.0-dev.6 — B6
+
+- Financeiro integrado a compras/pedidos, journal, contas e pagamentos divididos.
+- Liquidação futura, crédito/reembolso explícitos e recorrências pendentes.
+- Caixa separado de custos analíticos, sem dupla contagem; histórico preservado.
+- 132 testes, build e navegador financeiro aprovados em ambiente sintético.
+
+## 0.2.0-dev.5 — B5
+
+- Pedidos diretos ou por aprovação de proposta, itens múltiplos e snapshots.
+- Reservas centrais, fabricação própria/privada, edição, cancelamento e entrega.
+- Orçamento aprovado preservado; Concluído somente após entrega do pedido.
+- 122 testes, build e navegador com entrega integral aprovados.
+
+## 0.2.0-dev.4 — B4
+
+- Fabricação concluída transacional e idempotente com consumo físico de lotes.
+- Estoque de produtos, ajustes e transferências sem duplicação de custos.
+- Preços independentes, cópia automática somente no total físico exatamente zero,
+  atualização opt-in por faixa e histórico preservado.
+- 115 testes, build e fluxo de navegador em ambiente sintético aprovados.
+
+## 0.2.0-dev.3 — B3, desenvolvimento sem publicação
+
+- Consolidação versionada do schema legado, preservação/restauração verificadas em fixtures.
+- Materiais no Estoque, classificações/acondicionamento, compras e unidades físicas.
+- Última compra registrada define referência mesmo com data retroativa; sem custo médio.
+- Consumo, ajustes, perdas e déficit auditados/idempotentes; obrigação financeira pendente única.
+- Custos atuais sem regravar snapshots ou preços comerciais; logins HA/Debian preservados.
+- Ver B3-MATERIAIS-COMPRAS.md; B4 não iniciada e nenhuma atualização real autorizada.
+
 # 0.1.17 — gestão centralizada e convites sem vencimento (experimental)
 
 - Remove os cinco pares e-mail/código das opções do Home Assistant e deixa de gerar convites por opções/variáveis antigas. Criação e gestão passam pela administração Web; contas, dados e convites persistidos são preservados.

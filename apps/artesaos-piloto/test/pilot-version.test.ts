@@ -9,7 +9,8 @@ test('build registra versões separadas e impede pacote com base divergente',()=
  const dir=mkdtempSync(join(tmpdir(),'pilot-version-'));
  try{
   mkdirSync(join(dir,'pilot'));writeFileSync(join(dir,'package.json'),JSON.stringify({version:'0.1.19'}));writeFileSync(join(dir,'pilot/config.yaml'),'version: "0.1.1"\n');writeFileSync(join(dir,'pilot/core-base.json'),JSON.stringify({version:'0.1.19',commit:'a'.repeat(40)}));
-  let result=spawnSync(process.execPath,[script],{cwd:dir,encoding:'utf8'});assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(readFileSync(join(dir,'pilot-build.json'),'utf8')),{pilotVersion:'0.1.1',coreVersion:'0.1.19',coreCommit:'a'.repeat(40)});assert.ok(existsSync(join(dir,'server/pilot/build-info.ts')));
+  writeFileSync(join(dir,'artesao-release.json'),JSON.stringify({version:'0.1.1',distributions:['home-assistant','debian'],schemaVersions:{tenant:1,control:1,interest:1,support:1,legal:1}}));
+  let result=spawnSync(process.execPath,[script],{cwd:dir,encoding:'utf8'});assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(readFileSync(join(dir,'pilot-build.json'),'utf8')),{pilotVersion:'0.1.1',coreVersion:'0.1.19',coreCommit:'a'.repeat(40),releaseVersion:'0.1.1',schemaVersions:{tenant:1,control:1,interest:1,support:1,legal:1}});assert.ok(existsSync(join(dir,'server/pilot/build-info.ts')));
   rmSync(join(dir,'pilot-build.json'));writeFileSync(join(dir,'package.json'),JSON.stringify({version:'0.1.20'}));result=spawnSync(process.execPath,[script],{cwd:dir,encoding:'utf8'});assert.notEqual(result.status,0);assert.equal(existsSync(join(dir,'pilot-build.json')),false);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

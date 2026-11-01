@@ -7,12 +7,13 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json && node scripts/prepare-pilot-brand.mjs",
+    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json && node scripts/prepare-pilot-brand.mjs && node scripts/verify-foundation.mjs",
     "start": "node dist-server/index.js",
     "test": "node --import tsx --test test/*.test.ts",
     "verify:runtime": "node scripts/verify-runtime.mjs",
     "start:pilot": "node dist-server/pilot/index.js",
     "pilot:admin": "node dist-server/pilot/admin.js",
+    "debian:admin": "node dist-server/pilot/local-admin-console.js",
     "prebuild": "node scripts/prepare-pilot-metadata.mjs",
     "pretest": "node scripts/prepare-pilot-metadata.mjs"
   },

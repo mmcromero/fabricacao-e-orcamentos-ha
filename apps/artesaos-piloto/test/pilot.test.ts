@@ -1,7 +1,7 @@
 import {buildInfo} from '../server/pilot/build-info.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {mkdtempSync,rmSync,readFileSync,readdirSync,writeFileSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createPilotApp} from '../server/pilot/app.js';
@@ -112,7 +112,7 @@ test('opções antigas de convite são ignoradas; administração é a origem e 
  const dir=mkdtempSync(join(tmpdir(),'pilot-admin-only-')),optionsFile=join(dir,'options.json');const options:Record<string,string>={public_url:origin+prefix,google_client_id:'fixture',google_client_secret:'fixture'};
  for(let n=1;n<=5;n++){options['test_email_'+n]=`account${n}@example.test`;options['test_invite_'+n]=`synthetic-invite-${n}-01234567890123456789`;}
  writeFileSync(optionsFile,JSON.stringify(options));const env={PILOT_OPTIONS_FILE:optionsFile,DATA_DIR:dir,PILOT_TEST_EMAIL_5:'override@example.test',PILOT_TEST_INVITE_5:'synthetic-override-01234567890123456789'},settings=pilotConfig(env);assert.equal(settings.maxUsers,null);assert.equal('initialInvites' in settings,false);
- const manifest=readFileSync(resolve('pilot/config.yaml'),'utf8');assert.ok(!/test_(?:email|invite)_\d/.test(manifest));
+ const manifest=readFileSync(resolve(existsSync('pilot/config.yaml')?'pilot/config.yaml':'config.yaml'),'utf8');assert.ok(!/test_(?:email|invite)_\d/.test(manifest));
  const provider:IdentityProvider={async start(){throw Error('Not used');},async complete(){throw Error('Not used');}};
  const app=await createPilotApp(settings,provider);await app.close();const store=new PilotStore(dir);
  try{assert.equal(store.db.prepare('SELECT COUNT(*) n FROM pilot_invites').get()!.n,0,'Opções antigas não geram nem renovam convites');

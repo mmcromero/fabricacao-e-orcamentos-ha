@@ -171,3 +171,36 @@
 .markup-control{display:flex;align-items:center;gap:16px}.products-screen .markup-control input[type=range]{flex:1;min-width:0;min-height:44px;padding:0;accent-color:#205e47}.markup-control output{min-width:52px;text-align:right;font-weight:700}
 
 .field-help-bubble::before{content:"";position:absolute;inset:-5px 0 0;z-index:-1}
+
+.material-inventory fieldset{min-width:0;margin:16px 0;border:1px solid var(--areia,#CBB493);border-radius:8px;padding:12px}
+.material-inventory legend{white-space:normal;max-width:100%}
+.material-inventory button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.material-inventory select{min-width:0;max-width:100%}
+.material-inventory nav{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+.stock-operation-dialog { width:min(92vw,720px); max-height:90vh; overflow:auto; box-sizing:border-box; }
+.stock-product-card { margin:16px 0; padding:16px; border:1px solid var(--brand-areia,#CBB493); border-radius:12px; overflow-wrap:anywhere; }
+.stock-product-card button { margin:4px; }
+.stock-snapshot { white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; }
+
+#pilot-attention-host { display:inline-flex; align-items:center; }
+#pilot-attention-host .attention-bell { display:inline-flex; align-items:center; gap:4px; padding:7px; margin:0; color:#F5F5EF; background:transparent; border:1px solid #CBB493; min-width:44px; min-height:44px; }
+.attention-badge { border-radius:12px; background:#B5653A; color:white; min-width:20px; padding:1px 4px; font-size:12px; }
+.attention-dialog { width:min(92vw,850px); max-height:90dvh; overflow:auto; box-sizing:border-box; background:#F5F5EF; color:#1F2A25; }
+.attention-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:12px; }
+.attention-occurrence { border-top:1px solid #CBB493; padding:12px 0; }
+.attention-source { overflow-wrap:anywhere; }
+
+#pilot-attention-host .attention-bell { position:relative; width:44px; height:44px; justify-content:center; }
+#pilot-attention-host .attention-badge { position:absolute; top:-4px; right:-4px; min-width:18px; font-size:11px; }
+#pilot-shell .pilot-account-user { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* B10: mesmos tokens/layout; navegação local sem novo menu principal. */
+.settings-group-links{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
+.settings-group-links a{padding:.65rem;border:1px solid var(--sand,#CBB493);border-radius:.5rem}
+.pilot-settings>section{scroll-margin-top:8rem;margin-block:1.5rem}
+.shipping-panel{margin-block:1rem;padding:1rem;border:1px solid #CBB493;border-radius:.5rem;min-width:0}
+.shipping-panel fieldset{min-width:0;display:grid;gap:.75rem}
+.shipping-panel input:not([type=checkbox]),.shipping-panel select{max-width:100%;box-sizing:border-box;width:100%}
+.shipping-panel p,.shipping-panel li{overflow-wrap:anywhere}
+.shipping-panel summary{cursor:pointer;font-weight:bold;min-height:2rem}

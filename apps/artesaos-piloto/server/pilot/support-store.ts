@@ -1,3 +1,4 @@
+import {initializeDatabase} from '../foundation/migrations.js';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,chmodSync} from 'node:fs';
 import {join} from 'node:path';
@@ -7,13 +8,8 @@ type Row=Record<string,unknown>;
 export class SupportStore{
  readonly db:DatabaseSync;
  constructor(dir:string){
-  mkdirSync(dir,{recursive:true,mode:0o700});const path=join(dir,'pilot-support.sqlite');this.db=new DatabaseSync(path);chmodSync(path,0o600);
-  this.db.exec(`PRAGMA foreign_keys=ON;
-   CREATE TABLE IF NOT EXISTS support_tickets(id INTEGER PRIMARY KEY AUTOINCREMENT,owner TEXT NOT NULL,email TEXT NOT NULL,kind TEXT NOT NULL,subject TEXT NOT NULL,status TEXT NOT NULL,revision INTEGER NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,request_key TEXT NOT NULL,UNIQUE(owner,request_key));
-   CREATE TABLE IF NOT EXISTS support_events(id INTEGER PRIMARY KEY AUTOINCREMENT,ticket_id INTEGER NOT NULL REFERENCES support_tickets(id),actor TEXT NOT NULL,role TEXT NOT NULL,body TEXT NOT NULL,status TEXT NOT NULL,created_at TEXT NOT NULL,request_key TEXT NOT NULL,UNIQUE(ticket_id,actor,request_key));
-   CREATE INDEX IF NOT EXISTS support_owner_updated ON support_tickets(owner,updated_at DESC);
-   CREATE INDEX IF NOT EXISTS support_status_updated ON support_tickets(status,updated_at DESC);
-   CREATE INDEX IF NOT EXISTS support_event_ticket ON support_events(ticket_id,id);`);
+  mkdirSync(dir,{recursive:true,mode:0o700});const path=join(dir,'pilot-support.sqlite');this.db=new DatabaseSync(path);initializeDatabase(this.db,'support');chmodSync(path,0o600);
+
  }
  private summary(row:Row):SupportSummary{return {id:Number(row.id),email:String(row.email),kind:row.kind as SupportKind,subject:String(row.subject),status:row.status as SupportStatus,revision:Number(row.revision),createdAt:String(row.created_at),updatedAt:String(row.updated_at)};}
  private ticket(id:number,owner?:string){return owner===undefined?this.db.prepare('SELECT * FROM support_tickets WHERE id=?').get(id):this.db.prepare('SELECT * FROM support_tickets WHERE id=? AND owner=?').get(id,owner);}
