@@ -1,3 +1,12 @@
+## C3 — identidade reconciliada e publicação autorizada
+
+O operador forneceu `/config/app/f6379561_artesaos_piloto/info`: slug completo
+**f6379561_artesaos_piloto**, coerente com o manifesto e o pacote. O conflito
+anterior foi resolvido, sem mudar identificadores. Autorização posterior: publicar
+se não houver outros bloqueios. Publicação experimental permitida; atualização,
+reinício, backup/restauração e homologação reais continuam sem autorização.
+As limitações físicas conhecidas permanecem; QEMU não certifica o Raspberry Pi.
+
 # Home Assistant — instalação, atualização e homologação
 
 Versão de referência: **0.2.0-dev.11**. Para o Raspberry Pi 4 já instalado em 0.1.17, seguir [C3 atualização](C3-RASPBERRY-PI-ATUALIZACAO.md) e [backup específico](C3-RASPBERRY-BACKUP.md). Ambiente principal de instalação/testes/homologação.
@@ -6,14 +15,19 @@ na instalação real: aguardar autorização específica para a primeira homolog
 
 ## Pacote e requisitos
 
-`artesao-digital-home-assistant-0.2.0-dev.11.tar.gz` contém a pasta `artesaos_piloto`,
-Dockerfile, código e lockfile, config.yaml e manuais. Não contém banco, usuário,
-senha, client secret, convite ou dados comerciais. É pacote-fonte de add-on local;
-o Supervisor construirá a imagem. Não é arquivo de backup para restaurar no HA.
-Base Node 24.19.0 Bookworm. C3 acrescenta pacote aarch64 pré-compilado e testes
-ARM64 em emulação Cortex-A72; Supervisor/Pi reais permanecem pendentes. Home Assistant OS/Supervised com
-loja de aplicativos e acesso autorizado à pasta de add-ons locais são necessários.
-Home Assistant Container/Core sem Supervisor não instala esse formato.
+O artefato atual para o Pi é
+`artesao-digital-home-assistant-aarch64-0.2.0-dev.11.tar.gz`, contendo
+`apps/artesaos-piloto`, manifesto, Dockerfile e runtime pré-compilado em
+`runtime.tar.gz`. Não contém bancos, credenciais ou dados reais; não é um backup
+importável na UI. Destina-se à promoção revisada na mesma origem, e não a substituir
+a instalação existente por um add-on local. A identidade foi reconciliada pelo caminho da interface informado pelo operador. SHA-256 e fontes em `docs/ARTEFATOS_C3.json`.
+
+Base ARM64 Node 24.19.0 Bookworm fixada por digest; o Supervisor constrói a imagem
+com o runtime já compilado, sem instalar npm/compilar frontend no Pi. QEMU é evidência
+isolada; Supervisor/Pi físicos permanecem pendentes. É necessário HA com Supervisor;
+Home Assistant Container/Core isolado não instala esse formato de complemento.
+As instruções de instalação nova abaixo são genéricas e não se aplicam como
+substituição da instalação 0.1.17 existente.
 
 Antes de qualquer alteração real, registrar versão do HA/Supervisor, arquitetura,
 origem/slug do add-on instalado, URL, hostname interno e configurações do proxy;

@@ -1,3 +1,12 @@
+## C3 — identidade reconciliada e publicação autorizada
+
+O operador forneceu `/config/app/f6379561_artesaos_piloto/info`: slug completo
+**f6379561_artesaos_piloto**, coerente com o manifesto e o pacote. O conflito
+anterior foi resolvido, sem mudar identificadores. Autorização posterior: publicar
+se não houver outros bloqueios. Publicação experimental permitida; atualização,
+reinício, backup/restauração e homologação reais continuam sem autorização.
+As limitações físicas conhecidas permanecem; QEMU não certifica o Raspberry Pi.
+
 # C3 — backup e recuperação específicos do Raspberry Pi 4
 
 Alvo aarch64/HAOS 18.3/Core 2026.9.3/Supervisor 2026.09.3/SSD 480 GB, versão atual

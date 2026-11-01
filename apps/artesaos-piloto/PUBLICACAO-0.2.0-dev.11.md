@@ -12,5 +12,4 @@ Supervisor/Pi/Google/proxy reais pendentes. Publicação não é homologação f
 Nenhuma atualização real executada ou autorizada. Antes de atualizar: backup completo
 validado e autorização específica. Retorno exige aplicação e dados pré-upgrade coerentes.
 
-Os SHA256SUMS do pacote original descrevem o export original; os manuais atualizados
-nesta promoção estão cobertos pelo commit Git. runtime.tar.gz permanece byte idêntico.
+SHA256SUMS foi recalculado para a árvore final publicada, incluindo manuais atualizados. runtime.tar.gz permanece byte idêntico.

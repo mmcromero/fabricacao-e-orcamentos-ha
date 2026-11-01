@@ -1,3 +1,12 @@
+## C3 — identidade reconciliada e publicação autorizada
+
+O operador forneceu `/config/app/f6379561_artesaos_piloto/info`: slug completo
+**f6379561_artesaos_piloto**, coerente com o manifesto e o pacote. O conflito
+anterior foi resolvido, sem mudar identificadores. Autorização posterior: publicar
+se não houver outros bloqueios. Publicação experimental permitida; atualização,
+reinício, backup/restauração e homologação reais continuam sem autorização.
+As limitações físicas conhecidas permanecem; QEMU não certifica o Raspberry Pi.
+
 # C3 — atualização do Artesão Digital existente no Raspberry Pi 4
 
 Alvo **0.2.0-dev.11**, pacote específico **aarch64**. Preparação/testes isolados,
@@ -40,9 +49,9 @@ pasta `apps/artesaos-piloto`, origem declarada
 O SHA-1 dessa URL começa com `f6379561`, coerente com o hostname informado.
 **É evidência de uma origem candidata, não consulta ao Supervisor real.**
 
-Provável identificador: `f6379561_artesaos_piloto`; **confirmar pela URL/CLI antes de
-usar**. O hostname transforma separadores em hífens e não comprova o slug.
-Não adotar automaticamente `f6379561_artesaos-piloto` nem mudar identificador.
+O caminho fornecido posteriormente pelo operador,
+`/config/app/f6379561_artesaos_piloto/info`, confirma o identificador com underscore,
+igual ao manifesto. Manter `f6379561_artesaos_piloto`; hostname não define identidade.
 Mesmo nome de exibição não implica mesmo aplicativo/volume.
 
 ## Compatibilidade preparada
