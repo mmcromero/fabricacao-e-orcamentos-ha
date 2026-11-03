@@ -1,3 +1,13 @@
+> Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
+> schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
+> Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.
+> Nível 1: backup recomendado, sem certificação obrigatória. As notas de versões
+> antigas abaixo são históricas; verificar o estado atual em docs/operacao/DISTRIBUICOES.json.
+
+> Operação vigente: Forja 01 é o servidor principal. Procedimentos de atualização
+> e metadados em ATUALIZACOES.md; recuperação em RECUPERACAO.md. Exemplos dev.11 e
+> notebook abaixo são históricos. Não inferir estado real a partir deles.
+
 > Versão corrente: **0.2.0-dev.13**. Ver [estabilização e convites](ESTABILIZACAO-CONVITES.md).
 > Pix aceita telefone BR com DDD; confirmação/erro aparece junto ao formulário.
 > Migração incremental control4; demais schemas preservados. Manuais/evidências

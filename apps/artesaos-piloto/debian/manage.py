@@ -49,7 +49,10 @@ def backup(output):
         try:
             with os.fdopen(fd,'wb') as stream:
                 with tarfile.open(fileobj=stream,mode='w:gz') as tar:
-                    for name in ['data','config','.env','release.json']:tar.add(ROOT/name,arcname=name,recursive=True)
+                    for name in ['data','config','.env','release.json']:
+                        source=ROOT/name
+                        if name=='release.json' and (ROOT/'.operations/active-release.json').is_file():source=ROOT/'.operations/active-release.json'
+                        tar.add(source,arcname=name,recursive=True)
             os.link(staging,output)
             staging.unlink()
         except Exception:
@@ -84,6 +87,9 @@ def restore(archive,target):
 
 def verify():
     release=json.loads((ROOT/'release.json').read_text())
+    if release.get('metadataVersion')==1:
+        from operations import verify_package
+        verify_package(ROOT)
     common=json.loads((ROOT/'app/artesao-release.json').read_text())
     if release['releaseVersion']!=common['version'] or release['schemaVersions']!=common['schemaVersions']:raise ValueError('Versão/schema divergentes.')
     for line in (ROOT/'SHA256SUMS').read_text().splitlines():
@@ -93,11 +99,11 @@ def verify():
 
 if __name__=='__main__':
     os.umask(0o077)
-    p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='action',required=True)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',type=Path,default=ROOT);sub=p.add_subparsers(dest='action',required=True)
     init=sub.add_parser('initialize');init.add_argument('--uid',type=int,default=os.geteuid() or 1000);init.add_argument('--gid',type=int,default=os.getegid() or 1000);sub.add_parser('verify')
     b=sub.add_parser('backup');b.add_argument('--output',required=True,type=Path)
     r=sub.add_parser('restore');r.add_argument('--archive',required=True,type=Path);r.add_argument('--target',required=True,type=Path)
-    a=p.parse_args()
+    a=p.parse_args();ROOT=a.root.resolve()
     try:
         if a.action=='initialize':
             if not(1<=a.uid<=2147483647 and 1<=a.gid<=2147483647):raise ValueError('UID/GID inválidos.')

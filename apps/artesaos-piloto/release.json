@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.13",
-  "stage": "estabilizacao-pix-rodape-convites",
+  "version": "0.2.0-dev.14",
+  "stage": "r1.1-publicacao-rastreavel",
   "distributions": [
     "home-assistant",
     "debian"
@@ -12,10 +12,296 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.13",
-  "sourceCommit": "2486b7fe8b715c3cf8aa933c29c91828345c64df",
-  "businessSourceSha256": "e30c5e1c7edd44a31e92e0b76afa6158831b082702817212e9c35773232162e9",
+  "releaseVersion": "0.2.0-dev.14",
+  "sourceCommit": "b7b84f8f7a7779881d6b37d49442753188dafb5c",
+  "businessSourceSha256": "857a69049fa4f7b10e2572752c000fffe120a57ae10757628346645475c535be",
   "baseVersion": "0.1.23",
+  "metadataVersion": 1,
+  "builtAt": "2026-11-03T01:30:55.563301+00:00",
+  "validation": {
+    "sourceCommit": "b7b84f8f7a7779881d6b37d49442753188dafb5c",
+    "checkedAt": "2026-11-03T01:30:52.934596+00:00",
+    "status": "passed",
+    "checks": [
+      {
+        "name": "build",
+        "status": "passed",
+        "seconds": 13.17
+      },
+      {
+        "name": "application-tests",
+        "status": "passed",
+        "seconds": 28.66,
+        "testCount": 193
+      },
+      {
+        "name": "distribution-helper",
+        "status": "passed",
+        "seconds": 0.09,
+        "testCount": 8
+      },
+      {
+        "name": "operations",
+        "status": "passed",
+        "seconds": 0.15,
+        "testCount": 18
+      }
+    ],
+    "schemaChecksums": {
+      "tenant": [
+        {
+          "version": 1,
+          "name": "fundacao-operacoes",
+          "checksum": "6cc52beab75f7d98147a22370196ec4e7d223cbecadb0d5a7c7297fcc5874824"
+        },
+        {
+          "version": 2,
+          "name": "consolidacao-legada",
+          "checksum": "65293ba874c2d4b2321ee6acff45b37117cbf47e32fe17d79b314fa587416a97"
+        },
+        {
+          "version": 3,
+          "name": "materiais-compras",
+          "checksum": "b994b7d9b7c8457557c7b0442fb95e494a65ed329ed63ab18f08fea8ab4bbc7a"
+        },
+        {
+          "version": 4,
+          "name": "estoque-produtos-fabricacao",
+          "checksum": "b049a1c8ee2e44e450a29bac9b98119efe7d594f9d54bdd9c811a117856adca9"
+        },
+        {
+          "version": 5,
+          "name": "pedidos-reservas",
+          "checksum": "efa5e7debdd81656a05fe907807c244f36bcb89bd9ecb7d39828b0c011bb9981"
+        },
+        {
+          "version": 6,
+          "name": "financeiro-liquidacoes",
+          "checksum": "549992dd711563a1d2fb09650d3ee4fbc07c8b149196af468cf06601f70e132e"
+        },
+        {
+          "version": 7,
+          "name": "vendas-cupons-divergencias",
+          "checksum": "01db8cc455d5b72da558cfd65cf5217c3bd85c98c566293193d635d533de481e"
+        },
+        {
+          "version": 8,
+          "name": "sessoes-consignacoes",
+          "checksum": "de04c32bb3f21be213c20481e43063977b43329eab0bcc6796ecb1253e47d74b"
+        },
+        {
+          "version": 9,
+          "name": "central-pendencias",
+          "checksum": "0dac0b67b8ab4231a3e0bd64bac57e3c1bbc2daa70286a608370dae6d38c4c40"
+        },
+        {
+          "version": 10,
+          "name": "preparo-expedicao",
+          "checksum": "259932bc64f39b1e24551280bc938738a0da5004fdb95f1af0c24ad49b02339f"
+        },
+        {
+          "version": 11,
+          "name": "clientes-visitantes-rastreabilidade",
+          "checksum": "f66a30267f66acb43b483473e36f7afe7ec5bdb39512130c2e9c65651020dce6"
+        }
+      ],
+      "control": [
+        {
+          "version": 1,
+          "name": "fundacao-controle",
+          "checksum": "0d24231e562e3040c0a9c6bd142c9581e8faf768d648538747cba445d41cda62"
+        },
+        {
+          "version": 2,
+          "name": "administracao-local-debian",
+          "checksum": "ad791f81c932d64195d5ef6cd71a82fe6217cc89be82f2b75de637c5279078ae"
+        },
+        {
+          "version": 3,
+          "name": "consolidacao-legada",
+          "checksum": "a3498923f965e477e9ac60152628619e4843db7dc86933b1f6c9c849792b7913"
+        },
+        {
+          "version": 4,
+          "name": "interessados-convites-rastreaveis",
+          "checksum": "74d9d1c01605f7110f0ec516bb34e402ce2b5e992408655b5c37f8c45fe6da6e"
+        }
+      ],
+      "interest": [
+        {
+          "version": 1,
+          "name": "fundacao-interesses",
+          "checksum": "a3e7bc68fbdf3721c9ef29cffedf8f88857a67198a39e7df835dc0e59f4f8d47"
+        },
+        {
+          "version": 2,
+          "name": "consolidacao-legada",
+          "checksum": "6170c605b609813d6e8c68b9bca7f4906afcd2eacd319997d84ed04bfef45e36"
+        }
+      ],
+      "support": [
+        {
+          "version": 1,
+          "name": "fundacao-suporte",
+          "checksum": "c81ce0b8aaca065eb90b863b74a6b3c81d8d18f7e69f220f913ac9f5db5db130"
+        },
+        {
+          "version": 2,
+          "name": "consolidacao-legada",
+          "checksum": "9da3c84bceacac3265ab05326e449454092fa9d6286206f76a3c7c111fb4dc7e"
+        }
+      ],
+      "legal": [
+        {
+          "version": 1,
+          "name": "fundacao-legal",
+          "checksum": "3c71da20c357d6e4fb21113c909f8eefc4276f2b8569ec4d77527161dd95b69d"
+        },
+        {
+          "version": 2,
+          "name": "consolidacao-legada",
+          "checksum": "d169244c0ff79e1c98903a734d23ab8ddb3205e76c88626b794b558ed844d3e8"
+        },
+        {
+          "version": 3,
+          "name": "documentos-manuais-contribuicao",
+          "checksum": "e81beb3d4d43f5fa87b6baecc01c1fe54df6b51a7f434b08d08d7aa553f1a3f4"
+        }
+      ]
+    },
+    "physicalValidation": "not-performed"
+  },
+  "schemaChecksums": {
+    "tenant": [
+      {
+        "version": 1,
+        "name": "fundacao-operacoes",
+        "checksum": "6cc52beab75f7d98147a22370196ec4e7d223cbecadb0d5a7c7297fcc5874824"
+      },
+      {
+        "version": 2,
+        "name": "consolidacao-legada",
+        "checksum": "65293ba874c2d4b2321ee6acff45b37117cbf47e32fe17d79b314fa587416a97"
+      },
+      {
+        "version": 3,
+        "name": "materiais-compras",
+        "checksum": "b994b7d9b7c8457557c7b0442fb95e494a65ed329ed63ab18f08fea8ab4bbc7a"
+      },
+      {
+        "version": 4,
+        "name": "estoque-produtos-fabricacao",
+        "checksum": "b049a1c8ee2e44e450a29bac9b98119efe7d594f9d54bdd9c811a117856adca9"
+      },
+      {
+        "version": 5,
+        "name": "pedidos-reservas",
+        "checksum": "efa5e7debdd81656a05fe907807c244f36bcb89bd9ecb7d39828b0c011bb9981"
+      },
+      {
+        "version": 6,
+        "name": "financeiro-liquidacoes",
+        "checksum": "549992dd711563a1d2fb09650d3ee4fbc07c8b149196af468cf06601f70e132e"
+      },
+      {
+        "version": 7,
+        "name": "vendas-cupons-divergencias",
+        "checksum": "01db8cc455d5b72da558cfd65cf5217c3bd85c98c566293193d635d533de481e"
+      },
+      {
+        "version": 8,
+        "name": "sessoes-consignacoes",
+        "checksum": "de04c32bb3f21be213c20481e43063977b43329eab0bcc6796ecb1253e47d74b"
+      },
+      {
+        "version": 9,
+        "name": "central-pendencias",
+        "checksum": "0dac0b67b8ab4231a3e0bd64bac57e3c1bbc2daa70286a608370dae6d38c4c40"
+      },
+      {
+        "version": 10,
+        "name": "preparo-expedicao",
+        "checksum": "259932bc64f39b1e24551280bc938738a0da5004fdb95f1af0c24ad49b02339f"
+      },
+      {
+        "version": 11,
+        "name": "clientes-visitantes-rastreabilidade",
+        "checksum": "f66a30267f66acb43b483473e36f7afe7ec5bdb39512130c2e9c65651020dce6"
+      }
+    ],
+    "control": [
+      {
+        "version": 1,
+        "name": "fundacao-controle",
+        "checksum": "0d24231e562e3040c0a9c6bd142c9581e8faf768d648538747cba445d41cda62"
+      },
+      {
+        "version": 2,
+        "name": "administracao-local-debian",
+        "checksum": "ad791f81c932d64195d5ef6cd71a82fe6217cc89be82f2b75de637c5279078ae"
+      },
+      {
+        "version": 3,
+        "name": "consolidacao-legada",
+        "checksum": "a3498923f965e477e9ac60152628619e4843db7dc86933b1f6c9c849792b7913"
+      },
+      {
+        "version": 4,
+        "name": "interessados-convites-rastreaveis",
+        "checksum": "74d9d1c01605f7110f0ec516bb34e402ce2b5e992408655b5c37f8c45fe6da6e"
+      }
+    ],
+    "interest": [
+      {
+        "version": 1,
+        "name": "fundacao-interesses",
+        "checksum": "a3e7bc68fbdf3721c9ef29cffedf8f88857a67198a39e7df835dc0e59f4f8d47"
+      },
+      {
+        "version": 2,
+        "name": "consolidacao-legada",
+        "checksum": "6170c605b609813d6e8c68b9bca7f4906afcd2eacd319997d84ed04bfef45e36"
+      }
+    ],
+    "support": [
+      {
+        "version": 1,
+        "name": "fundacao-suporte",
+        "checksum": "c81ce0b8aaca065eb90b863b74a6b3c81d8d18f7e69f220f913ac9f5db5db130"
+      },
+      {
+        "version": 2,
+        "name": "consolidacao-legada",
+        "checksum": "9da3c84bceacac3265ab05326e449454092fa9d6286206f76a3c7c111fb4dc7e"
+      }
+    ],
+    "legal": [
+      {
+        "version": 1,
+        "name": "fundacao-legal",
+        "checksum": "3c71da20c357d6e4fb21113c909f8eefc4276f2b8569ec4d77527161dd95b69d"
+      },
+      {
+        "version": 2,
+        "name": "consolidacao-legada",
+        "checksum": "d169244c0ff79e1c98903a734d23ab8ddb3205e76c88626b794b558ed844d3e8"
+      },
+      {
+        "version": 3,
+        "name": "documentos-manuais-contribuicao",
+        "checksum": "e81beb3d4d43f5fa87b6baecc01c1fe54df6b51a7f434b08d08d7aa553f1a3f4"
+      }
+    ]
+  },
+  "compatibility": {
+    "policy": "same-schema-only",
+    "migrationAuthorizationRequired": true
+  },
+  "procedures": {
+    "install": "manuals/HOME-ASSISTANT.md",
+    "update": "manuals/ATUALIZACOES.md",
+    "rollback": "manuals/RECUPERACAO.md"
+  },
   "physicalValidation": "pending",
   "stable": false,
   "validationReport": null,
@@ -25,10 +311,10 @@
   "supervisorArch": "aarch64",
   "addonSlug": "artesaos_piloto",
   "repositoryPath": "apps/artesaos-piloto",
-  "runtimeSourceCommit": "2486b7fe8b715c3cf8aa933c29c91828345c64df",
-  "runtimeSourceImageId": "sha256:77a9231112cb3da4349dcbc9907a966eba43e60308c582b4b92c68aff27f2f9a",
-  "runtimePayloadSha256": "2fc531768b1a4e7bb6f3be7c27f9729beb033969b9183614dcc33e610c0856d7",
-  "runtimePayloadArchiveSha256": "a58edc66032e57e846f610018b2992b05bbedf1c73bf78fd4bda98d8c1af1971",
+  "runtimeSourceCommit": "b7b84f8f7a7779881d6b37d49442753188dafb5c",
+  "runtimeSourceImageId": "sha256:2a6f7ebc0a93a62c60369fcae551c64fc43743210fa7fbe4c4aa50293655a87c",
+  "runtimePayloadSha256": "0090563bf971e3bcd120d5ba1b116c91fdbb72c50ddc00448cacda0486fbc68e",
+  "runtimePayloadArchiveSha256": "36ce69b37e9788fc6da2b7ec8a2e337480c78bc42468b44d6d0ed3046bc28494",
   "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
   "physicalSupervisorValidation": "pending",
   "dataMount": "/data",

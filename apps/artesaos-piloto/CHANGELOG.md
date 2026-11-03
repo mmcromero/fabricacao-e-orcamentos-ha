@@ -1,3 +1,12 @@
+# 0.2.0-dev.14 — R1.1 e continuidade operacional
+
+Inclui R1.1 (3471da1): cadastros consecutivos de interessados, alertas com conteúdo
+e remoção do link redundante no login administrativo Debian. Feedback inicial,
+Suporte e atalho financeiro existentes preservados. Inclui rastreabilidade,
+procedimentos operacionais e segurança por fase até 79679b9. Versão incrementada
+para o Supervisor identificar a atualização; base 0.1.23 e schemas inalterados.
+Publicação GitHub não significa instalação no Forja ou homologação no Raspberry Pi.
+
 # 0.2.0-dev.13 — estabilização e convites
 
 - Pix: telefone BR, persistência/recarga, confirmação/erro junto ao botão, espera

@@ -1,3 +1,105 @@
+> Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
+> schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
+> Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.
+> Nível 1: backup recomendado, sem certificação obrigatória. As notas de versões
+> antigas abaixo são históricas; verificar o estado atual em docs/operacao/DISTRIBUICOES.json.
+
+# Procedimento vigente — contingência manual Home Assistant
+
+Forja 01/Debian é principal. HA é plano B temporário. O pacote acompanha as publicações autorizadas;
+instalação, atualização no equipamento e sincronização não são automáticas. A preparação ocorre no
+repositório/ambiente de desenvolvimento, sem acessar o Raspberry Pi pessoal.
+
+## Preparar pacote ARM64
+
+1. Ler AGENTS.md, nível de segurança aprovado e docs/operacao/DISTRIBUICOES.json.
+2. Em commit limpo, gerar recibo pelo release-evidence.py e exportar pelo
+   prepare-distributions.py com --validation. A pasta artesaos_piloto é fonte HA;
+   não confundir seu tar com o complemento ARM64 pré-compilado.
+3. Construir imagem com Dockerfile dessa fonte e --platform linux/arm64. O estágio
+   de compilação usa BUILDPLATFORM; metadados/labels devem apontar à mesma fonte.
+4. `python3 scripts/prepare-ha-aarch64.py --source /FONTE/artesaos_piloto --image
+   IMAGEM-ARM64 --output /SAIDA-NOVA` gera apps/artesaos-piloto, runtime.tar.gz,
+   manifesto aarch64, manuais e checksums. Rejeita imagem AMD64 ou origem divergente.
+5. Conferir SHA256SUMS, versão/commit/data, schema, labels e arquitetura. Build ARM64
+   não comprova execução ARM64; testes Debian não certificam Supervisor/Pi. Informar
+   separadamente build, emulação, hardware e validação de Google/proxy.
+6. Se surgirem adaptações/testes HA acima do esforço rotineiro, parar antes do
+   trabalho adicional e pedir decisão conforme AGENTS.md. Não mascarar ausência de
+   homologação. Não publicar no repositório de add-ons sem autorização aplicável.
+
+## Publicar no repositório existente — sem acessar o equipamento
+
+Destino: https://github.com/mmcromero/fabricacao-e-orcamentos-ha, branch main,
+apenas apps/artesaos-piloto. Autenticação Git do ambiente deve autorizar escrita
+nesse repositório; usar o gerenciador de credenciais/secret seguro já configurado,
+nunca gravar tokens na URL, no pacote ou no Git. Não depende do acesso SSH ao Forja.
+
+1. Conferir remote, branch, árvore limpa e fetch origin main; não sobrescrever
+   alterações remotas. Exigir avanço normal, sem force push.
+2. Reutilizar prepare-distributions.py e prepare-ha-aarch64.py acima. Comparar versão
+   do config.yaml com a remota: deve ser superior para o Supervisor oferecer atualização.
+3. Promover somente o conteúdo validado apps/artesaos-piloto, preservando exatamente
+   repository.yaml e apps/umdoislab legado. Incluir nota PUBLICACAO-VERSAO.md com
+   origem/testes/limitações; recalcular SHA256SUMS após acrescentar a nota.
+4. Verificar checksums e concordância config.yaml/release.json/runtime.tar.gz/labels.
+   Revisar git diff --stat e arquivos, commit e git push origin HEAD:main.
+5. Comparar git rev-parse HEAD com git ls-remote origin refs/heads/main. Em um clone
+   novo do commit remoto, repetir checksums e conferência de versão/runtime. Registrar
+   o hash remoto em docs/operacao/DISTRIBUICOES.json no repositório funcional.
+
+Disponibilidade no Git confirmada não certifica descoberta da atualização por um
+Supervisor real. O proprietário recarrega/verifica atualizações da loja de add-ons
+na origem existente e escolhe Atualizar manualmente (Nível 1: backup recomendado).
+Não desinstalar/reinstalar para atualizar, não mudar slug/origem nem /data. Se o
+add-on estiver ausente, instalar manualmente da mesma origem somente quando necessário.
+Depois conferir versão/logs/healthcheck/login. Retorno é manual, preservando dados e
+compatibilidade conforme RECUPERACAO.md; nunca fazer downgrade de schema por suposição.
+
+## Instalar/ativar manualmente — somente em emergência autorizada
+
+Preferir mesma origem https://github.com/mmcromero/fabricacao-e-orcamentos-ha e slug
+artesaos_piloto quando houver instalação existente a preservar. A loja só oferece
+os arquivos publicados naquele repositório; a branch funcional não atualiza o Pi.
+
+Para instalação LOCAL NOVA a partir do pacote, com autorização operacional: verificar
+checksums e extrair em preparação, copiar o conteúdo de apps/artesaos-piloto para
+/addons/artesaos_piloto por mecanismo autorizado do Supervisor, recarregar a loja e
+instalar o add-on local correspondente. Esse caminho cria identidade local distinta
+da origem GitHub; não é atualização nem recuperação automática da instalação antiga.
+Se existir pasta/add-on/dados, não sobrescrever ou desinstalar por suposição.
+
+Antes de iniciar: verificar capacidade disponível sem afetar serviços domésticos;
+configurar opções HTTPS/Google e allowlist administrativa locais, mantendo 8099 sem
+exposição pública e o prefixo /artesaos-piloto/. Usar hostname real exibido pelo HA.
+Proxy/rede exigem autorização separada; não aplicar alterações residenciais nesta
+preparação. Não reutilizar automaticamente credenciais/volumes Debian.
+
+Iniciar manualmente e conferir logs sanitizados, versão/commit/data/arquitetura,
+login administrativo Google, login comum/convites e operações sintéticas. Não aplicar
+Primeiro Acesso/senha Debian no HA. Registrar nível aplicado, riscos e resultado.
+No Nível 1, backup recomendado sem certificação bloqueante; no Nível 2 aplicar as
+condições aprovadas antes de alterações sobre dados existentes. Nenhum nível autoriza
+exclusões ou restauração destrutiva por consequência.
+
+## Dados da contingência — pendências separadas
+
+- Recuperar dados Debian no HA: não implementado; bindDistribution bloqueia volumes
+  de outro adaptador. Instalação emergencial pode começar vazia conforme decisão.
+- Operar temporariamente: mesma base de negócio, configuração/autenticação próprias;
+  capacidade e instalação física precisam de validação quando ativadas.
+- Retornar dados HA ao Forja: mecanismo de transferência controlada pendente.
+- Evitar duplicações/conflitos na transição: procedimento pendente; não mesclar bancos.
+- PWA: sincroniza apenas com Forja; não há troca automática de destino para HA.
+
+---
+
+## Histórico de versões e instruções anteriores
+
+Trechos abaixo documentam versões antigas. As prioridades e o procedimento vigente
+acima prevalecem sobre afirmações antigas de HA como ambiente principal. Nenhuma
+instrução histórica concede autorização operacional atual.
+
 > Versão corrente: **0.2.0-dev.13**. Ver [estabilização e convites](ESTABILIZACAO-CONVITES.md).
 > Pix aceita telefone BR com DDD; confirmação/erro aparece junto ao formulário.
 > Migração incremental control4; demais schemas preservados. Manuais/evidências

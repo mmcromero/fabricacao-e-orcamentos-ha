@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.13",
-  "stage": "estabilizacao-pix-rodape-convites",
+  "version": "0.2.0-dev.14",
+  "stage": "r1.1-publicacao-rastreavel",
   "distributions": [
     "home-assistant",
     "debian"

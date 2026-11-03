@@ -1,3 +1,14 @@
+> Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
+> schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
+> Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.
+> Nível 1: backup recomendado, sem certificação obrigatória. As notas de versões
+> antigas abaixo são históricas; verificar o estado atual em docs/operacao/DISTRIBUICOES.json.
+
+> Segurança por fase: Nível 1 recomenda backup/recuperação, sem bloquear atualização
+> comum apenas por falta de certificação. Nível 2 exige evidências proporcionais à
+> política aprovada. Ver docs/operacao/SEGURANCA_POR_FASE.md e operation-policy.json.
+> Nenhum nível autoriza destruir/restaurar o ativo sem autorização específica.
+
 > Versão corrente: **0.2.0-dev.13**. Ver [estabilização e convites](ESTABILIZACAO-CONVITES.md).
 > Pix aceita telefone BR com DDD; confirmação/erro aparece junto ao formulário.
 > Migração incremental control4; demais schemas preservados. Manuais/evidências
@@ -86,8 +97,55 @@ ou Google real só pode ser alterada em intervenção separada autorizada.
 
 ## Exercício periódico
 
-A cada atualização: backup completo protegido, restauração em pasta/instalação nova,
+No Nível 2, conforme política aprovada: backup protegido, restauração isolada,
 integridade/FKs, sessão/configuração e operação comercial sintética, reinício e
-registro dos resultados. A existência de um arquivo não comprova recuperação.
+registro dos resultados. No Nível 1, recomendar esse exercício sem torná-lo bloqueio de atualização comum.
+A existência de um arquivo não comprova recuperação.
 C2 valida dados sintéticos; restauração nativa do Supervisor e hardware real permanecem
 pendentes da primeira homologação autorizada.
+
+## Evidências e retorno controlado por imagem
+
+Estados independentes: arquivo criado; integridade verificada; cópia externa
+verificada; restauração isolada testada; recuperação operacional comprovada.
+`operations.py check-backup --archive /BACKUP` testa extração temporária/SQLite e
+chaves exigidas por registros existentes; não comprova login/decifragem funcional.
+Não modifica produção. Uma saída estrutural aprovada não autoriza apply.
+
+Após testar de fato a recuperação isolada e a cópia externa, o operador registra
+fora do Git um atestado JSON do backup exato: `archiveSha256`, `backupCreatedAt` e `testedAt` (ISO UTC),
+`operator` (identificador operacional), `externalCopyVerified: true`,
+`operationalRecoveryProven: true`, e descrição local dos testes/provas.
+No Nível 2, o helper exige correspondência de hash e idade do backup dentro de
+maxBackupAgeHours da política aprovada; a referência anterior fixa de 24 horas
+foi substituída pela política por fase. Isso é
+atestação explícita do operador, **não comprovação automática ou assinatura digital**.
+Não criar atestado verdadeiro por mera existência de arquivo.
+
+private-codes é usado por local-admin-console.ts para códigos temporários de
+ativação/recuperação, com validade de 30 minutos/uso único. O banco guarda hashes e
+estado administrativo; chaves duráveis ficam em data/. Excluir os arquivos de
+código do backup é intencional e já testado em validate-distribution-tools.py.
+Não foi inspecionado conteúdo real do Forja: se houver outros arquivos nesse
+volume, classificar com o operador antes de considerar cobertura suficiente.
+Restaurar diretório de códigos vazio, 0700/UID correto; emitir código novo pelo
+console autorizado quando necessário. Não imprimir nem versionar códigos.
+
+Após apply, o recibo privado informa o comando de retorno:
+`python3 operations.py --root /srv/artesao-digital-app rollback --record
+/INSTALACAO/.operations/update-ID/deployment.json --approve-code-only`.
+Retorna somente à imagem preservada e à declaração anterior, sem restaurar dados.
+Bloqueia se a imagem atual não corresponder à tentativa ou se schemas divergirem.
+Preservar contêiner guardião, recibos, override e backups até aprovação operacional.
+Após o comando verificar collect, healthcheck, logs sanitizados e autenticação.
+Não declarar rollback funcional aprovado apenas pelo aceite do Compose.
+
+Pacote-fonte, runtime/labels, backup, atestado, ID da imagem e recibo de implantação
+são evidências distintas. Imagem presente somente no HD do Forja não é cópia externa.
+O retorno que exige restauração de dados permanece operação separada autorizada.
+
+Após atualizações por imagem, usar o manage.py do pacote atualizado com
+`--root /srv/artesao-digital-app` para incluir a declaração ativa no próximo backup.
+O helper histórico da instalação pode não conhecer .operations/active-release.json.
+Guardar também recibos operacionais e pacotes/imagens fora do servidor; o backup de
+dados não inclui automaticamente imagens Docker nem a seleção Compose de retorno.

@@ -36,6 +36,11 @@ test('Debian: Primeiro Acesso, senha protegida, login, APIs administrativas e lo
   assert.equal((await f.request('admin/auth/setup','POST',body(code))).statusCode,403);
   const row=f.store.db.prepare('SELECT * FROM local_admin').get()!;assert.match(String(row.password_hash),/^scrypt\$32768\$8\$1\$/);assert.ok(!JSON.stringify(row).includes(password));
   assert.equal(f.store.db.prepare('SELECT COUNT(*) n FROM local_admin_activation').get()!.n,0);
+  const loginPage=await f.request('admin/login');
+  assert.doesNotMatch(loginPage.body,/href="\/artesaos-piloto\/admin\/login">Login administrativo/);
+  assert.match(loginPage.body,/Recuperar acesso/);
+  assert.match(loginPage.body,/Login de usuários com Google/);
+  assert.match((await f.request('admin/recover')).body,/href="\/artesaos-piloto\/admin\/login">Login administrativo/);
   const login=await f.request('admin/auth/login','POST',{email,password});assert.equal(login.statusCode,303,login.body);
   const sessionCookie=cookies(login);assert.ok(login.cookies.every((c:any)=>c.secure&&c.path===prefix+'admin/'));assert.ok(login.cookies.find((c:any)=>c.name==='__Secure-artesaos_admin_session').httpOnly);
   const session=await f.request('admin/api/session','GET',undefined,{cookie:sessionCookie});assert.equal(session.statusCode,200);

@@ -1,3 +1,15 @@
+> Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
+> schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
+> Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.
+> Nível 1: backup recomendado, sem certificação obrigatória. As notas de versões
+> antigas abaixo são históricas; verificar o estado atual em docs/operacao/DISTRIBUICOES.json.
+
+> Segurança vigente por fase: consultar docs/operacao/SEGURANCA_POR_FASE.md no
+> repositório e operation-policy.json no pacote. Nível 1 explicitamente aprovado:
+> backup recomendado, sem bloqueio por ausência de certificação/cópia externa.
+> Nível 2 exige as evidências e parâmetros aprovados. Esta regra substitui a
+> exigência indistinta de backup nas instruções históricas abaixo.
+
 > Versão corrente: **0.2.0-dev.13**. Ver [estabilização e convites](ESTABILIZACAO-CONVITES.md).
 > Pix aceita telefone BR com DDD; confirmação/erro aparece junto ao formulário.
 > Migração incremental control4; demais schemas preservados. Manuais/evidências
@@ -11,10 +23,9 @@
 
 # Atualizações futuras — contrato de distribuição e continuidade
 
-Home Assistant é principal para homologação. Debian acompanha versão/código/schema
-sem depender de um notebook preparado. Falta de validação física Debian deve ser
-registrada, não bloquear automaticamente correções quando os testes pertinentes e
-segurança forem atendidos. Não compartilhar volumes, credenciais ou contas entre eles.
+Forja 01/Debian é principal para operação e homologação. Home Assistant é apenas
+contingência manual; respeitar a regra de esforço adicional em AGENTS.md. Não
+compartilhar volumes, credenciais ou contas entre instalações.
 
 ## Para desenvolvimento de cada versão
 
@@ -25,7 +36,9 @@ segurança forem atendidos. Não compartilhar volumes, credenciais ou contas ent
    só muda por incorporação autorizada, preservando core-base.json e rastreabilidade.
 4. Atualizar estes quatro manuais, limitações, relatório e critérios de compatibilidade.
 5. Testar código, produzir ambos os pacotes de um commit limpo usando
-   `python3 scripts/prepare-distributions.py --output DIRETORIO-NOVO`.
+   `python3 scripts/prepare-distributions.py --output DIRETORIO-NOVO --validation /CAMINHO/recibo.json`.
+   Gerar o recibo antes com `python3 -B scripts/release-evidence.py --output /CAMINHO/recibo.json`
+   sobre commit limpo. Não editar o recibo para simular aprovação.
    Opcional `--image-archive CAMINHO/image.tar` inclui imagem Docker amd64 previamente
    construída/tagueada da mesma fonte. O exportador não constrói nem instala serviços.
 6. Validar SHA256SUMS, manifestos, hash do código comum, instalação/upgrade/backup/restore,
@@ -41,29 +54,51 @@ anterior, atualizar sem desinstalar/zerar dados, validar Google/tenant e operaç
 Supervisor real e proxy exigem autorização específica. Não fazer merge na principal
 como parte de teste experimental nem transferir credenciais de outro aplicativo.
 
-## Operador Debian
+## Operador Debian — atualização controlada por imagem
 
-Somente em atualização real autorizada:
+A ferramenta nova `operations.py` complementa `manage.py`; não reinstala a aplicação.
+Não é um serviço permanente. Produção exige autorização operacional separada.
 
-1. Guardar novo pacote em pasta de preparação diferente; verificar hash e manifestos.
-2. Na instalação atual, criar backup frio em arquivo novo e comprovar restauração.
-   Guardar pacote anterior e anotar operações feitas depois do backup.
-3. Parar serviço com `docker compose stop artesao`. Carregar nova image.tar. Confirmar
-   imagem/versão esperadas, sem reutilizar tag de outra fonte inadvertidamente.
-4. Atualizar **somente arquivos imutáveis do pacote** (app/, manuals/, compose.yaml,
-   manage.py, release.json, SHA256SUMS e imagem) na pasta estável. Preservar data/,
-   config/, private-codes/ e .env. Não executar initialize de novo. UID/GID/porta da
-   instalação permanecem. Atualizar modelos como referência, sem sobrescrever opções.
-5. `python3 manage.py verify`, `docker compose config --quiet`,
-   `docker compose up -d --no-build`, `docker compose ps` e logs sanitizados.
-6. Conferir versão, admin local, Google comum, duas contas isoladas, dados/configuração,
-   migrações dos tenants, cenário funcional e desktop/celular. Guardar backup anterior.
+1. Exportar e validar pacote de origem exata. Construir **fora da instalação ativa**:
+   `docker build -t artesao-digital:REVISAO -f PACOTE/app/Dockerfile PACOTE/app`.
+   Não usar o app/ antigo da instalação para reconstruir a versão nova. No cloud,
+   usar CA/proxy BuildKit documentados, sem desativar TLS.
+2. Executar `python3 operations.py --root /srv/artesao-digital-app collect` com helper
+   disponibilizado em diretório de ferramentas aprovado. Saída sanitizada informa
+   declaração, labels, ID real e metadados do runtime, divergências e healthcheck.
+3. No Nível 2, exigir backup e recuperação; no Nível 1, recomendar sem tornar
+   certificação condição bloqueante. Helper de backup: `python3 /PACOTE/manage.py --root
+   /srv/artesao-digital-app backup --output /BACKUP-NOVO`; guardar cópia externa e imagem anterior.
+   Testar recuperação isolada e registrar evidência, conforme RECUPERACAO.md.
+4. Executar `python3 operations.py --root /srv/artesao-digital-app plan --package
+   /PACOTE --policy /POLITICA-APROVADA.json`. No Nível 2 acrescentar
+   `--archive /BACKUP --recovery-evidence /ATESTADO.json`; no Nível 1 são opcionais. Somente com zero
+   bloqueios prosseguir. A ferramenta não instala dependências nem carrega imagem:
+   carregamento/construção deve ser feito em etapa autorizada antes.
+5. Com autorização e política aprovada, mesmo comando usando `apply` e acrescentando `--image IMAGEM
+   --approve-update`. Instalação legada sem metadados exige ainda
+   `--allow-legacy-current`, após revisão explícita da incerteza da origem.
+6. O helper mantém a imagem anterior referenciada por contêiner parado; cria recibo
+   privado em .operations/, seleciona a imagem por ID em compose.override.yaml e
+   executa Compose sem build/pull. Compara configuração efetiva antes/depois: somente
+   imagem/pull_policy podem mudar. Override existente sem proveniência ou modificado causa bloqueio para revisão.
+7. Mantém app/, compose.yaml, data/, config/, private-codes/ e .env originais.
+   .operations/active-release.json registra a declaração ativa, separada do pacote
+   histórico. **Não reconstruir usando o app/ histórico.** A seleção normal do Compose
+   passa a usar compose.override.yaml; não remover nem ignorar esse arquivo.
+8. Verifica healthcheck, imagem, labels e runtime. `collect` diferencia concordância
+   técnica de homologação funcional, que continua pendente. Não exporta logs brutos.
+   Verificar logs localmente com sanitização e testar acesso/autenticação no endereço
+   aprovado. A ferramenta não afirma que login real foi testado.
 
-Se a atualização recusar schema/checksum, parar e preservar dados. Não editar banco
-ou trocar versão até “passar”. Usar RECUPERACAO.md para restauração compatível em pasta
-nova; downgrade direto sobre schema novo não é permitido. Uma troca de diretório de
-versão sem preservar projeto/volumes pode criar instalação vazia: não confundir com
-perda de dados nem apagar a anterior. Imagens/volumes não são removidos automaticamente.
+O atualizador recusa schemas diferentes e compara todas as migrações dos bancos do
+backup ao catálogo da imagem de destino. Tenant ainda não migrado também bloqueia:
+nenhuma autorização de migração é inferida. Não restaurar dados durante atualização.
+Falha não apaga nem recria volumes e não inicia desenvolvimento corretivo automático.
+Retorno por imagem exige aprovação, mesmo catálogo e fonte interrompida, conforme
+RECUPERACAO.md. Sem Docker acessível, pacote e plano podem ser preparados, mas não
+há prova de implantação. Novas atualizações aceitam apenas override criado pela ferramenta e com hash
+inalterado; qualquer configuração externa exige revisão operacional.
 
 ## Pendências permanentes de homologação
 
