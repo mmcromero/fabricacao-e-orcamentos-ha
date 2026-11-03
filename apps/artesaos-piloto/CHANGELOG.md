@@ -1,3 +1,30 @@
+## 0.2.0-dev.17 — R1.4
+
+- Distribuição de AD-UX-002: apoio voluntário aberto e após conteúdo de Ajuda/Suporte.
+- Distribuição de PWA-UPDATE-001: detecção de versão, bloqueio preventivo de operações,
+  logout/login controlados e aviso conservador antes de abandonar alterações locais.
+- Primeira adoção aceita recarga manual de abas antigas; sem tratamento especial.
+- PWA-DATA-001 registrada para futura homologação PWA-02, sem implementação.
+- Mesmos schemas, identidade do add-on e contratos de distribuição. Nenhuma instalação
+  autorizada por esta publicação. Homologação física posterior e limitada ao escopo.
+
+## R1.3 — proteção de versão em desenvolvimento local, sem distribuição
+
+- PWA-UPDATE-001: versão da página/servidor, marcador auxiliar de sessão, bloqueio
+  preventivo de APIs e reautenticação controlada quando a versão muda.
+- Aviso aprovado antes de abandonar estado local, com revisão/cópia sem logout.
+- Sem offline, migrações, versão nova, push ou deploy. Primeira adoção exige recarga
+  manual das abas antigas conforme aprovado. AD-UX-002 da R1.2 preservada.
+- Evidências e limitações em docs/R1.3.md e R1.3-VALIDACAO.json.
+
+## R1.2 — desenvolvimento local, sem nova versão de distribuição
+
+- AD-UX-002: apoio voluntário aberto ao final de Ajuda/Suporte; conteúdo e ações preservados.
+- PUSH-DOC-02: GOV-02 e DOC-UPD-01 enviados, remoto 3b2860a.
+- PWA-UPDATE-001: não implementado; bloqueio da adoção em interfaces antigas e alternativa
+  para aprovação em docs/R1.2.md. Não declarar proteção de atualização disponível.
+- Sem pacote/deploy; versão declarada permanece dev.16. Testes locais não homologam dispositivos.
+
 # 0.2.0-dev.16 — UX-Loading-01
 
 Feedback discreto de espera em login local/Google, preparação do aplicativo,

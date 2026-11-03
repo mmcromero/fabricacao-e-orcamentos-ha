@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.16",
-  "stage": "ux-loading-01",
+  "version": "0.2.0-dev.17",
+  "stage": "r1.4",
   "distributions": [
     "home-assistant",
     "debian"

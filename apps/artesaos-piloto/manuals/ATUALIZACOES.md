@@ -1,3 +1,17 @@
+## dev.17 — primeira adoção de PWA-UPDATE-001
+
+Antes da instalação autorizada: salvar/conferir informações e fechar/recarregar
+manualmente abas antigas da dev.16, conforme aceite do proprietário único. A primeira
+adoção não promete proteção retroativa. Da versão com mecanismo em diante, troca de
+versão exige novo login e aviso conservador de alterações locais; Revisar mantém a
+página para cópia, sem permitir novas gravações incompatíveis.
+
+Homologação inicial: versão/commit, acesso/login, funcionamento básico, card de apoio
+no final de Ajuda/Suporte e ausência de erros críticos aparentes. Ensaios extensos de
+integridade/rascunhos/offline ficam em PWA-DATA-001, sem iniciar PWA-02 aqui.
+Publicar/disponibilizar não instala. Nível 1 mantido; backup recomendado, não exige
+certificação como nova condição. Usar os mesmos CMDs e procedimentos de retorno.
+
 ## Distribuição dev.16 — UPD-CMD-01 e link obrigatório
 
 Kit Windows: Baixar-Pacote.cmd → Verificar-Download.cmd (opcional) →

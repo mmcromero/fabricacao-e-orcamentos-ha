@@ -114,7 +114,7 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
   if(write&&!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),a.csrfHash)){reply.code(403).send({message:'Confirmação inválida.'});return null;}return a;
  },page);
  app.all(base+'*',(_req,reply)=>reply.code(404).send({message:'Página administrativa não encontrada.'}));
- return {interestForm:()=>available()?interestForm():'<p>A lista de interesse está temporariamente indisponível.</p>',async completeAdmin(identity:Identity,req:{headers:{cookie?:string}},reply:FastifyReply){
+ return {current,interestForm:()=>available()?interestForm():'<p>A lista de interesse está temporariamente indisponível.</p>',async completeAdmin(identity:Identity,req:{headers:{cookie?:string}},reply:FastifyReply){
   if(local||identity.issuer!=='https://accounts.google.com'||!identity.verified||!identity.subject||!allowed.includes(identity.email.toLowerCase()))return reply.code(403).send({message:'Esta conta não tem autorização administrativa.'});
   store.adminLogout(readCookie(req.headers.cookie,ADMIN));const created=store.adminSession(identity);reply.header('Set-Cookie',[`${FLOW}=; Path=${prefix}; Secure; HttpOnly; SameSite=Lax; Max-Age=0`,adminCookie(ADMIN,created.value),adminCookie(CSRF,created.csrf,false)]);return reply.type('text/html').send(finishPage());
  }};

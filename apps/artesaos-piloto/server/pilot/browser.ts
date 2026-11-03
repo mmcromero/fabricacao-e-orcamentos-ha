@@ -39,6 +39,7 @@ self.addEventListener('fetch',event=>{
  const ready=async()=>{
   const done=window.pilotLoading?.begin('Carregando aplicativo…');
   try{
+   if(window.pilotVersionReady&&!await window.pilotVersionReady)return;
    await window.pilotBrowserReady;
    document.querySelectorAll('[data-pilot-login]').forEach(button=>button.disabled=false);
    for(const style of document.querySelectorAll('link[data-pilot-href]'))style.href=style.dataset.pilotHref;
@@ -72,6 +73,7 @@ export function sessionScript(prefix:string,csrfCookie:string){
  };
  addEventListener('DOMContentLoaded',async()=>{
   try{await window.pilotBrowserReady;}catch{return;}
+  if(window.pilotVersionReady&&!await window.pilotVersionReady)return;
   const response=await fetch(prefix+'api/pilot/session');
   if(!response.ok){location.replace(prefix+'login');return;}
   const data=await response.json();

@@ -1,3 +1,19 @@
+# PWA-DATA-001 — Integridade dos dados durante atualizações
+
+PENDENTE — registro aprovado na R1.4, sem implementação nesta distribuição.
+A futura homologação PWA-02 deverá contemplar formulários parcialmente preenchidos,
+alterações locais não salvas, atualização com sessão ativa, revisão antes de logout
+ou recarga, preservação dos dados gravados, recuperação de rascunhos, operações
+offline/retorno da conexão e cenários de perda ou duplicação de dados.
+Este registro não autoriza implementar PWA-02, offline, autosave ou recuperação.
+
+Homologação imediata dev.17 limitada a instalação/versão, acesso/login, funcionamento
+básico, AD-UX-002 e ausência de erros críticos aparentes. Primeira adoção do controle
+de versão: proprietário único aceita recarregar manualmente abas dev.16. Atualizações
+posteriores usam PWA-UPDATE-001; não prometer retroatividade antes da adoção.
+
+---
+
 # UX-Loading-01 — situação da prioridade de feedback
 
 Implementado em desenvolvimento na dev.16; detalhes em docs/UX-Loading-01.md no

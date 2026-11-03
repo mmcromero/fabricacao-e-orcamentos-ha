@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.16",
-  "stage": "ux-loading-01",
+  "version": "0.2.0-dev.17",
+  "stage": "r1.4",
   "distributions": [
     "home-assistant",
     "debian"
@@ -12,90 +12,39 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.16",
-  "sourceCommit": "5e676c9bd0319a0c751e2652b4e79306d5638d95",
-  "businessSourceSha256": "207a47bd368836e5129b8a77cd854a53424e0f4f865564227fa470d97865b0bd",
+  "releaseVersion": "0.2.0-dev.17",
+  "sourceCommit": "914ca49ab66823ea7c73e1c502f0645e65318d42",
+  "businessSourceSha256": "d9c6ec10e586e963530ae7fc8a634a8b0364f4e0cd99560c7ce41fa174f7afdf",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "builtAt": "2026-11-03T16:09:57.851890+00:00",
+  "builtAt": "2026-11-03T19:45:15.804300+00:00",
   "validation": {
-    "sourceCommit": "5e676c9bd0319a0c751e2652b4e79306d5638d95",
-    "checkedAt": "2026-11-03T16:09:57.810136+00:00",
+    "sourceCommit": "914ca49ab66823ea7c73e1c502f0645e65318d42",
+    "checkedAt": "2026-11-03T19:44:40.418571+00:00",
     "status": "passed",
     "checks": [
       {
         "name": "build",
         "status": "passed",
-        "reused": true,
-        "testedSourceCommit": "f460d348f6615286e6333702e34a9750185d5732",
-        "evidence": "docs/UX-Loading-01-VALIDACAO.json",
-        "unchangedSourceVerified": [
-          "server",
-          "src",
-          "assets",
-          "package.json",
-          "package-lock.json",
-          "artesao-release.json",
-          "pilot/config.yaml",
-          "pilot/core-base.json",
-          "pilot/Dockerfile",
-          "pilot/branding",
-          "scripts",
-          "tsconfig.json",
-          "tsconfig.server.json",
-          "index.html",
-          "vite.config.ts"
-        ]
+        "seconds": 12.21
       },
       {
         "name": "application-tests",
         "status": "passed",
-        "testCount": 206,
-        "reused": true,
-        "testedSourceCommit": "f460d348f6615286e6333702e34a9750185d5732",
-        "evidence": "docs/UX-Loading-01-VALIDACAO.json"
-      },
-      {
-        "name": "Chromium-loading",
-        "status": "passed",
-        "reused": true,
-        "testedSourceCommit": "f460d348f6615286e6333702e34a9750185d5732",
-        "viewports": [
-          390,
-          1280
-        ]
+        "seconds": 32.59,
+        "testCount": 214
       },
       {
         "name": "distribution-helper",
         "status": "passed",
-        "testCount": 8,
-        "reused": false
+        "seconds": 0.09,
+        "testCount": 8
       },
       {
         "name": "operations",
         "status": "passed",
-        "testCount": 18,
-        "reused": false
-      },
-      {
-        "name": "forja-update",
-        "status": "passed",
-        "testCount": 15,
-        "reused": false
-      },
-      {
-        "name": "forja-admin",
-        "status": "passed",
-        "testCount": 5,
-        "reused": false
-      },
-      {
-        "name": "PowerShell-updater",
-        "status": "passed",
-        "testCount": 37,
-        "reused": true,
-        "evidence": "previous phase logs /tmp/dist16-ps-{new,existing,origin}.log; preserved PS1/tests hashes verified",
-        "physicalWindows": "not-tested"
+        "seconds": 0.16,
+        "testCount": 18
       }
     ],
     "schemaChecksums": {
@@ -220,8 +169,7 @@
         }
       ]
     },
-    "physicalValidation": "not-performed",
-    "scope": "Distribution source receipt; reused build/application tests explicitly identified, not rerun at this commit."
+    "physicalValidation": "not-performed"
   },
   "schemaChecksums": {
     "tenant": [
@@ -363,10 +311,10 @@
   "supervisorArch": "aarch64",
   "addonSlug": "artesaos_piloto",
   "repositoryPath": "apps/artesaos-piloto",
-  "runtimeSourceCommit": "5e676c9bd0319a0c751e2652b4e79306d5638d95",
-  "runtimeSourceImageId": "sha256:f66b2540c0b72433cc5a818537d16e97bed8d6946b967e644ba30929fed6a7b1",
-  "runtimePayloadSha256": "976d7efd4df9ce8cf9256e3247c24963ac3b86a2d27f710223404a8deddc1a40",
-  "runtimePayloadArchiveSha256": "02249e9c16742403f21bdb0c52d6eabb83e6502510b67ca3f41cb502ac5d1c22",
+  "runtimeSourceCommit": "914ca49ab66823ea7c73e1c502f0645e65318d42",
+  "runtimeSourceImageId": "sha256:d36378176fe0be6838136509f360e523bfc06a5776971f4074844639e7dbf9ad",
+  "runtimePayloadSha256": "47ec60b1fa2ad6fa231fdefdc128876f40ecd2ba231e30f284b25f004ed9fb8f",
+  "runtimePayloadArchiveSha256": "ba50960b1c8c88147e044a18a8e2c618db23c632fc670b455b554963f709489a",
   "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
   "physicalSupervisorValidation": "pending",
   "dataMount": "/data",

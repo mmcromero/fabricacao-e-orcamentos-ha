@@ -101,8 +101,8 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   // Idle expiry with cookies still present: leaving the application is idempotent.
   admin.db.prepare('UPDATE pilot_sessions SET last_seen=0 WHERE user_id=?').run(b['x-pilot-context']);
   assert.equal((await request('api/products',b)).statusCode,401);
-  const expiredLogout=await request('auth/logout',b,'POST');assert.equal(expiredLogout.statusCode,200);assert.equal(expiredLogout.cookies.length,2);assert.ok(expiredLogout.cookies.every(c=>c.maxAge===0));
-  const repeatedLogout=await request('auth/logout',{origin},'POST');assert.equal(repeatedLogout.statusCode,200);assert.equal(repeatedLogout.cookies.length,2);
+  const expiredLogout=await request('auth/logout',b,'POST');assert.equal(expiredLogout.statusCode,200);assert.equal(expiredLogout.cookies.length,3);assert.ok(expiredLogout.cookies.every(c=>c.maxAge===0));
+  const repeatedLogout=await request('auth/logout',{origin},'POST');assert.equal(repeatedLogout.statusCode,200);assert.equal(repeatedLogout.cookies.length,3);
 
   admin.revoke('a@example.test');assert.equal((await request('api/products',a)).statusCode,401);assert.equal((await login('a@example.test','a')).statusCode,403);
   const leaked=readFileSync(join(dir,'pilot-control.sqlite'));assert.ok(!leaked.includes(Buffer.from(inviteA)));
