@@ -29,3 +29,13 @@ Não armazena senha; não configura NOPASSWD/grupo docker/SSH. Cancelamento pres
 pacote pendente. Sucesso confirmado move para Concluidos. Ferramenta não apaga dados,
 não migra schemas nem executa retorno automático. Recibos existentes em .operations
 servem ao procedimento de retorno por imagem, com autorização e compatibilidade.
+
+## dev.15 disponível — Nível 1
+
+[ZIP Windows](Forja-01-0.2.0-dev.15.zip) · [Fonte Debian](artesao-digital-debian-0.2.0-dev.15.tar.gz)
+· [Metadados](publicacoes/0.2.0-dev.15.json) · [Checksums](SHA256SUMS).
+Fonte cc50f483c2f77dfcb5ee2353caf051bb405aa9b5, PWA-01 online. Colocar somente ZIP
+em Pacotes e verificar download. Atualização real exige autorização; manter atalho,
+SSH/sudo/configuração existentes. Conferir healthy/commit/login/PWA após instalar.
+Retorno explícito por imagem anterior/recibo, sem apagar bancos. Publicação não é
+instalação nem homologação física.

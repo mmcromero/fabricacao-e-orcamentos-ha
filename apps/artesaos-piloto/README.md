@@ -1,3 +1,3 @@
-# Artesão Digital — Testes
+# Artesão Digital — Contingência
 
-Aplicativo experimental separado, baseado no núcleo Fabricação e Orçamentos 0.1.23. Instalação manual; não substitui o aplicativo principal. Leia DOCS.md antes de iniciar. Somente dados fictícios.
+Forja 01 é o servidor principal. Acionamento manual no Home Assistant; recuperação e transferência de dados ainda não concluídas. Sem sincronização automática entre ambientes. Base 0.1.23. Leia DOCS.md antes de iniciar.

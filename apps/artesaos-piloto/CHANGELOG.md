@@ -1,3 +1,12 @@
+# 0.2.0-dev.15 — PWA-01 online e HA-UX-001
+
+Manifest Android, escopo/prefixo próprios, identidade Artesão Digital com símbolo
+existente e ícones 192/512. Janela standalone; autenticação/navegação preservadas.
+Worker de rede sem cache mantido; sem offline comercial. Add-on apresentado como
+Artesão Digital — Contingência, preservando slug, opções, /data e portas. Base 0.1.23
+e schemas inalterados. Preparação local; sem publicação/instalação. iOS documentado,
+não homologado fisicamente.
+
 # 0.2.0-dev.14 — R1.1 e continuidade operacional
 
 Inclui R1.1 (3471da1): cadastros consecutivos de interessados, alertas com conteúdo

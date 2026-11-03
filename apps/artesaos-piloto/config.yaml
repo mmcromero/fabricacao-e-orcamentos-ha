@@ -1,7 +1,7 @@
-name: "Artesão Digital — Testes"
-version: "0.2.0-dev.14"
+name: "Artesão Digital — Contingência"
+version: "0.2.0-dev.15"
 slug: artesaos_piloto
-description: "Teste separado de login Google, convites e contas isoladas. Somente dados fictícios."
+description: "Contingência temporária com acionamento manual; Forja 01 é o servidor principal. Recuperação e transferência de dados entre ambientes ainda não concluídas. Sem sincronização automática de bancos."
 arch:
   - aarch64
 startup: application

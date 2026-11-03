@@ -1,3 +1,9 @@
+> Desenvolvimento **0.2.0-dev.15 — PWA-01 online**: manifest/ícones de instalação,
+> sem consulta/venda offline. HA-UX-001 altera apresentação da contingência; identidade
+> técnica e schemas preservados. Sem distribuição/deploy neste pacote. Nível 1
+> permanece vigente. Procedimento e testes em docs/PWA-01.md no repositório; estados
+> e versões anteriores abaixo são históricos quando houver divergência.
+
 > Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
 > schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
 > Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.

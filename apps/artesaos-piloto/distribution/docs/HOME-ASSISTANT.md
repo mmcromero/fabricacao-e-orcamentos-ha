@@ -1,3 +1,9 @@
+> Desenvolvimento **0.2.0-dev.15 — PWA-01 online**: manifest/ícones de instalação,
+> sem consulta/venda offline. HA-UX-001 altera apresentação da contingência; identidade
+> técnica e schemas preservados. Sem distribuição/deploy neste pacote. Nível 1
+> permanece vigente. Procedimento e testes em docs/PWA-01.md no repositório; estados
+> e versões anteriores abaixo são históricos quando houver divergência.
+
 > Distribuição **0.2.0-dev.14**: inclui R1.1 e ferramentas operacionais por fase;
 > schemas tenant11/control4/interest2/support2/legal3 e base 0.1.23 inalterados.
 > Forja principal; HA ARM64 para instalação manual. Publicação não comprova instalação.
@@ -9,6 +15,46 @@
 Forja 01/Debian é principal. HA é plano B temporário. O pacote acompanha as publicações autorizadas;
 instalação, atualização no equipamento e sincronização não são automáticas. A preparação ocorre no
 repositório/ambiente de desenvolvimento, sem acessar o Raspberry Pi pessoal.
+
+## Proxy HA: 502 resolvido pelo proprietário — 03/11/2026
+
+Evidências recebidas: log NGINX `host not found in upstream` apontando a
+f6379561-artesaos-piloto em /share/nginx_proxy_default_artesaos.conf:6; consulta
+Supervisor retornou slug f6379561_artesaos_piloto, hostname
+f6379561-artesaos-piloto, state started, version 0.2.0-dev.14. O proprietário
+reiniciou o NGINX e confirmou que o acesso passou a funcionar. Não relatou alteração
+de proxy, dados, credenciais ou rede. Não houve acesso/intervenção desta sessão Codex.
+
+Destino confirmado para esta instalação:
+`proxy_pass http://f6379561-artesaos-piloto:8099;`
+Preservar HTTPS, porta externa 8443 e prefixo /artesaos-piloto/; não expor 8099.
+O nome já estava correto. O resultado é compatível com indisponibilidade do nome
+na inicialização do NGINX, mas não comprova a causa exata ou um problema de cache DNS.
+Não foi necessário corrigir código da aplicação. Acesso restabelecido não representa
+homologação completa de login, módulos, persistência ou recuperação no HA.
+
+Para recorrências, sem alterar configuração por suposição:
+1. Consultar Supervisor com nomenclatura atual:
+   `ha apps info f6379561_artesaos_piloto --raw-json | jq '(.data // .) | {slug,hostname,state,version}'`.
+   Não compartilhar options/credenciais. Identidade acima é desta instalação;
+   instalações locais/de outra origem exigem consultar seu próprio hostname.
+2. Comparar hostname com proxy_pass e conferir logs atuais/horários. Antes de
+   iniciar o proxy, confirmar que a aplicação está iniciada. Não renomear por hipótese.
+3. Se houver falha persistente, verificar resolução e HTTP a partir do contêiner
+   NGINX por acesso já autorizado; teste no core-ssh não prova a rede do proxy.
+   Ex.: getent hosts HOSTNAME ou nslookup HOSTNAME, se já disponíveis, e uma consulta
+   sem credenciais a http://HOSTNAME:8099/artesaos-piloto/login. Não instalar ferramentas,
+   alterar DNS, abrir portas ou publicar IP numérico para contornar o problema.
+4. Após confirmar destino/aplicação disponíveis, considerar reinício somente do
+   NGINX com autorização: pode interromper temporariamente outros serviços que ele
+   atende. Não reiniciar o Home Assistant inteiro. Conferir configuração com nginx -t
+   no contexto apropriado antes de aplicar qualquer edição. Nesta ocorrência o
+   proprietário executou o reinício e confirmou recuperação; não repetir agora.
+5. Validar URL HTTPS habitual com 8443 e registrar o resultado. Se o hostname já
+   corresponder, não reescrever o arquivo apenas porque houve um erro de DNS anterior.
+
+Não automatizar reinícios nem alterar configurações globais de DNS/segurança nesta
+rotina. Impacto na Central de Pendências: nenhum, diagnóstico operacional.
 
 ## Preparar pacote ARM64
 

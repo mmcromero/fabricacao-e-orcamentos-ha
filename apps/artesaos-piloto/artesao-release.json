@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.14",
-  "stage": "r1.1-publicacao-rastreavel",
+  "version": "0.2.0-dev.15",
+  "stage": "pwa-01-online",
   "distributions": [
     "home-assistant",
     "debian"

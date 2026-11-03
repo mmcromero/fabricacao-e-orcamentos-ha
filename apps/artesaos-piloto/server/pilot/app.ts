@@ -1,3 +1,4 @@
+import {pwaManifest,pwaHead} from './pwa.js';
 import {bindDistribution} from './local-admin.js';
 import {TenantCache,TenantCapacityError} from './tenant-cache.js';
 import {smtpInvitationMailer,type InvitationMailer} from './invitation-mail.js';
@@ -26,7 +27,7 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  const legal=new LegalStore(config.dataDir);
  const destination=prefix+'?view=produtos';
  const scripts=browserScripts(prefix,buildInfo.pilotVersion);
- const browserTag=`<script src="${prefix}browser-ready.js?v=${buildInfo.pilotVersion}"></script><script src="${prefix}brand.js?v=${buildInfo.pilotVersion}"></script>`;
+ const browserTag=`${pwaHead(prefix)}<script src="${prefix}browser-ready.js?v=${buildInfo.pilotVersion}"></script><script src="${prefix}brand.js?v=${buildInfo.pilotVersion}"></script>`;
  const versionFooter=`<footer id="pilot-build-info" aria-label="Versões do aplicativo"><a class="pilot-support-link" href="${prefix}?view=suporte">Suporte técnico</a><a href="${prefix}?view=ajuda">Ajuda</a><a href="${prefix}legal">Termos e privacidade</a><span class="pilot-current-version">Artesão Digital v${buildInfo.pilotVersion}</span></footer>`;
  const finishPage=()=>`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Concluindo acesso — Artesão Digital</title><link rel="stylesheet" href="${prefix}pilot.css">${browserTag}<script defer src="${prefix}auth/finish.js?v=${buildInfo.pilotVersion}"></script></head><body><main class="pilot-auth"><div data-pilot-brand>Artesão Digital</div><h1>Concluindo acesso</h1><p id="finish-status" role="status">Confirmando sua sessão antes de abrir o aplicativo…</p><a id="finish-continue" href="${destination}" hidden>Continuar para Produtos</a><a id="finish-login" href="${prefix}login" hidden>Entrar novamente</a></main>${versionFooter}</body></html>`;
  const setCookie=(name:string,value:string,httpOnly=true,maxAge=28800)=>`${name}=${encodeURIComponent(value)}; Path=${prefix}; Secure; SameSite=Lax; Max-Age=${maxAge}${httpOnly?'; HttpOnly':''}`;
@@ -38,8 +39,14 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(req.headers.host!==config.publicUrl.host)return reply.code(421).send({message:'Endereço de acesso não autorizado.'});
   if(!['GET','HEAD','OPTIONS'].includes(req.method)&&req.headers.origin!==config.publicUrl.origin)return reply.code(403).send({message:'Origem da alteração não autorizada.'});
  });
- app.get(prefix+'legal',(_req,reply)=>reply.type('text/html').send(legal.publicPage(prefix)));
+ app.get(prefix+'legal',(_req,reply)=>reply.type('text/html').send(legal.publicPage(prefix).replace('</head>',pwaHead(prefix)+'</head>')));
  app.get(prefix+'login',async(req,reply)=>{if(session(req))return reply.redirect(destination);return reply.type('text/html').send(`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Artesão Digital</title>${browserTag}<script defer src="${prefix}interest.js?v=${buildInfo.pilotVersion}"></script><link rel="stylesheet" href="${prefix}pilot.css"></head><body><main class="pilot-auth"><h1 data-pilot-brand>Artesão Digital</h1><div class="pilot-introduction"><p class="pilot-kicker">Piloto gratuito · acesso por convite</p><h2>Conheça e teste o Artesão Digital</h2><p><strong>Projeto piloto: acesso somente para pessoas convidadas.</strong> Para acessar e testar, você precisa de um convite individual. Depois da ativação, basta entrar com a mesma conta Google.</p><p>Quer participar? Preencha o formulário de interesse abaixo. O envio não cria uma conta nem libera o acesso automaticamente.</p><a class="pilot-login-shortcut" href="#pilot-login">já tenho um convite/login</a></div>${community.interestForm()}<section id="pilot-login" class="pilot-login-section" aria-labelledby="pilot-login-title" tabindex="-1"><h2 id="pilot-login-title">Já tem convite ou conta ativada?</h2><p>Esta seção é para quem já recebeu um convite ou já acessou o piloto. Entre com sua conta Google. No primeiro acesso, informe seu convite individual.</p><p><a href="${prefix}legal">Termos, privacidade, cookies e informações sobre o login Google</a></p><form method="post" action="${prefix}auth/google/start"><label for="invite">Código de convite (somente no primeiro acesso)</label><input id="invite" name="invite" type="password" maxlength="100" autocomplete="off"><button data-pilot-login disabled>Entrar com Google</button></form><p>Seus dados são separados das demais contas. Esse é um ambiente para testes. Mantenha uma cópia das suas informações por segurança. Esse ambiente ainda está em construção e pode apresentar instabilidades.</p><p><a href="${prefix}admin/login">Acesso administrativo</a></p></section></main>${versionFooter}</body></html>`);});
+ app.get(prefix+'manifest.webmanifest',(_req,reply)=>reply.type('application/manifest+json').send(pwaManifest(prefix)));
+ app.get<{Params:{size:string}}>(prefix+'pwa/icon-:size.png',(req,reply)=>{
+  if(!['192','512'].includes(req.params.size))return reply.code(404).send({message:'Ícone não encontrado.'});
+  const file=join(config.staticDir,'assets','pilot-pwa-'+req.params.size+'.png');
+  return existsSync(file)?reply.type('image/png').send(readFileSync(file)):reply.code(404).send({message:'Ícone não disponível nesta compilação.'});
+ });
  app.get(prefix+'browser-ready.js',(_req,reply)=>reply.type('application/javascript').send(scripts.bootstrap));
  app.get(prefix+'service-worker.js',(_req,reply)=>reply.header('Service-Worker-Allowed',prefix).type('application/javascript').send(scripts.serviceWorker));
  app.get(prefix+'brand.js',(_req,reply)=>reply.type('application/javascript').send(brandScript(prefix,buildInfo.pilotVersion,existsSync(join(config.staticDir,'pilot-logo.png')))));
@@ -104,7 +111,7 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   let body:Buffer|string=response.rawPayload;if((response.headers['content-type']??'').toString().startsWith('text/html'))body=response.body.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/g,(_,src)=>`<script type="application/json" data-pilot-module="${src}"></script>`).replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/g,(_,href)=>`<link rel="stylesheet" data-pilot-href="${href}">`).replace('<html ', '<html data-app-name="Artesão Digital" ').replace(/<title>[^<]*<\/title>/,'<title>Artesão Digital</title>').replace('</head>',`${browserTag}<meta name="pilot-context" content="${current.userId}"><link rel="stylesheet" href="${prefix}pilot.css"><script src="${prefix}pilot-session.js?v=${buildInfo.pilotVersion}"></script></head>`).replace('</body>',versionFooter+'</body>');
   return reply.send(body);
  });
- app.get('/artesaos-piloto',(_req,reply)=>reply.redirect(prefix));
+ if(prefix!=='/')app.get(prefix.slice(0,-1),(_req,reply)=>reply.redirect(prefix));
  app.addHook('onClose',async()=>{await tenants.close();support.close();legal.close();store.close();});
  await app.register(staticFiles,{root:join(config.staticDir,'assets'),prefix:prefix+'assets/',decorateReply:false,index:false,cacheControl:false,etag:false,lastModified:false});
  return app;
