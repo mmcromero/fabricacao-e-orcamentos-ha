@@ -1,3 +1,14 @@
+## 0.2.0-dev.18 — domínio público único
+
+- Origem oficial Forja: https://artesaodigital.com.br/artesaos-piloto/; Tailscale
+  destinado à administração privada SSH/pacotes/atualizações, sem segundo login web.
+- Retirada a proposta de múltiplas origens; Host/Origin/CSRF/sessões preservados.
+- Callback Google validado explicitamente contra a origem/caminho configurados;
+  PKCE, nonce, estado, cookies e fluxo de autenticação existentes mantidos.
+- Testes de origem oficial, callbacks negativos, sessões/CSRF, PWA e Chromium local.
+- Ativação, transição de PWA e rollback documentados em DOMINIO-PUBLICO.md; sem
+  migração, offline, alterações comerciais ou instalação de servidores.
+
 ## 0.2.0-dev.17 — R1.4
 
 - Distribuição de AD-UX-002: apoio voluntário aberto e após conteúdo de Ajuda/Suporte.

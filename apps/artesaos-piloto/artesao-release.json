@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.17",
-  "stage": "r1.4",
+  "version": "0.2.0-dev.18",
+  "stage": "public-origin",
   "distributions": [
     "home-assistant",
     "debian"

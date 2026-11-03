@@ -12,6 +12,7 @@ const dir=mkdtempSync(join(tmpdir(),'pilot-browser-'));
 const testPort=Number(process.env.PILOT_TEST_PORT??8298);if(!Number.isInteger(testPort)||testPort<1024||testPort>65535)throw Error('Invalid test port');
 const origin='https://127.0.0.1:'+testPort;
 const config={publicUrl:new URL(origin+'/artesaos-piloto/'),prefix:'/artesaos-piloto/',dataDir:dir,staticDir:resolve('dist'),clientId:'synthetic',clientSecret:'synthetic',sessionHours:8,idleMinutes:30,maxUsers:null,adminEmails:['admin@example.test']};
+if(process.env.PILOT_TEST_PUBLIC_ORIGIN==='1')config.publicUrl=new URL('https://artesaodigital.com.br:'+testPort+config.prefix);
 const distribution=process.env.PILOT_TEST_DISTRIBUTION??'home-assistant';if(!['home-assistant','debian'].includes(distribution))throw Error('Invalid test distribution');config.distribution=distribution;
 const seeds=new PilotStore(dir);bindDistribution(seeds,distribution);
 if(distribution==='debian'){const local=new LocalAdmin(seeds);let code;local.issueCode('setup',value=>{code=value;});await local.setPassword('setup','admin@example.test','Synthetic admin pass 123!','Synthetic admin pass 123!',code);}

@@ -2,9 +2,9 @@
   "catalogVersion": 1,
   "repository": "mmcromero/fabricacao_e_orcamentos",
   "distribution": "debian",
-  "version": "0.2.0-dev.17",
-  "sourceCommit": "914ca49ab66823ea7c73e1c502f0645e65318d42",
-  "file": "Forja-01-0.2.0-dev.17.zip",
-  "sha256": "772c182caef3e7ec4b10e4203788a69ddef6cf59041807b2e23cd6ad266c5b4c",
-  "metadataSha256": "9950aaf2d3694b584e87aad8261ce5a021ea30685b0957cf4defa9b8169afcf0"
+  "version": "0.2.0-dev.18",
+  "sourceCommit": "464eba3a7b55701452df69c01001e95a8cab966d",
+  "file": "Forja-01-0.2.0-dev.18.zip",
+  "sha256": "0be2e46a8f3cfd830b36cd049ca08150ceb391bccc21e7c6e289ee138725ad1e",
+  "metadataSha256": "c36fb41cab6fe2e36b8bc7063d74a1efe58e8a249a4c6dcc24c3af411a73607b"
 }

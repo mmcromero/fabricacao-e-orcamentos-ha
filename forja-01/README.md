@@ -1,3 +1,25 @@
+# 0.2.0-dev.18 — domínio público único, Nível1; disponível para homologação
+
+[ZIP Forja](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.18.zip)
+· [Checksums](SHA256SUMS) · [Índice atual](publicacao-atual.json)
+· [Kit permanente existente](Instalar-Atualizador-Forja-01.zip).
+
+Fonte 464eba3a7b55701452df69c01001e95a8cab966d. Origem oficial do Forja: https://artesaodigital.com.br/artesaos-piloto/.
+Tailscale permanece administração SSH/atualizações. Não há suporte a duas origens de
+login. A configuração instalada é preservada: pacote sozinho não muda public_url,
+DNS/proxy/TLS/Google. Infraestrutura deve coordenar a ativação conforme
+[DOMINIO-PUBLICO.md](../apps/artesaos-piloto/manuals/DOMINIO-PUBLICO.md).
+Callback Google: https://artesaodigital.com.br/artesaos-piloto/auth/google/callback
+
+Kit Windows inalterado: Baixar-Pacote.cmd baixa/valida; Verificar-Download.cmd é
+opcional; Atualizar-Forja-01.cmd exige autorização própria. Não instalar automaticamente.
+Pacote compose-source; imagem construída no staging durante instalação autorizada.
+Schemas e volumes preservados. Retorno pela ferramenta existente/imagem anterior,
+sem restauração/apagamento de banco automático. Backup recomendado conforme Nível1.
+Publicação não comprova instalação ou homologação física. Nenhum servidor acessado.
+
+---
+
 # dev.17 — R1.4 disponível, Nível 1; kit Windows existente preservado
 
 [ZIP dev.17](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.17.zip)
