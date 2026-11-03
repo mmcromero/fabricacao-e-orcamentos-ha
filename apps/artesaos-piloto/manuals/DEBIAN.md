@@ -1,3 +1,7 @@
+> Desenvolvimento **0.2.0-dev.16 — UX-Loading-01**: feedback visual de espera,
+> sem mudanças de autenticação/schema/regras comerciais. Nível 1 preservado.
+> Nenhuma distribuição/deploy nesta entrega. Guia/testes em docs/UX-Loading-01.md.
+
 > Desenvolvimento **0.2.0-dev.15 — PWA-01 online**: manifest/ícones de instalação,
 > sem consulta/venda offline. HA-UX-001 altera apresentação da contingência; identidade
 > técnica e schemas preservados. Sem distribuição/deploy neste pacote. Nível 1

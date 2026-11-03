@@ -37,12 +37,13 @@ self.addEventListener('fetch',event=>{
   });
  })();
  const ready=async()=>{
+  const done=window.pilotLoading?.begin('Carregando aplicativo…');
   try{
    await window.pilotBrowserReady;
    document.querySelectorAll('[data-pilot-login]').forEach(button=>button.disabled=false);
    for(const style of document.querySelectorAll('link[data-pilot-href]'))style.href=style.dataset.pilotHref;
    for(const script of document.querySelectorAll('script[data-pilot-module]'))await import(script.dataset.pilotModule);
-  }catch{report();}
+  }catch{report();}finally{done?.();}
  };
  // Attach rejection handling immediately, even while the document is parsing.
  window.pilotBrowserReady.catch(()=>{});

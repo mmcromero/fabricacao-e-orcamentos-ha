@@ -1,3 +1,4 @@
+import {LocalAdmin,bindDistribution} from '../server/pilot/local-admin.ts';
 import {PilotStore} from '../server/pilot/store.ts';
 import http from 'node:http';
 import https from 'node:https';
@@ -11,7 +12,10 @@ const dir=mkdtempSync(join(tmpdir(),'pilot-browser-'));
 const testPort=Number(process.env.PILOT_TEST_PORT??8298);if(!Number.isInteger(testPort)||testPort<1024||testPort>65535)throw Error('Invalid test port');
 const origin='https://127.0.0.1:'+testPort;
 const config={publicUrl:new URL(origin+'/artesaos-piloto/'),prefix:'/artesaos-piloto/',dataDir:dir,staticDir:resolve('dist'),clientId:'synthetic',clientSecret:'synthetic',sessionHours:8,idleMinutes:30,maxUsers:null,adminEmails:['admin@example.test']};
-const seeds=new PilotStore(dir);for(const account of ['a','b'])seeds.bootstrap(account+'@example.test','synthetic-invite-'+account+'-01234567890123456789');seeds.close();
+const distribution=process.env.PILOT_TEST_DISTRIBUTION??'home-assistant';if(!['home-assistant','debian'].includes(distribution))throw Error('Invalid test distribution');config.distribution=distribution;
+const seeds=new PilotStore(dir);bindDistribution(seeds,distribution);
+if(distribution==='debian'){const local=new LocalAdmin(seeds);let code;local.issueCode('setup',value=>{code=value;});await local.setPassword('setup','admin@example.test','Synthetic admin pass 123!','Synthetic admin pass 123!',code);}
+for(const account of ['a','b'])seeds.bootstrap(account+'@example.test','synthetic-invite-'+account+'-01234567890123456789');seeds.close();
 const provider={async start(state){return 'https://accounts.google.com/test?state='+state;},async complete(url){const subject=url.searchParams.get('code');if(!['a','b','c','admin'].includes(subject))throw Error('Unknown fixture');return {issuer:'https://accounts.google.com',subject,email:subject+'@example.test',verified:true};}};
 if(process.env.PILOT_TEST_LEGAL==='1'){const doc={version:'fixture-1',effectiveAt:'2026-01-01',text:'Documento fictício de teste. Não é texto jurídico publicado.'};writeFileSync(join(dir,'legal-config.json'),JSON.stringify({enabled:true,reviewed:true,terms:doc,privacy:doc,cookies:doc}));}
 const app=await createPilotApp(config,provider);

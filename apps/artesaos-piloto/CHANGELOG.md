@@ -1,3 +1,11 @@
+# 0.2.0-dev.16 — UX-Loading-01
+
+Feedback discreto de espera em login local/Google, preparação do aplicativo,
+navegação administrativa e requisições administrativas. Encerramento em resposta/
+erro e restauração ao voltar à página. Autenticação, regras comerciais, schemas,
+PWA e worker de rede preservados. Sem investigação de desempenho ou offline.
+Implementação independente; não publicada nem instalada por esta entrega.
+
 # 0.2.0-dev.15 — PWA-01 online e HA-UX-001
 
 Manifest Android, escopo/prefixo próprios, identidade Artesão Digital com símbolo

@@ -1,3 +1,30 @@
+# dev.16 e UPD-CMD-01 disponíveis — Nível 1
+
+[ZIP dev.16](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.16.zip)
+· [Kit permanente atualizado](Instalar-Atualizador-Forja-01.zip)
+· [Correção da ferramenta existente](Correcao-Download-Forja-01.zip)
+· [Checksums](SHA256SUMS) · [Índice atual](publicacao-atual.json).
+
+Ferramenta já instalada: fechar comandos, extrair kit/correção em pasta separada,
+copiar somente Forja01.ps1 e Baixar-Pacote.cmd (LEIA-ME opcional); preservar
+forja-config.json, forja-admin.py, os dois CMDs/atalho e todas as pastas existentes.
+Novo uso: kit permanente com configuração-modelo vazia, sem credenciais.
+
+Baixar-Pacote.cmd identifica/baixa/valida ZIP oficial para Pacotes; não instala nem
+executa diagnóstico/SSH. Depois, Verificar-Download.cmd é opcional. Atualizar-Forja-01.cmd
+somente com autorização expressa de instalação. ZIPs anteriores são preservados em
+Pacotes-Anteriores; Concluidos indica somente sucesso real de atualização.
+
+Versão dev.16, fonte 5e676c9bd0319a0c751e2652b4e79306d5638d95. UX-Loading-01,
+mesma autenticação/schema/regra comercial. Código/testes do app reaproveitados com
+comparação de fonte. Pacote Debian compose-source: a imagem será construída pelo
+atualizador existente no staging durante instalação autorizada, não está no ZIP.
+N1: backup recomendado, sem certificação como pré-requisito de atualização comum.
+Retorno por imagem anterior/recibo, sem restaurar/apagar dados automaticamente.
+Publicação não é instalação nem homologação física; Windows/Android/Pi pendentes.
+
+---
+
 # Ferramenta de atualização Forja 01 — Windows
 
 Este diretório público distribui somente a ferramenta e os metadados necessários

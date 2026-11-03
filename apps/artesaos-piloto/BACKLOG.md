@@ -1,3 +1,38 @@
+# UX-Loading-01 — situação da prioridade de feedback
+
+Implementado em desenvolvimento na dev.16; detalhes em docs/UX-Loading-01.md no
+repositório. Publicação/instalação/homologação física pendentes. Não repetir o pacote
+nem incorporar outras alterações por consequência. Investigação de desempenho segue
+adiada para depois do piloto/homologação. A diretriz abaixo preserva a motivação.
+
+---
+
+# Prioridade imediata — feedback visual de espera (03/11/2026)
+
+Fase atual: homologação, validação funcional, correções e melhorias visuais.
+Incluir no próximo pacote feedback visual discreto e consistente de carregamento e
+processamento, especialmente no login e na navegação administrativa. Pode ser uma
+entrega independente, sem incorporar outras alterações.
+
+Critério principal: o usuário percebe claramente que a solicitação foi recebida e
+que deve aguardar, preservando a identidade visual e o fluxo funcional existentes.
+Não apresentar sucesso antes da confirmação real da operação. Implementação ainda
+não iniciada por este registro; preparar o próximo pacote dentro desse escopo.
+
+## Desempenho — etapa posterior ao piloto/homologação
+
+Manter no backlog investigação de latência, benchmarking, medidas e ajustes finos
+de desempenho ou otimizações sem relação direta com falhas funcionais. Não acoplar
+essa investigação ao feedback visual nem usá-la como condição para sua entrega.
+Correções de falhas funcionais continuam no foco atual, sem ampliar automaticamente
+seu escopo para uma análise geral de desempenho.
+
+Impacto na Central de Pendências: nenhum previsto para o indicador visual de espera;
+não criar alerta/pendência comercial para representar simples carregamento.
+Reavaliar apenas se a futura implementação demonstrar impacto adicional.
+
+---
+
 # Prioridades posteriores à 0.2.0-dev.12 — registrar, não implementar
 
 ## Alta: auditoria abrangente
@@ -64,7 +99,7 @@ etc.); itens não promovidos expressamente continuam fora do escopo.
 - Concluir pacote legal; testar celular real, Google real e hospedagem/HA.
 - Conferir cálculos, isolamento de contas/logos/documentos/chamados, atualização, reinício e restauração.
 - Backup inexistente atualmente: definir, configurar e testar recuperação protegida em outro dispositivo/local.
-- Medir memória, desempenho e espaço no servidor efetivo; revisar textos contra operação e normas vigentes.
+- Revisar textos contra operação e normas vigentes. Investigação de desempenho/memória/benchmarking foi adiada para depois do piloto/homologação pela diretriz de 03/11/2026; não bloqueia o pacote de feedback visual.
 - Corrigir falhas que impeçam o fluxo, alterem valores ou exponham dados. Compilar/publicar este pacote não declara release estável.
 
 ## Ideias Futuras

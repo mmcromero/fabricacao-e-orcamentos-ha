@@ -1,3 +1,19 @@
+## Distribuição dev.16 — UPD-CMD-01 e link obrigatório
+
+Kit Windows: Baixar-Pacote.cmd → Verificar-Download.cmd (opcional) →
+Atualizar-Forja-01.cmd (somente com autorização). Download/diagnóstico não instalam.
+Preservar configuração, credenciais e atalho; atualizar apenas Forja01.ps1 e acrescentar
+Baixar-Pacote.cmd quando a ferramenta anterior não tiver o downloader.
+
+Em toda publicação Debian/Windows entregar versão, nome real do ZIP, URL HTTPS
+direta clicável e verificada, SHA-256 e disponibilidade pública confirmada, conforme
+AGENTS.md. Publicar/conferir manifesto por versão e arquivos antes de promover
+publicacao-atual.json na origem existente. Regras operacionais N1/N2 não mudam.
+
+> Desenvolvimento **0.2.0-dev.16 — UX-Loading-01**: feedback visual de espera,
+> sem mudanças de autenticação/schema/regras comerciais. Nível 1 preservado.
+> Nenhuma distribuição/deploy nesta entrega. Guia/testes em docs/UX-Loading-01.md.
+
 > Desenvolvimento **0.2.0-dev.15 — PWA-01 online**: manifest/ícones de instalação,
 > sem consulta/venda offline. HA-UX-001 altera apresentação da contingência; identidade
 > técnica e schemas preservados. Sem distribuição/deploy neste pacote. Nível 1

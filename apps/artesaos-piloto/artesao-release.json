@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.15",
-  "stage": "pwa-01-online",
+  "version": "0.2.0-dev.16",
+  "stage": "ux-loading-01",
   "distributions": [
     "home-assistant",
     "debian"
