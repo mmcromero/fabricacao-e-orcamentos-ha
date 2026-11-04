@@ -14,9 +14,9 @@ RUN --mount=type=secret,id=proxy_ca \
     chmod a+r /app/package.json /app/pilot-build.json
 
 FROM node:24.19.0-bookworm-slim
-LABEL org.opencontainers.image.revision="464eba3a7b55701452df69c01001e95a8cab966d" \
-      org.opencontainers.image.version="0.2.0-dev.18" \
-      org.opencontainers.image.created="2026-11-03T22:29:01.829809+00:00" \
+LABEL org.opencontainers.image.revision="9cc36e95bb73019e7b6a97b7277fcc0c142c47f9" \
+      org.opencontainers.image.version="0.2.0-dev.19" \
+      org.opencontainers.image.created="2026-11-04T05:48:50.104500+00:00" \
       org.opencontainers.image.source="https://github.com/mmcromero/fabricacao_e_orcamentos" \
       dev.artesao.distribution="home-assistant"
 WORKDIR /app

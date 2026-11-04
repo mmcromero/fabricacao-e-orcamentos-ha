@@ -1,3 +1,4 @@
+import ActionButton from './ActionButton';
 import Help from './Help';
 import LegalGate from './LegalGate';
 import {appName} from './branding';
@@ -59,7 +60,7 @@ function App() {
     <section><h2>Teste de persistência</h2><p>Escreva algo sem dados pessoais, salve e reinicie o aplicativo pelo Home Assistant. A anotação deve continuar aqui.</p>
       <ValidatedForm onSubmit={save}><label htmlFor="note">Anotação de teste</label>
       <textarea id="note" maxLength={500} value={text} onChange={e => setText(e.target.value)} disabled={busy || !health} />
-      <button disabled={busy || !health}>{busy ? 'Aguarde…' : 'Salvar anotação'}</button></ValidatedForm>
+      <ActionButton disabled={busy || !health}>{busy ? 'Aguarde…' : 'Salvar anotação'}</ActionButton></ValidatedForm>
       <p>Última gravação: {saved ? new Date(saved).toLocaleString('pt-BR') : 'nenhuma'}</p>
     </section><p role="status">{message}</p>
   </main>;

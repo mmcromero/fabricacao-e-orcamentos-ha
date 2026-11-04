@@ -2,3 +2,5 @@
 
 #root{padding-top:24px}
 .app-version{position:fixed;top:4px;right:8px;z-index:4;font-size:11px;line-height:1.4;color:#55665d;background:#f3f5f1;border-radius:4px;padding:2px 5px;pointer-events:none}
+
+button[aria-busy="true"]{cursor:progress}.action-wait-mark{display:inline-block;margin-right:.35em;font-weight:700}.field-error[role="alert"]{overflow-wrap:anywhere}

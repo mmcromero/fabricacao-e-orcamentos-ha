@@ -1,4 +1,5 @@
-import {useEffect,useRef,type FormHTMLAttributes} from 'react';
+import {useEffect,useRef,useState,type FormEvent,type FormHTMLAttributes} from 'react';
+import {ActionFormContext} from './ActionButton';
 export type ValidationIssue={element:HTMLElement;message:string};
 let serial=0;
 export function RequiredMark(){return <span className="required-mark" aria-hidden="true"> *</span>;}
@@ -44,11 +45,20 @@ export function validateFields(root:HTMLElement,additional:ValidationIssue[]=[],
  return showValidation(root,issues);
 }
 export default function ValidatedForm({onSubmit,children,...props}:FormHTMLAttributes<HTMLFormElement>){
- const ref=useRef<HTMLFormElement>(null);
+ const ref=useRef<HTMLFormElement>(null),locked=useRef(false);
+ const [pending,setPending]=useState(false),[submitter,setSubmitter]=useState<HTMLElement|null>(null),[actionError,setActionError]=useState(false);
  useEffect(()=>{
   const form=ref.current!;
   const annotate=()=>{for(const control of Array.from(form.querySelectorAll<HTMLInputElement>('[required],[aria-required=true]'))){const label=control.labels?.[0];if(label&&!label.querySelector('.required-mark')&&!label.textContent?.includes('*')){const mark=document.createElement('span');mark.className='required-mark';mark.setAttribute('aria-hidden','true');mark.textContent=' *';if(label.contains(control)){let anchor:HTMLElement=control;while(anchor.parentElement!==label)anchor=anchor.parentElement!;label.insertBefore(mark,anchor);}else label.append(mark);}}};
   annotate();const observer=new MutationObserver(annotate);observer.observe(form,{childList:true,subtree:true,attributes:true,attributeFilter:['required','aria-required']});return()=>observer.disconnect();
  },[]);
- return <form {...props} ref={ref} noValidate onSubmit={event=>{event.preventDefault();if(validateFields(event.currentTarget))onSubmit?.(event);}}><p className="required-note">* Indica preenchimento obrigatório conforme a regra do campo ou grupo.</p>{children}</form>;
+ return <ActionFormContext.Provider value={{pending,submitter}}><form {...props} ref={ref} noValidate aria-busy={pending||undefined} onSubmit={event=>{
+  event.preventDefault();if(locked.current||!validateFields(event.currentTarget))return;
+  setActionError(false);setSubmitter(((event.nativeEvent as SubmitEvent).submitter as HTMLElement|null)??event.currentTarget.querySelector<HTMLElement>('button:not([type=button])'));
+  try{const result=(onSubmit as ((event:FormEvent<HTMLFormElement>)=>unknown)|undefined)?.(event);
+   if(result&&typeof (result as PromiseLike<unknown>).then==='function'){
+    locked.current=true;setPending(true);Promise.resolve(result).catch(()=>setActionError(true)).finally(()=>{locked.current=false;setPending(false);});
+   }
+  }catch{setActionError(true);}
+ }}><p className="required-note">* Indica preenchimento obrigatório conforme a regra do campo ou grupo.</p>{children}{actionError&&<p role="alert" className="field-error">Não foi possível confirmar o envio. Confira os dados e tente novamente.</p>}</form></ActionFormContext.Provider>;
 }

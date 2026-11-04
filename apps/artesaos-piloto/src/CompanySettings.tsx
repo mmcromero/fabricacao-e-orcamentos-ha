@@ -1,3 +1,4 @@
+import ActionButton from './ActionButton';
 import {useEffect,useId,useState,type FormEvent} from 'react';
 import ValidatedForm from './FormValidation';
 type Company={name:string;responsible:string;phone:string;email:string};
@@ -13,5 +14,5 @@ export default function CompanySettings(){
  <label>Nome da pessoa responsável<input required name="companyResponsible" value={data.responsible} maxLength={200} autoComplete="name" onChange={event=>setData({...data,responsible:event.target.value})}/></label>
  <label>Telefone para contato<input required name="companyPhone" type="tel" value={data.phone} maxLength={40} autoComplete="tel" onChange={event=>setData({...data,phone:event.target.value})}/></label>
  <label>E-mail para contato<input required name="companyEmail" type="email" value={data.email} maxLength={254} autoComplete="email" onChange={event=>setData({...data,email:event.target.value})}/></label>
- </div><button disabled={!loaded||busy}>Salvar dados da empresa</button></fieldset></ValidatedForm><p role={error?'alert':'status'}>{message}</p></section>;
+ </div><ActionButton disabled={!loaded||busy}>Salvar dados da empresa</ActionButton></fieldset></ValidatedForm><p role={error?'alert':'status'}>{message}</p></section>;
 }

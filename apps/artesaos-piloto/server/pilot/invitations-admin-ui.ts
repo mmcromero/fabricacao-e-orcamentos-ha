@@ -9,7 +9,7 @@ export function invitationsAdminScript(base:string){return `(()=>{addEventListen
  let reactivatingId=null,searchTimer=null;let page=1,pages=1,automatic=false,busy=false,current=null,issueKey=crypto.randomUUID(),generation=0,detailGeneration=0,lastTrigger=null;
  const date=value=>value?new Date(value).toLocaleString('pt-BR'):'Não registrado';
  const node=(tag,text)=>{const el=document.createElement(tag);el.textContent=text;return el;};
- const button=(text,fn)=>{const el=node('button',text);el.type='button';el.onclick=()=>void fn();return el;};
+ const button=(text,fn)=>{const el=node('button',text);el.type='button';el.onclick=()=>fn();return el;};
  async function request(path,init={}){const r=await fetch(base+'api/invitations'+path,{...init,cache:'no-store',signal:AbortSignal.timeout(50000),headers:{'Content-Type':'application/json','X-Pilot-Admin-Context':context,'X-Pilot-Admin-CSRF':csrf}});if(r.status===401){location.replace(base+'login');throw Error('Sessão administrativa expirada.');}const data=await r.json();if(!r.ok)throw Error(data.message||'Não foi possível concluir a operação.');return data;}
  function lock(value){busy=value;document.querySelectorAll('.invitations-admin button,.invitations-admin input,.invitations-admin select').forEach(el=>el.disabled=value);document.getElementById('invitations-previous').disabled=value||page<=1;document.getElementById('invitations-next').disabled=value||page>=pages;}
  function channelChanged(){email.required=channel.value==='email';phone.required=channel.value==='whatsapp';document.getElementById('invitation-save-hint').textContent=channel.value==='whatsapp'?'Após salvar, abra o WhatsApp com a mensagem pronta e faça o envio.':automatic?'Ao salvar, o sistema tentará enviar a mensagem pelo e-mail configurado.':'Após salvar, abra seu e-mail ou copie a mensagem pronta. O envio automático ainda não está configurado.';}
@@ -44,6 +44,6 @@ export function invitationsAdminScript(base:string){return `(()=>{addEventListen
    await load();
   }catch(error){notice.textContent=error.message;}finally{lock(false);}};
  search.oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(!busy){page=1;void load();}},300);};filter.onchange=()=>{if(!busy){page=1;void load();}};
- document.getElementById('invitations-refresh').onclick=()=>{if(!busy)void load();};document.getElementById('invitations-previous').onclick=()=>{if(!busy){page--;void load();}};document.getElementById('invitations-next').onclick=()=>{if(!busy){page++;void load();}};
+ document.getElementById('invitations-refresh').onclick=()=>{if(!busy)return load();};document.getElementById('invitations-previous').onclick=()=>{if(!busy){page--;return load();}};document.getElementById('invitations-next').onclick=()=>{if(!busy){page++;return load();}};
  setInterval(()=>{if(document.visibilityState==='visible'&&!busy&&form.hidden)void load();},15000);addEventListener('focus',()=>{if(!busy&&form.hidden)void load();});await load();const initialId=new URLSearchParams(location.search).get('id');if(initialId&&/^[a-f0-9]{64}$/.test(initialId)){await detail(initialId);if(new URLSearchParams(location.search).get('from')==='interests')notice.textContent='Convite gerado ou localizado. Mensagem pronta para compartilhar; nenhum envio automático foi presumido.';}
 });})();`;}

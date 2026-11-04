@@ -1,3 +1,24 @@
+## 0.2.0-dev.19 — UX-FEEDBACK-001 + UX-LEGAL-001
+
+- Distribuição exclusivamente Debian/Forja das duas melhorias já implementadas.
+- Feedback por ação, prevenção de repetição, mensagens e retorno jurídico contextual.
+- Sem mudanças de autenticação, schemas, dados ou regras comerciais.
+- Home Assistant não empacotado/publicado nesta entrega; fonte comum mantém versão
+  coerente para build. Publicação não instala nem homologa o servidor.
+
+## UX-FEEDBACK-001 + UX-LEGAL-001 — implementação local, sem distribuição
+
+- Feedback de processamento por ação/formulário, bloqueio de repetição e liberação
+  após resposta/erro; reutiliza UX-Loading-01, sem bloqueio global novo.
+- Mensagens específicas preservadas; falhas não tratadas recebem aviso seguro.
+  Confirmações de categoria/arquivamento somente após resposta confirmada.
+- Política de Privacidade padronizada nos links; botão Voltar contextual com sessão
+  validada no servidor, origem permitida e continuidade login/landing na mesma aba.
+- Conteúdo jurídico, histórico, autenticação, regras, schemas e distribuição intactos.
+- Versão declarada dev.18 mantida. Próxima distribuição proposta dev.19, sujeita a
+  nova conferência do Git e autorização; nenhum pacote ou servidor atualizado.
+- Evidências e homologação: docs/UX-FEEDBACK-001-UX-LEGAL-001.md.
+
 ## 0.2.0-dev.18 — domínio público único
 
 - Origem oficial Forja: https://artesaodigital.com.br/artesaos-piloto/; Tailscale

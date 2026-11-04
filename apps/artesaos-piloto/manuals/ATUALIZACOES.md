@@ -1,3 +1,20 @@
+## dev.19 — feedback e navegação jurídica; somente Debian
+
+Inclui exclusivamente UX-FEEDBACK-001/UX-LEGAL-001 sobre a dev.18. Sem schema novo,
+migração ou alteração de autenticação/regras. Exige novo login pelo mecanismo de
+versão existente. Antes de continuar, revisar/copiar campos não salvos conforme aviso.
+Nível 1 preservado, backup recomendado sem certificação bloqueante.
+
+Exportação somente Debian: usar o mesmo prepare-distributions.py com --debian-only.
+A opção padrão continua exportando ambos os destinos. A opção restrita gera apenas
+a árvore Debian e seu tar; nenhuma distribuição Home Assistant dev.19 é produzida.
+ZIP/descriptor/índice públicos seguem prepare-forja-windows.py, sem executar SSH.
+Publicação no GitHub não instala. Instalação futura: comandos Windows existentes,
+plano/aceites/sudo, somente após autorização da infraestrutura/proprietário.
+Rollback pelo procedimento existente de RECUPERACAO.md, preservando volumes,
+configurações e registros; esta alteração de UI não exige restauração de bancos.
+Homologar indicadores e os seis retornos jurídicos em desktop e Android/PWA real.
+
 ## dev.17 — primeira adoção de PWA-UPDATE-001
 
 Antes da instalação autorizada: salvar/conferir informações e fechar/recarregar

@@ -1,0 +1,49 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,resolve} from 'node:path';
+import {legalBackLocation,legalReturnTarget} from '../server/pilot/legal-navigation.js';
+import {createPilotApp} from '../server/pilot/app.js';
+import {DatabaseSync} from 'node:sqlite';
+import {PilotStore} from '../server/pilot/store.js';
+import type {PilotConfig} from '../server/pilot/config.js';
+const prefix='/artesaos-piloto/',origin='https://artesaodigital.com.br',config={prefix,publicUrl:new URL(origin+prefix)};
+test('retorno jurídico: seis cenários e página interna exata, sem destinos arbitrários',()=>{
+ const page=prefix+'?view=financeiro&id=abc&month=2026-11#details';
+ assert.equal(legalBackLocation(config,'/',false,false),'/');
+ assert.equal(legalBackLocation(config,prefix+'login',false,false),prefix+'login');
+ assert.equal(legalBackLocation(config,page,true,false),page);
+ assert.equal(legalBackLocation(config,page,false,false),prefix+'login');
+ assert.equal(legalBackLocation(config,undefined,true,false),prefix);
+ assert.equal(legalBackLocation(config,undefined,false,false),'/');
+ for(const input of ['https://evil.test/', '//evil.test/','/\\evil.test/',prefix+'auth/google/callback?code=secret',prefix+'api/clients',prefix+'legal',prefix+'?view=unknown',prefix+'?view=vendas&view=clientes','https://user:secret@artesaodigital.com.br'+prefix,'/other-page','javascript:alert(1)','/%0d%0aLocation:evil'])assert.equal(legalReturnTarget(config,input),null,input);
+ assert.equal(legalBackLocation(config,'https://evil.test/',true,false),prefix);
+ assert.equal(legalBackLocation(config,prefix+'admin/support?page=2',false,false),prefix+'admin/login');
+ assert.equal(legalBackLocation(config,prefix+'admin/support?page=2',false,true),prefix+'admin/support?page=2');
+});
+test('rota de Voltar valida sessão no clique; conteúdo jurídico e versões permanecem iguais',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'legal-nav-'));
+ const settings:PilotConfig={...config,dataDir:dir,staticDir:resolve('dist'),clientId:'synthetic',clientSecret:'synthetic',sessionHours:8,idleMinutes:30,maxUsers:null};
+ const provider={async start(){return 'https://accounts.google.com/synthetic';},async complete(){throw Error('unused');}};
+ const app=await createPilotApp(settings,provider,null),store=new PilotStore(dir);
+ const get=(path:string,headers:Record<string,string>={})=>app.inject({url:prefix+path,headers:{host:'artesaodigital.com.br',...headers}});
+ try{
+  const readLegal=()=>{const db=new DatabaseSync(join(dir,'pilot-legal.sqlite'),{readOnly:true});try{return db.prepare('SELECT id,kind,version,content,hash,author,published_at FROM resource_versions ORDER BY id').all();}finally{db.close();}};const initialLegal=readLegal();
+  const before=await get('legal');assert.match(before.body,/>Voltar<\/button>/);assert.doesNotMatch(before.body,/Voltar ao acesso/);assert.match(before.body,/Política de Privacidade/);
+  assert.equal((await get('legal/back')).headers.location,'/');
+  assert.equal((await get('legal/back?returnTo='+encodeURIComponent(prefix+'?view=financeiro&id=abc'))).headers.location,prefix+'login');
+  const code=store.invite('legal@example.test');const user=store.activate({issuer:'https://accounts.google.com',subject:'legal',email:'legal@example.test',verified:true},(await import('../server/pilot/store.js')).digest(code),null);
+  const created=store.session(user,8),cookie='__Secure-artesaos_session='+created.value;
+  const target=prefix+'?view=financeiro&id=abc&month=2026-11#entry';const url='legal/back?returnTo='+encodeURIComponent(target);
+  assert.equal((await get(url,{cookie})).headers.location,target);
+  assert.equal((await get('legal/back',{cookie})).headers.location,prefix);
+  store.db.prepare('UPDATE pilot_sessions SET expires_at=0').run();assert.equal((await get(url,{cookie})).headers.location,prefix+'login');
+  const fromLanding=await get('legal',{referer:origin+'/'});assert.match(fromLanding.body,/name="returnTo" value="\/"/);
+  const fromLogin=await get('legal',{referer:origin+prefix+'login'});assert.match(fromLogin.body,/name="returnTo" value="\/artesaos-piloto\/login"/);
+  assert.equal((await get('legal/back?returnTo=https%3A%2F%2Fevil.test')).headers.location,'/');
+  assert.equal((await get('legal/back?returnTo=%2F&returnTo=https%3A%2F%2Fevil.test')).headers.location,'/');
+  assert.deepEqual(readLegal(),initialLegal,'navegação não modifica conteúdo, publicação ou histórico');
+  const login=await get('login');assert.match(login.body,/>Política de Privacidade<\/a>/);
+ }finally{store.close();await app.close();rmSync(dir,{recursive:true,force:true});}
+});

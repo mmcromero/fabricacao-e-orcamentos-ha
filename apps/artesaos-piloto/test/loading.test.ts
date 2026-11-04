@@ -32,8 +32,8 @@ test('loading: modified and same-page navigation do not start indicators',()=>{
  f.docListeners.click(e);assert.equal(f.status().hidden,true);link.href='https://example.test/prefix/admin/support';f.docListeners.click({...e,ctrlKey:true});assert.equal(f.status().hidden,true);f.docListeners.click(e);assert.equal(f.status().hidden,false);f.listeners.keydown({key:'Escape'});assert.equal(f.status().hidden,true);
 });
 
-test('loading: Escape releases native login state without changing form data',()=>{
- const f=fixture(),form=new f.Form();f.docListeners.submit({target:form,defaultPrevented:false});assert.equal(form.button.disabled,true);f.listeners.keydown({key:'Escape'});assert.equal(form.button.disabled,false);assert.equal(f.status().hidden,true);
+test('loading: Escape does not unlock an unconfirmed native login or allow a duplicate',()=>{
+ const f=fixture(),form=new f.Form();f.docListeners.submit({target:form,defaultPrevented:false});assert.equal(form.button.disabled,true);f.listeners.keydown({key:'Escape'});assert.equal(form.button.disabled,true);assert.equal(f.status().hidden,false);let prevented=false;f.docListeners.submit({target:form,defaultPrevented:false,preventDefault(){prevented=true;}});assert.equal(prevented,true);
 });
 test('loading: common and HA-admin Google forms share feedback without changing action',()=>{
  for(const action of ['https://example.test/prefix/auth/google/start','https://example.test/prefix/admin/auth/google/start']){

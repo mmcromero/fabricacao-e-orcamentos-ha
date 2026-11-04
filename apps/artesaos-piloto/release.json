@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.18",
-  "stage": "public-origin",
+  "version": "0.2.0-dev.19",
+  "stage": "ux-homologation",
   "distributions": [
     "home-assistant",
     "debian"
@@ -12,27 +12,27 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.18",
-  "sourceCommit": "464eba3a7b55701452df69c01001e95a8cab966d",
-  "businessSourceSha256": "a0b742040ff3a41f2cc8d9cf22e10597237939dd2d03e764d17ca1fff48341a8",
+  "releaseVersion": "0.2.0-dev.19",
+  "sourceCommit": "9cc36e95bb73019e7b6a97b7277fcc0c142c47f9",
+  "businessSourceSha256": "101bf38f67fd40cb9d53b302fbe8140a4b12c2819a246f49ddbc5335c83546d4",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "builtAt": "2026-11-03T22:29:01.829809+00:00",
+  "builtAt": "2026-11-04T05:48:50.104500+00:00",
   "validation": {
-    "sourceCommit": "464eba3a7b55701452df69c01001e95a8cab966d",
-    "checkedAt": "2026-11-03T22:28:39.226608+00:00",
+    "sourceCommit": "9cc36e95bb73019e7b6a97b7277fcc0c142c47f9",
+    "checkedAt": "2026-11-04T05:40:58.721389+00:00",
     "status": "passed",
     "checks": [
       {
         "name": "build",
         "status": "passed",
-        "seconds": 12.5
+        "seconds": 9.42
       },
       {
         "name": "application-tests",
         "status": "passed",
-        "seconds": 27.17,
-        "testCount": 221
+        "seconds": 28.52,
+        "testCount": 223
       },
       {
         "name": "distribution-helper",
@@ -43,7 +43,7 @@
       {
         "name": "operations",
         "status": "passed",
-        "seconds": 0.14,
+        "seconds": 0.15,
         "testCount": 18
       }
     ],
@@ -311,10 +311,10 @@
   "supervisorArch": "aarch64",
   "addonSlug": "artesaos_piloto",
   "repositoryPath": "apps/artesaos-piloto",
-  "runtimeSourceCommit": "464eba3a7b55701452df69c01001e95a8cab966d",
-  "runtimeSourceImageId": "sha256:cddcdc956190d65e95742a98f5ffac88755871853837c816be19fa3856da4c09",
-  "runtimePayloadSha256": "39f86d93dad304508da9b27585ea28f7876a1fa2b23b65e1b7443ed05c918394",
-  "runtimePayloadArchiveSha256": "5c7d242761c32fabaa3061d9c164bb5a87bdc93576fbfa2687d29a273a727df5",
+  "runtimeSourceCommit": "9cc36e95bb73019e7b6a97b7277fcc0c142c47f9",
+  "runtimeSourceImageId": "sha256:d80606071025d36d8cfe08f3e1eac0f9e4aa385e01011eefa89b4c83ac65157c",
+  "runtimePayloadSha256": "68e743beda9b9e9765949b6a50f8f88fb8d46e602440a481936bd872c058138e",
+  "runtimePayloadArchiveSha256": "b6e981521a4025b4ff8a5ecca6a24becd3ddd574732532809c8890daaf602665",
   "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
   "physicalSupervisorValidation": "pending",
   "dataMount": "/data",
