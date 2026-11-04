@@ -1,3 +1,14 @@
+## dev.21 — consulta offline de Produtos
+
+Preservar DATA_DIR inteiro, especialmente `.offline-key`, bancos e fotos. A nova
+chave protege cópias locais e deve acompanhar a instalação ao recuperá-la; não é uma
+credencial de API. Nenhum schema novo. Não limpar perfis/IndexedDB/caches na atualização.
+Logout bloqueia sem apagar; mesma conta online recupera. Browser/SO podem limpar dados.
+Usar kit Forja e add-on manual existentes; Nível1, sem requisito novo de certificação.
+Rollback de código conserva volumes, mas dev.20 não oferece consulta offline e seu
+worker antigo pode limpar assets públicos. Recuperação exige código/chave compatíveis;
+não apagar dados nem restaurar banco automaticamente. Ver documentação OFF-01.
+
 ## dev.20 — fotos internas persistentes, IMG-PROD-001
 
 Upload para produtos/consignados usa data/tenants/<tenant>/product-photos, incluindo

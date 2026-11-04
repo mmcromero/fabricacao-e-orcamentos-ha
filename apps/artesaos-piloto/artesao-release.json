@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.20",
-  "stage": "product-images",
+  "version": "0.2.0-dev.21",
+  "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
     "debian"

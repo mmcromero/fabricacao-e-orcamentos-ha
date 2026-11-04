@@ -25,12 +25,12 @@ for(const distribution of ['debian','home-assistant'] as const)for(const prefix 
   const worker=await get('service-worker.js');assert.equal(worker.headers['service-worker-allowed'],prefix);assert.equal(worker.headers['cache-control'],'no-store');
  }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
 });
-test('PWA keeps worker network-only and deletes only own URL entries, never HA entries',async()=>{
+test('PWA keeps APIs network-only and activation preserves offline and HA caches',async()=>{
  const handlers:Record<string,any>={},deleted:string[]=[],fetched:any[]=[];let claimed=false;
  const urls=['https://host/artesaos-piloto/private','https://host/lovelace','https://host/other-app/','https://elsewhere/artesaos-piloto/private'];
  const self={location:new URL('https://host/artesaos-piloto/service-worker.js'),registration:{navigationPreload:{async disable(){}}},clients:{async claim(){claimed=true;}},async skipWaiting(){},addEventListener:(name:string,fn:any)=>{handlers[name]=fn;}};
  runInNewContext(browserScripts('/artesaos-piloto/','new').serviceWorker,{self,URL,caches:{async keys(){return ['ha-cache'];},async open(){return {async keys(){return urls.map(url=>({url}));},async delete(req:any){deleted.push(req.url);}};}},fetch:async(req:any,opts:any)=>{fetched.push({req,opts});return 'network';}});
- await new Promise<void>((resolve,reject)=>handlers.activate({waitUntil:(p:Promise<void>)=>p.then(resolve,reject)}));assert.deepEqual(deleted,[urls[0]]);assert.equal(claimed,true);
+ await new Promise<void>((resolve,reject)=>handlers.activate({waitUntil:(p:Promise<void>)=>p.then(resolve,reject)}));assert.deepEqual(deleted,[]);assert.equal(claimed,true);
  let response:any;handlers.fetch({request:{url:urls[0]},respondWith:(p:any)=>{response=p;}});assert.equal(await response,'network');assert.equal(fetched[0].opts.cache,'no-store');
  handlers.fetch({request:{url:urls[1]},respondWith:()=>assert.fail('Must not intercept HA')});assert.equal(fetched.length,1);
 });

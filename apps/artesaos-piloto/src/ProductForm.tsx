@@ -1,3 +1,4 @@
+import {loadPhoto,releasePhoto,type LocalCatalog} from './offline-storage';
 import ProductImagePicker from './ProductImagePicker';
 import ActionButton from './ActionButton';
 import {applyMaterialReferences,type MaterialDefinition} from '../server/material-model';
@@ -14,7 +15,13 @@ export const emptyProduct=():EditableProduct=>({name:'',sku:'',origin:'own',cate
 const tiers=['wholesale','factory','retail'] as const;
 const labels=['Atacado','Loja de fábrica','Varejo'];
 const money=(n:number)=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-export function ProductPhoto({url,name}:{url:string;name:string}){const [failed,setFailed]=useState(false);useEffect(()=>setFailed(false),[url]);if(!/^https:\/\//i.test(url)&&!/^api\/product-photos\/[a-f0-9]{32}\/[a-f0-9]{64}\.png$/.test(url))return null;return failed?<span className="product-photo-empty" role="img" aria-label={`Foto indisponível de ${name}`} title="Foto indisponível no endereço informado">Sem foto</span>:<img src={url.startsWith('api/product-photos/')?new URL(url,document.baseURI).href:url} alt={`Foto de ${name}`} loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailed(true)} style={{width:120,height:120,objectFit:'contain',maxWidth:'100%'}}/>;}
+export function ProductPhoto({url,name,offlineCatalog}:{url:string;name:string;offlineCatalog?:LocalCatalog}){
+ const [failed,setFailed]=useState(false),[local,setLocal]=useState<string|null>(null);
+ useEffect(()=>{setFailed(false);setLocal(null);if(!offlineCatalog)return;let active=true,objectUrl:string|null=null;loadPhoto(offlineCatalog,url).then(value=>{objectUrl=value;if(active)setLocal(value);else if(value)releasePhoto(offlineCatalog,value);}).catch(()=>{if(active)setFailed(true);});return()=>{active=false;if(objectUrl)releasePhoto(offlineCatalog,objectUrl);};},[url,offlineCatalog]);
+ const internal=/^api\/product-photos\/[a-f0-9]{32}\/[a-f0-9]{64}\.png$/.test(url);if(!/^https:\/\//i.test(url)&&!internal)return null;
+ const source=offlineCatalog?local:internal?new URL(url,document.baseURI).href:url;
+ return failed||!source?<span className="product-photo-empty" role="img" aria-label={`Foto indisponível de ${name}`} title="Foto indisponível nesta consulta">Sem foto</span>:<img src={source} alt={`Foto de ${name}`} loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailed(true)} style={{width:120,height:120,objectFit:'contain',maxWidth:'100%'}}/>;
+}
 export default function ProductForm({initial,context,onSaved,onCancel,onDirtyChange,onBusyChange}:{initial?:EditableProduct;context:'fabricacao'|'produtos'|'orcamentos';onSaved:(product:EditableProduct,catalog:boolean,tier:typeof tiers[number])=>void|Promise<void>;onCancel?:()=>void;onDirtyChange?:(dirty:boolean)=>void;onBusyChange?:(busy:boolean)=>void}){
  const [value,setValue]=useState<EditableProduct>(()=>structuredClone(initial?.origin==='client'&&appName==='Artesão Digital'?{...initial,catalogVisible:false}:initial??emptyProduct()));
  const [photoBusy,setPhotoBusy]=useState(false);

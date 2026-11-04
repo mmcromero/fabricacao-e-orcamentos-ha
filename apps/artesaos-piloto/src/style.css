@@ -4,3 +4,9 @@
 .app-version{position:fixed;top:4px;right:8px;z-index:4;font-size:11px;line-height:1.4;color:#55665d;background:#f3f5f1;border-radius:4px;padding:2px 5px;pointer-events:none}
 
 button[aria-busy="true"]{cursor:progress}.action-wait-mark{display:inline-block;margin-right:.35em;font-weight:700}.field-error[role="alert"]{overflow-wrap:anywhere}
+
+.offline-review button,.offline-review a,.offline-review select,.offline-review input[type=checkbox],.offline-review input[type=radio]{opacity:.55;cursor:not-allowed}
+
+.offline-review [data-offline-review] button{opacity:1;cursor:pointer}
+
+html[data-offline-mode="local"] #pilot-shell,html[data-offline-mode="locked"] #pilot-shell{display:none!important}

@@ -1,3 +1,12 @@
+## 0.2.0-dev.21 — OFF-01
+
+- Preparação completa e verificável de Produtos/fotos internas para consulta offline.
+- Reabertura da PWA sem rede, lista/busca/paginação existentes, alterações desativadas.
+- IndexedDB cifrado por conta/negócio, confirmação atômica, cópia anterior conservada.
+- Logout bloqueia acesso sem apagar cópias; mesma conta pode recuperá-las online.
+- Worker preserva gerações e caches externos; sem escrita/vendas/sync offline.
+- Nível1, sem schema novo, sem instalação nesta entrega. Ver docs/OFF-01.md.
+
 ## 0.2.0-dev.20 — IMG-PROD-001
 
 - Fotos de produtos e consignados por arquivo, com prévia e substituição; sem novo
