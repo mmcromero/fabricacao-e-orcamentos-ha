@@ -1,0 +1,219 @@
+﻿KIT DE PUBLICAÇÃO FORJA 01 — INSTALAÇÃO LIMPA E RECUPERAÇÃO
+Revisão: 04/11/2026 — Windows — piloto Nível 1
+
+Os comandos abaixo são para o CMD (Prompt de Comando), uma linha por vez.
+Não precisam de CMD “como administrador” para baixar, extrair e usar o kit.
+Só execute publicação quando autorizada. Este manual não autoriza uma versão.
+
+A. BAIXAR E CONFERIR
+
+1. Baixe o ZIP completo oficial para a pasta Downloads do seu usuário:
+https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Instalar-Atualizador-Forja-01.zip
+
+2. Abra também a referência oficial de SHA-256:
+https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Instalar-Atualizador-Forja-01.zip.sha256
+
+3. Abra o Prompt de Comando pelo menu Iniciar e execute:
+certutil -hashfile "%USERPROFILE%\Downloads\Instalar-Atualizador-Forja-01.zip" SHA256
+
+Compare todos os 64 caracteres com o valor publicado. Diferença, extensão ou nome
+inesperados: pare. Não desbloqueie nem execute. Se o navegador adicionou “(1)” ao
+nome, use o nome real no comando; não compare outro arquivo por engano.
+
+B. DESBLOQUEAR APENAS O ARQUIVO CONFERIDO E EXTRAIR
+
+4. Se o ZIP tiver marca de Internet, depois da conferência use Propriedades >
+Geral > Desbloquear > Aplicar. Alternativa equivalente no CMD, para o ZIP exato:
+powershell.exe -NoProfile -Command "Unblock-File -LiteralPath (Join-Path $env:USERPROFILE 'Downloads\Instalar-Atualizador-Forja-01.zip')"
+
+Isso remove a marca de procedência do arquivo escolhido; não altera a política
+de execução, não assina scripts, não libera ameaça e não desliga antivírus.
+
+5. Extraia em pasta NOVA. O exemplo usa Forja01-Kit-Limpo; se ela já contiver um
+kit antigo, escolha outro nome e ajuste os comandos, sem sobrescrever ou apagar:
+powershell.exe -NoProfile -Command "Expand-Archive -LiteralPath (Join-Path $env:USERPROFILE 'Downloads\Instalar-Atualizador-Forja-01.zip') -DestinationPath (Join-Path $env:USERPROFILE 'Forja01-Kit-Limpo')"
+
+Ou use o Explorador: botão direito no ZIP > Extrair Tudo. Não execute dentro da
+prévia do ZIP. Não instale em Program Files, pasta do sistema ou pasta sem escrita.
+
+6. Entre na pasta, pelo CMD:
+cd /d "%USERPROFILE%\Forja01-Kit-Limpo\Atualizador-Forja-01"
+
+7. Confira o conteúdo:
+dir /b
+
+Devem existir os três CMDs, Forja01.ps1, forja-admin.py, forja-config.json, manuais,
+README, SHA256SUMS e Pacotes. Não copie scripts soltos de um kit antigo.
+
+Se o ZIP foi extraído ANTES do desbloqueio, não precisa misturar arquivos:
+prefira desbloquear o ZIP conferido e extrair novamente em outra pasta nova.
+Para reconhecer a marca no PS1 já extraído, no CMD da pasta correta:
+powershell.exe -NoProfile -Command "Get-Content -LiteralPath '.\Forja01.ps1' -Stream Zone.Identifier -ErrorAction SilentlyContinue"
+
+ZoneId=3 indica Internet. Depois de conferir origem e hashes, o desbloqueio
+seletivo desse script é:
+powershell.exe -NoProfile -Command "Unblock-File -LiteralPath '.\Forja01.ps1'"
+
+Não use desbloqueio recursivo do Downloads inteiro ou do perfil do usuário.
+
+C. CONFIGURAR A CONEXÃO, SEM SALVAR SENHAS
+
+8. Abra o modelo distribuído:
+notepad forja-config.json
+
+Preencha sshHost com o endereço/alias do Forja e sshUser com seu usuário SSH
+aprovado. Confirme sshPort (normalmente22) e installationRoot (instalação estável,
+normalmente /srv/artesao-digital-app). Não altere o caminho por suposição.
+backupPath e recoveryEvidencePath podem ficar null no Nível1. Não informe nível
+no JSON nem crie senha, token ou chave dentro dele. O nível vem da publicação.
+
+9. Confira os programas já existentes:
+where powershell.exe
+where ssh.exe
+where scp.exe
+
+Não precisa instalar Python, Git ou GitHub CLI no Windows para usar este kit.
+OpenSSH Client e a conexão Tailscale ao servidor são pré-requisitos externos.
+Se faltarem, peça assistência para a configuração aprovada, sem trocar o kit.
+
+SSH usa CHAVE já aprovada. O modo BatchMode não solicita senha SSH: falha se a
+identidade não estiver disponível. Identidade/caminho da chave ficam no OpenSSH
+(%USERPROFILE%\.ssh\config) ou no agente já configurado, não no forja-config.json.
+Se a chave tem senha, seu desbloqueio precisa estar atendido pelo mecanismo já
+aprovado. Não retirar a senha, gravá-la num CMD ou ativar serviços por tentativa.
+
+Host desconhecido ou chave alterada: interrompa e confirme o fingerprint com o
+responsável pela infraestrutura. Não desligue StrictHostKeyChecking nem aceite
+uma chave diferente automaticamente. A confiança do PuTTY não substitui a lista
+known_hosts do OpenSSH. Chaves PPK e OpenSSH podem ter formatos diferentes.
+
+SUDO: só na etapa administrativa, quando necessário, o servidor pedirá sua senha
+no terminal remoto. A digitação não aparece. Não cole essa senha no chat, JSON ou
+arquivo. O kit não guarda senha e não altera permissões sudo.
+Não confundir chave SSH com a chave de recuperação dos backups: são distintas.
+
+D. USAR O KIT
+
+10. Primeiro baixe a publicação oficial:
+Baixar-Pacote.cmd
+
+Baixa a versão indicada pelo índice oficial, confere hashes/manifesto e coloca
+o ZIP em Pacotes. Não há SSH, senha ou instalação no Forja nessa operação.
+Falha interrompe sem escolher pacote alternativo. Pacotes anteriores são
+preservados em Pacotes-Anteriores; isso não significa que foram instalados.
+
+11. Verificação opcional, sem conexão ao Forja:
+Verificar-Download.cmd
+
+12. Somente após autorização, sem backup/atualização concorrente:
+Atualizar-Forja-01.cmd
+
+Confira a versão de destino, nível e plano. O fluxo existente solicitará
+ATUALIZAR para confirmar. Origem legada pode pedir ACEITAR LEGADO; se isso não
+for esperado, pare e consulte a infraestrutura. Não contorne bloqueio de schema.
+Não feche o terminal durante a atualização. Não execute outro CMD de atualização
+ao mesmo tempo. Falha não autoriza nova tentativa automática ou restauração.
+
+O CMD fica no pause ao final. Se quiser consultar o código de saída no CMD:
+echo %ERRORLEVEL%
+
+Após sucesso, o ZIP vai para Concluidos e o resultado fica em Relatorios.
+Confirme funcionamento/login/versão; healthy não é homologação funcional completa.
+Este kit usa o fluxo manual existente, mesmo que haja alternativa remota no Codex.
+
+E. DIAGNÓSTICO E PROBLEMAS CONHECIDOS
+
+Consultar políticas, sem modificá-las:
+powershell.exe -NoProfile -Command "Get-ExecutionPolicy -List"
+
+Consultar assinatura do script, sem alterar arquivo:
+powershell.exe -NoProfile -Command "Get-AuthenticodeSignature -LiteralPath '.\Forja01.ps1' | Select-Object Status,StatusMessage"
+
+Consultar permissões da pasta correta, sem resetar ACL:
+icacls .
+
+1) “Não está assinado digitalmente” / PSSecurityException / UnauthorizedAccess
+   Causa possível: marca de Internet em script não assinado sob RemoteSigned.
+   Confirme Zone.Identifier e a política. Se a procedência/hash estão corretos,
+   use somente o Unblock-File seletivo descrito acima. Se MachinePolicy/UserPolicy
+   impuserem AllSigned/Restricted, pare e solicite solução ao administrador.
+   Não usar Bypass, Unrestricted global, exclusões do antivírus ou certificado falso.
+
+2) “A execução de scripts foi desabilitada neste sistema”
+   Consulte Get-ExecutionPolicy -List. O CMD existente pede RemoteSigned somente
+   no processo; políticas corporativas prevalecem. Não altere registro/GPO para
+   executar o kit. Se continuar bloqueado, envie somente o erro e os escopos.
+
+3) Janela abre e fecha ou CMD/PS1 desaparece
+   Abra um CMD manualmente e execute o nome do arquivo para ler a mensagem.
+   Confira dir /b. Consulte Segurança do Windows > Proteção contra vírus e ameaças
+   > Histórico de proteção. Se usa outro antivírus, consulte também sua quarentena.
+   Não há exclusão dos CMDs no código do kit. A causa do desaparecimento relatado
+   não foi confirmada. Não restaurar/liberar ameaça sem conferir origem e detecção.
+   Pare e envie nome da ameaça, arquivo e horário, sem credenciais.
+
+4) “Acesso negado” / pede administrador ao copiar arquivos
+   Diferencie destino sem escrita, arquivo em uso e bloqueio de segurança.
+   Use pasta nova no perfil do usuário e confira icacls; não tome posse nem dê
+   permissões gerais a pastas do sistema. Não executar o kit inteiro como
+   administrador só para contornar bloqueio desconhecido. Se a pasta nova também
+   falhar, pare e consulte o histórico do produto de segurança.
+
+5) “O argumento ... para o parâmetro -File não existe” / arquivo ausente
+   Confira pasta atual e dir /b. Extraia o ZIP COMPLETO validado em pasta nova.
+   Não remonte o kit copiando arquivos antigos. Se desaparecer de novo, caso3.
+
+6) “Coloque o arquivo ZIP ... na pasta Pacotes”
+   Ainda não há pacote para verificar/publicar. Execute Baixar-Pacote.cmd primeiro.
+   Não extraia o ZIP da aplicação dentro de Pacotes; deixe-o como ZIP completo.
+
+7) “Mais de um pacote aguardando em Pacotes”
+   Nenhum foi escolhido. Baixar-Pacote.cmd prepara a versão oficial atual e conserva
+   outros ZIPs em Pacotes-Anteriores depois da validação. Se deseja versão anterior,
+   confirme a escolha com a infraestrutura; não escolha por data automaticamente.
+
+8) “SHA256 divergente”, índice/metadados inconsistentes, HTTP404 ou rede/TLS
+   Não publicar. Baixar novamente da origem oficial e conferir. Não usar arquivo
+   de outra origem ou ignorar validação. Falha pode ser publicação incompleta,
+   arquivo corrompido ou indisponibilidade; envie mensagem e URL pública, sem tokens.
+
+9) “Permission denied (publickey)” / SSH falhou
+   Não é senha sudo. Confira rede Tailscale, usuário/host, chave aprovada e agent/config
+   OpenSSH. Não salvar senha SSH em script nem alterar o servidor por tentativa.
+
+10) Plano bloqueado, origem legada inesperada, erro sudo ou healthcheck falhou
+    Pare; mantenha pacote e recibos. Não rodar de novo automaticamente, não usar
+    docker compose down -v nem restaurar bancos. Encaminhe erro sanitizado à gerência.
+    Publicação e rollback continuam nos mecanismos existentes, com escolha explícita.
+
+F. REINSTALAR / TROCAR DE COMPUTADOR
+
+Baixe novamente o ZIP completo e seu hash oficial. Repita A/B em uma pasta nova.
+Preencha o modelo de config; se houver cópia segura de seu forja-config.json,
+pode recuperar apenas esse arquivo de dados depois de revisar os campos.
+Não copiar CMDs, PS1 ou auxiliares avulsos de kits anteriores.
+
+Restabeleça separadamente Tailscale, OpenSSH, identidade aprovada e confiança do
+host. Se a chave SSH foi perdida, peça o procedimento de cadastro de outra chave;
+o ZIP público não tem e não deve ter essa chave. Não há senha do kit para recuperar.
+
+Não é necessário trazer pacotes antigos para a instalação limpa. Relatórios e
+histórico que quiser conservar podem ser arquivados separadamente, sem misturar
+os executáveis. O kit novo baixa o pacote oficial existente.
+
+G. LIMITES DESTA REVISÃO
+
+Correção de código: Atualizar-Forja-01.cmd agora preserva o retorno do PowerShell
+antes do pause, como Baixar/Verificar já faziam. Launcher e auxiliar não reescritos.
+Nenhum mecanismo de autoexclusão foi encontrado no kit. Sua limpeza usa somente
+pastas temporárias geradas, não os arquivos permanentes da ferramenta.
+
+Testes não autorizam uma atualização: não foi publicada versão no Forja para
+validar este kit. Duplo clique/antivírus/políticas de outra máquina podem diferir.
+Se houver bloqueio de assinatura exigida por GPO, é necessário código assinado
+com certificado aceito pela organização; este ZIP não afirma ter tal assinatura.
+
+Referências oficiais:
+https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies/
+https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/unblock-file
+https://support.microsoft.com/en-us/windows/security/windows-security/protection-history-in-the-windows-security-app

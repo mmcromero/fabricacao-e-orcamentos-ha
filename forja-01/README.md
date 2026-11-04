@@ -15,3 +15,9 @@ somente após autorização separada. Publicação não instala nem reinicia ser
 Rollback pelo mecanismo existente, preservando volumes. Código dev.20 não oferece
 consulta offline e seu worker pode limpar assets públicos; não limpar IndexedDB/perfil.
 256 testes automatizados e testes Chromium sintéticos aprovados; Android/Pi físicos pendentes.
+
+## Kit Windows — instalação limpa
+
+[ZIP completo](Instalar-Atualizador-Forja-01.zip) · [SHA-256](Instalar-Atualizador-Forja-01.zip.sha256) · [README](README-KIT-WINDOWS.md) · [Manual TXT](MANUAL-KIT-WINDOWS.txt).
+
+Revisão de 04/11/2026: preserva o atualizador existente e corrige o retorno de falhas do atalho de atualização. Modelo sem credenciais; Pacotes vazio. Comece pelo manual e Baixar-Pacote.cmd. Nenhuma versão é instalada apenas por baixar ou verificar.
