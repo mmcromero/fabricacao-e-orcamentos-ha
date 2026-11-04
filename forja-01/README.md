@@ -1,3 +1,23 @@
+# 0.2.0-dev.19 — feedback e navegação jurídica; somente Forja, Nível 1
+
+[Baixar ZIP dev.19](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.19.zip)
+· [Checksums](SHA256SUMS) · [Índice atual](publicacao-atual.json).
+
+Fonte 9cc36e95bb73019e7b6a97b7277fcc0c142c47f9. Inclui exclusivamente UX-FEEDBACK-001
+(processamento por ação e mensagens) e UX-LEGAL-001 (Política de Privacidade e Voltar
+contextual). Build +223 aplicação +8 helper +18 operações e Chromium sintético aprovados.
+Schemas iguais à dev.18; autenticação, registros e regras comerciais preservados.
+
+Kit existente inalterado. Baixar-Pacote.cmd baixa/valida; Verificar-Download.cmd é
+opcional. Atualizar-Forja-01.cmd somente após autorização separada de instalação.
+Pacote compose-source; imagem construída em staging durante instalação autorizada.
+Rollback pela ferramenta existente e imagem anterior, preservando volumes/opções;
+não restaura nem apaga bancos automaticamente. Backup recomendado no Nível 1.
+Nenhuma instalação, consulta ao servidor ou homologação física foi executada.
+Home Assistant permanece na dev.18: nenhum pacote/add-on dev.19 produzido ou publicado.
+
+---
+
 # 0.2.0-dev.18 — domínio público único, Nível1; disponível para homologação
 
 [ZIP Forja](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.18.zip)

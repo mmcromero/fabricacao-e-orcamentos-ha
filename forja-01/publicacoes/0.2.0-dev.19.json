@@ -1,0 +1,29 @@
+{
+  "metadataVersion": 1,
+  "repository": "mmcromero/fabricacao_e_orcamentos",
+  "distribution": "debian",
+  "version": "0.2.0-dev.19",
+  "sourceCommit": "9cc36e95bb73019e7b6a97b7277fcc0c142c47f9",
+  "approvalBasis": "Proprietário autorizou preparação e publicação dev.19, exclusivamente UX-FEEDBACK-001 e UX-LEGAL-001 para Forja, Nível 1. Sem Home Assistant, instalação ou infraestrutura.",
+  "securityPolicy": {
+    "policyVersion": 1,
+    "level": 1,
+    "decision": "explicit-owner-approval",
+    "basis": "Proprietário confirmou: somente testes internos, sem dados comerciais a preservar.",
+    "productionDeploymentAuthorized": false,
+    "level2": {
+      "maxBackupAgeHours": null,
+      "retention": null,
+      "independentCopyRule": null,
+      "recoveryRule": null,
+      "backupSchedule": null
+    }
+  },
+  "package": {
+    "sha256": "629586b469dc582d7d8814bc6be529de2e5cdee27bbe21ac417350e0ac799e9d",
+    "policySha256": "2932534935dd63ea911a5015714125123e52a2a72cdfee0cf91e064dd6d4abcd"
+  },
+  "runner": {
+    "sha256": "e7d4e288261a1aaf6dab82f5947cf150525219547be89daf531179438a72a86c"
+  }
+}
