@@ -106,6 +106,15 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(legalRequired(current.userId)){reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o suporte.'});return null;}
   return {key:'user:'+current.userId,owner:current.userId,email:current.email};
  },(key,max)=>store.limited(key,max));
+ // Cookie-authenticated image reads cannot attach fetch context headers. The opaque
+ // owner in each immutable reference prevents reuse under another tenant/session.
+ app.get<{Params:{owner:string;file:string}}>(prefix+'api/product-photos/:owner/:file',async(req,reply)=>{
+  const current=session(req);if(!current)return reply.code(401).send({message:'Entre na sua conta.'});
+  if(legalRequired(current.userId))return reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});
+  if(!/^[a-f0-9]{32}$/.test(req.params.owner)||!/^([a-f0-9]{64})\.png$/.test(req.params.file))return reply.code(404).send({message:'Foto não encontrada.'});
+  const response=await tenants.use(current.tenantId,inner=>inner.inject({method:'GET',url:'/api/product-photos/'+req.params.owner+'/'+req.params.file}));
+  reply.code(response.statusCode);if(response.headers['content-type'])reply.type(String(response.headers['content-type']));return reply.send(response.rawPayload);
+ });
  app.all(prefix+'*',async(req,reply)=>{
   const current=session(req);
   if(!current){if(req.method==='GET'&&!req.url.slice(prefix.length).startsWith('api/'))return reply.redirect(prefix+'login');return reply.code(401).send({message:'Entre na sua conta.'});}

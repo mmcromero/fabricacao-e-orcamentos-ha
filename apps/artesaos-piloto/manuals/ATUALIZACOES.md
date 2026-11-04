@@ -1,3 +1,26 @@
+## dev.20 — fotos internas persistentes, IMG-PROD-001
+
+Upload para produtos/consignados usa data/tenants/<tenant>/product-photos, incluindo
+.owner (namespace persistente) e PNGs identificados pelo hash. Conservar a pasta
+inteira junto ao banco do negócio: copiar só o SQLite não recupera as novas fotos.
+Os mecanismos existentes que preservam/incluem todo o diretório data abrangem essa
+estrutura; não excluir arquivos antigos nem .owner, não confundir com assets da imagem.
+Nenhuma migração de schema ou download automático de URLs antigas é executado.
+Arquivos criados/substituídos pelo usuário ficam fora da imagem, sob /data no HA e
+no volume data do Forja. O nome/slug/portas/opções/credenciais dos adaptadores não mudam.
+
+Usar atualizador Windows existente no Forja e atualização manual do mesmo add-on no
+HA, após autorização de instalação. Nível1 mantido; backup recomendado sem requisito
+novo de certificação. Publicar não instala. Após instalar, conferir versão/health,
+login, envio/prévia/salvamento/substituição e reabertura das fotos nos dois ambientes.
+
+Rollback pelo mecanismo existente preserva volumes/config/bancos/fotos. Sem schema
+novo; contudo dev.19 não compreende referências api/product-photos/...: fotos internas
+não serão exibidas e formulários antigos podem rejeitar a edição desses produtos.
+Não apagar/converter referências ou arquivos para contornar isso. Coordenar o retorno
+com a infraestrutura, reconhecendo essa limitação, ou corrigir no código compatível.
+Nunca executar restauração de banco ou downgrade de dados automaticamente.
+
 ## dev.19 — feedback e navegação jurídica; somente Debian
 
 Inclui exclusivamente UX-FEEDBACK-001/UX-LEGAL-001 sobre a dev.18. Sem schema novo,

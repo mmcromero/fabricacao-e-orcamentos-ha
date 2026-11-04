@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0-dev.19",
-  "stage": "ux-homologation",
+  "version": "0.2.0-dev.20",
+  "stage": "product-images",
   "distributions": [
     "home-assistant",
     "debian"

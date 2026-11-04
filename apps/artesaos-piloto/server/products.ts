@@ -1,3 +1,4 @@
+import {photoReferenceAllowed,PHOTO_REFERENCE_ERROR} from './product-photos.js';
 import {protectStockOrigin,StockError} from './product-stock.js';
 import {rememberMaterialUses} from './materials.js';
 import {manufacturingSchema,type Production} from './manufacturing-model.js';
@@ -14,7 +15,7 @@ export const productSchema = {type:'object', additionalProperties:false, require
   weightGrams:measure,lengthCm:measure,widthCm:measure,heightCm:measure,
   colors:{type:'array',maxItems:100,uniqueItems:true,items:{type:'string',maxLength:100}},
   sourceKeys:{type:'array',maxItems:200,uniqueItems:true,items:{type:'string',minLength:1,maxLength:250}},
-  sku:{type:'string',maxLength:100},imageUrl:{type:'string',maxLength:2048,pattern:'^(https://[^\\s]+|)$'},category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
+  sku:{type:'string',maxLength:100},imageUrl:{type:'string',maxLength:2048,pattern:'^(https://[^\\s]+|api/product-photos/[a-f0-9]{32}/[a-f0-9]{64}\\.png|)$'},category:{type:'string',maxLength:200},sourceFamily:{type:'string',maxLength:250},family:{type:'string',maxLength:200},description:{type:'string',maxLength:20000}
 }};
 export type Product = {manufacturing?:Production;sku?:string;imageUrl?:string;category?:string;sourceFamily?:string;name:string;origin:'own'|'client';publicAllowed:boolean;catalogVisible?:boolean;prices:{wholesale:number|null;factory:number|null;retail:number|null};weightGrams:number|null;lengthCm:number|null;widthCm:number|null;heightCm:number|null;colors:string[];sourceKeys:string[];family:string;description:string};
 function valid(p:Product) {return Object.values(p.prices).some(v=>v!==null) && categoryAllowed(p.origin,p.category) && !(p.origin==='client' && p.publicAllowed);}
@@ -34,6 +35,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatu
   app.post<{Body:Product}>('/api/products',{bodyLimit:65536,schema:{body:productSchema}},(req,reply)=>{
     if(!categoryAllowed(req.body.origin,req.body.category))return reply.code(400).send({message:'Produtos de cliente é uma categoria reservada. Para produto próprio, escolha outra categoria ou deixe em branco.'});
     if(!valid(req.body)) return reply.code(400).send({message:'Informe pelo menos um preço. Produto de cliente deve permanecer privado.'});
+    if(pilotFeatures&&!photoReferenceAllowed(db,req.body.imageUrl))return reply.code(400).send({message:PHOTO_REFERENCE_ERROR});
     if(req.body.sourceKeys.length) return reply.code(400).send({message:'Vínculos externos são reservados à importação.'});
     return {id:add(req.body)};
   });
@@ -44,10 +46,11 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatu
     if(!categoryAllowed(req.body.origin,req.body.category))return reply.code(400).send({message:'Produtos de cliente é uma categoria reservada. Para produto próprio, escolha outra categoria ou deixe em branco.'});
     if(pilotFeatures){try{protectStockOrigin(db,Number(req.params.id),req.body.origin);}catch(e){return reply.code(e instanceof StockError?e.status:400).send({message:(e as Error).message});}}
     const old=JSON.parse(row.data as string) as Product;
+    if(pilotFeatures&&!photoReferenceAllowed(db,req.body.imageUrl,old.imageUrl))return reply.code(400).send({message:PHOTO_REFERENCE_ERROR});
     if(!valid(req.body)||JSON.stringify(old.sourceKeys)!==JSON.stringify(req.body.sourceKeys)) return reply.code(400).send({message:'Confira os preços, a privacidade e os vínculos externos.'});
     if(req.body.origin==='own'&&req.body.category)storeCategory(db,req.body.category);
     rememberMaterialUses(db,req.body.manufacturing);
-    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct({...req.body,catalogVisible:req.body.catalogVisible??old.catalogVisible??false})),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),req.params.id);
+    db.prepare('UPDATE products SET data=?,updated_at=? WHERE id=?').run(JSON.stringify(normalizedProduct({...req.body,...(req.body.imageUrl===undefined?{imageUrl:old.imageUrl}:{}),catalogVisible:req.body.catalogVisible??old.catalogVisible??false})),new Date(Math.max(Date.now(),(Date.parse(String(row.updated_at))||0)+1)).toISOString(),req.params.id);
     return {ok:true};
   });
   app.delete<{Params:{id:string}}>('/api/products/:id',(req,reply)=>{
@@ -76,6 +79,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatu
         const id=[...matches][0];
         const row=db.prepare('SELECT data,archived FROM products WHERE id=?').get(id)!;
         const stored=JSON.parse(row.data as string) as Product;
+        if(pilotFeatures&&!photoReferenceAllowed(db,p.imageUrl,stored.imageUrl))return reply.code(400).send({message:PHOTO_REFERENCE_ERROR});
         let changed=false;
         if(req.body.fillMissing && !row.archived){
           if(!stored.sku?.trim() && p.sku?.trim()){stored.sku=p.sku;changed=true;}
@@ -87,6 +91,7 @@ export function registerProducts(app:FastifyInstance, db:DatabaseSync,pilotFeatu
         const normalized=(value:string)=>value.trim().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase();
         const duplicates=[...db.prepare('SELECT data FROM products').all().map(row=>JSON.parse(row.data as string) as Product),...pending];
         if(duplicates.some(old=>(p.sku?.trim()&&old.sku?.trim()&&normalized(p.sku)===normalized(old.sku))||(p.origin===old.origin&&normalized(p.name)===normalized(old.name))))return reply.code(409).send({message:'Possível duplicata por nome ou SKU com vínculos diferentes. Revise a conciliação; nenhum produto foi importado.'});
+        if(pilotFeatures&&!photoReferenceAllowed(db,p.imageUrl))return reply.code(400).send({message:PHOTO_REFERENCE_ERROR});
         pending.push(p);
       }
     }

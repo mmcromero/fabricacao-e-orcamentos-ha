@@ -1,3 +1,4 @@
+import {photoReferenceAllowed,PHOTO_REFERENCE_ERROR} from './product-photos.js';
 import {rememberMaterialUses} from './materials.js';
 import {createHash} from 'node:crypto';
 import type {FastifyInstance} from 'fastify';
@@ -64,6 +65,8 @@ export function registerReconciliation(app:FastifyInstance,db:DatabaseSync,pilot
    }
    if(decision?.category!==undefined&&incoming.origin==='own'&&next.category!==decision.category){next.category=decision.category;changes.push('categoria escolhida');}
    next=normalizedProduct(next);
+   if(pilotFeatures&&target!=='skip'&&!photoReferenceAllowed(db,incoming.imageUrl,existing?.data.imageUrl))errors.push(PHOTO_REFERENCE_ERROR);
+   if(pilotFeatures&&target!=='skip'&&!photoReferenceAllowed(db,next.imageUrl,existing?.data.imageUrl)&&!errors.includes(PHOTO_REFERENCE_ERROR))errors.push(PHOTO_REFERENCE_ERROR);
    if(!categoryAllowed(next.origin,next.category))errors.push('A categoria Produtos de cliente é reservada. Escolha outra categoria para o produto próprio');
    if(target==='skip')errors.length=0;
    const action=target==='skip'?'Ignorar':target===null?'Criar produto':changes.length?'Completar cadastro':'Preservar cadastro';

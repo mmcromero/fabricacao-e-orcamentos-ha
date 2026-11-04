@@ -1,3 +1,25 @@
+# dev.20 — IMG-PROD-001, fotos internas; Nível1
+
+[Baixar ZIP dev.20](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.20.zip)
+· [Checksums](SHA256SUMS) · [Índice atual](publicacao-atual.json).
+
+Fonte8e00241e47fcfb965bda6a7804a3d8abcf122a88. Fotos otimizadas de produtos e
+consignados, privadas por negócio; novas URLs externas recusadas e antigas
+preservadas. PNG/JPEG/WebP via seletor de arquivo; PNG validado após otimização.
+Conservar data/tenants/<tenant>/product-photos, incluindo .owner, junto ao banco.
+Sem schema novo, dependência nova ou sincronização/cache offline comercial.
+
+Kit existente: Baixar-Pacote.cmd → Verificar-Download.cmd opcional →
+Atualizar-Forja-01.cmd, somente após autorização própria de instalação.
+Publicação não instala. Mesmo fluxo N1; backup recomendado, sem certificação nova.
+Compose-source: imagem construída no staging durante instalação autorizada.
+Rollback preserva volumes/dados; dev.19 não entende novas referências internas,
+podendo ocultar fotos e recusar edição. Não apagar/converter dados para contornar.
+Home Assistant dev.20 também publicado em apps/artesaos-piloto, instalação manual.
+Nenhum servidor acessado ou atualizado pelo Codex nesta publicação.
+
+---
+
 # 0.2.0-dev.19 — feedback e navegação jurídica; somente Forja, Nível 1
 
 [Baixar ZIP dev.19](https://raw.githubusercontent.com/mmcromero/fabricacao-e-orcamentos-ha/main/forja-01/Forja-01-0.2.0-dev.19.zip)

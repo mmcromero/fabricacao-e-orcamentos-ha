@@ -1,3 +1,16 @@
+## 0.2.0-dev.20 — IMG-PROD-001
+
+- Fotos de produtos e consignados por arquivo, com prévia e substituição; sem novo
+  campo de URL externa. PNG/JPEG/WebP preparados no navegador, PNG validado no servidor.
+- Otimização até1024px/lado e500KB; arquivos persistentes privados por negócio em
+  data/tenants/<tenant>/product-photos; referências imutáveis com hash, sem schema novo.
+- Novas URLs externas recusadas nas APIs; valores antigos do próprio registro
+  preservados sem download/conversão. Nenhuma foto anterior apagada automaticamente.
+- Preparação para offline por identificador/hash; sem cache comercial ou sincronização.
+- Publicação nos dois ambientes autorizada; instalação/homologação física separadas.
+- Rollback para dev.19 preserva dados, mas essa versão não exibe e pode recusar edição
+  de produtos com novas referências internas. Não apagar/converter fotos para retornar.
+
 ## 0.2.0-dev.19 — UX-FEEDBACK-001 + UX-LEGAL-001
 
 - Distribuição exclusivamente Debian/Forja das duas melhorias já implementadas.

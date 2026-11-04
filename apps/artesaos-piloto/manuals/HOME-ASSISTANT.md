@@ -1,3 +1,12 @@
+## dev.20 — fotos de produtos sob /data
+
+IMG-PROD-001 preserva a identidade do add-on e não altera opções/portas/autenticação.
+Novas fotos são PNGs privados em /data/tenants/<tenant>/product-photos; conservar
+.owner e imagens junto aos bancos. Não ficam em runtime.tar.gz. Upload/substituição
+não apagam versões anteriores. URLs externas antigas continuam dependentes da origem
+externa; novas referências externas são recusadas. Ver ATUALIZACOES.md para limites
+de retorno ao código dev.19. Não desinstalar/recriar o add-on para atualizar.
+
 > Desenvolvimento **0.2.0-dev.16 — UX-Loading-01**: feedback visual de espera,
 > sem mudanças de autenticação/schema/regras comerciais. Nível 1 preservado.
 > Nenhuma distribuição/deploy nesta entrega. Guia/testes em docs/UX-Loading-01.md.

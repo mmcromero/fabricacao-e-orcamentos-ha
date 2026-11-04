@@ -1,3 +1,4 @@
+import {photoReferenceAllowed,PHOTO_REFERENCE_ERROR} from './product-photos.js';
 import {ProductStock,protectStockOrigin,StockError} from './product-stock.js';
 import {currentProduction} from './material-current-cost.js';
 import {rememberMaterialUses} from './materials.js';
@@ -16,7 +17,8 @@ export function registerProductEditor(app:FastifyInstance,db:DatabaseSync,pilotF
   if(id&&!row)return reply.code(404).send({message:'Produto não encontrado ou arquivado.'});
   if(row&&(!req.body.expectedUpdatedAt||row.updated_at!==req.body.expectedUpdatedAt))return reply.code(409).send({message:'O produto mudou. Reabra o cadastro antes de salvar.'});
   const old=row?JSON.parse(String(row.data)) as Product:undefined;
-  const p=normalizedProduct({...req.body.product,catalogVisible:req.body.product.catalogVisible??old?.catalogVisible??false});
+  if(pilotFeatures&&!photoReferenceAllowed(db,req.body.product.imageUrl,old?.imageUrl))return reply.code(400).send({message:PHOTO_REFERENCE_ERROR});
+  const p=normalizedProduct({...req.body.product,...(req.body.product.imageUrl===undefined?{imageUrl:old?.imageUrl}:{}),catalogVisible:req.body.product.catalogVisible??old?.catalogVisible??false});
   if(pilotFeatures&&id){try{protectStockOrigin(db,Number(id),p.origin);}catch(e){return reply.code(e instanceof StockError?e.status:400).send({message:(e as Error).message});}}
   if(!categoryAllowed(p.origin,p.category))return reply.code(400).send({message:'A categoria Produtos de cliente é reservada a produtos de cliente.'});
   if(JSON.stringify(p.sourceKeys)!==JSON.stringify(old?.sourceKeys??[]))return reply.code(400).send({message:'Vínculos de importação devem ser preservados.'});

@@ -1,0 +1,29 @@
+{
+  "metadataVersion": 1,
+  "repository": "mmcromero/fabricacao_e_orcamentos",
+  "distribution": "debian",
+  "version": "0.2.0-dev.20",
+  "sourceCommit": "8e00241e47fcfb965bda6a7804a3d8abcf122a88",
+  "approvalBasis": "Proprietário autorizou IMG-PROD-001: implementar/testar/versionar/empacotar/publicar Forja e Home Assistant, Nível 1. Instalações, servidores, dados reais e infraestrutura não autorizados.",
+  "securityPolicy": {
+    "policyVersion": 1,
+    "level": 1,
+    "decision": "explicit-owner-approval",
+    "basis": "Proprietário confirmou: somente testes internos, sem dados comerciais a preservar.",
+    "productionDeploymentAuthorized": false,
+    "level2": {
+      "maxBackupAgeHours": null,
+      "retention": null,
+      "independentCopyRule": null,
+      "recoveryRule": null,
+      "backupSchedule": null
+    }
+  },
+  "package": {
+    "sha256": "40f9d692af1ee4ef70ac5f44eaa4101ab4fbfc8d9b0a6125951e1c4fc7761ee3",
+    "policySha256": "2932534935dd63ea911a5015714125123e52a2a72cdfee0cf91e064dd6d4abcd"
+  },
+  "runner": {
+    "sha256": "e7d4e288261a1aaf6dab82f5947cf150525219547be89daf531179438a72a86c"
+  }
+}
