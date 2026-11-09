@@ -1,3 +1,5 @@
+## 0.2.0-dev.23 — BR CODE-01 + RETORNO
+## 0.2.0-dev.22 — BR CODE-01
 ## 0.2.0-dev.21 — OFF-01
 
 - Preparação completa e verificável de Produtos/fotos internas para consulta offline.

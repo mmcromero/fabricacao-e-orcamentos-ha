@@ -22,9 +22,10 @@ import {createApp} from '../app.js';
 import type {PilotConfig} from './config.js';
 import {googleProvider,type IdentityProvider} from './google.js';
 import {PilotStore,token,digest,equal} from './store.js';
+import {registerMercadoPagoPix} from './mercadopago-pix.js';
 const SESSION='__Secure-artesaos_session',CSRF='__Secure-artesaos_csrf',FLOW='__Secure-artesaos_flow';
 function cookie(header:string|undefined,name:string){try{const entries=(header??'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(name+'='));return entries.length===1?decodeURIComponent(entries[0].slice(name.length+1)):'';}catch{return '';}}
-export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config),mailer:InvitationMailer|null=smtpInvitationMailer(config)){
+export async function createPilotApp(config:PilotConfig,provider:IdentityProvider=googleProvider(config),mailer:InvitationMailer|null=smtpInvitationMailer(config),pixFetch:typeof fetch=fetch){
  const app=Fastify({logger:{redact:['req.headers.cookie','req.headers.authorization','res.headers.set-cookie']},disableRequestLogging:true,bodyLimit:2*1024*1024,trustProxy:false});
  const store=new PilotStore(config.dataDir);try{bindDistribution(store,config.distribution??'home-assistant');}catch(error){store.close();throw error;}const tenants=new TenantCache(id=>createApp({dataDir:join(config.dataDir,'tenants',id),staticDir:config.staticDir,mode:'local',logRequests:false,pilotFeatures:true,actorId:'tenant:'+id}));const prefix=config.prefix;
  let support:SupportStore;try{support=new SupportStore(config.dataDir);}catch(error){store.close();throw error;}
@@ -98,6 +99,7 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(req.headers['x-pilot-context']!==current.userId){reply.code(409).send({message:'A conta desta janela mudou.'});return null;}
   if(req.method!=='GET'&&!equal(digest(String(req.headers['x-pilot-csrf']??'')),current.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida.'});return null;}return current;
  };
+ registerMercadoPagoPix(app,{prefix,token:config.mercadopagoToken,adminEmails:config.adminEmails??[],fetchImpl:pixFetch,createLimited:(key,max)=>store.limited(key,max),auth:(req,reply)=>{const c=legalAuth(req,reply);if(!c)return null;if(legalRequired(c.userId)){reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});return null;}return {userId:c.userId,email:c.email};}});
  app.get(prefix+'api/offline/identity',(req,reply)=>{const current=legalAuth(req,reply);if(current){const identity=offlineIdentity(offlineMaster,config,current,buildInfo.pilotVersion);return identity;}});
  app.get(prefix+'api/legal/status',(req,reply)=>{const current=legalAuth(req,reply);if(current)return legal.status(current.userId);});
  app.post<{Body:{version:string;termsHash:string;accepted:boolean}}>(prefix+'api/legal/accept',{bodyLimit:2048,schema:{body:{type:'object',additionalProperties:false,required:['version','termsHash','accepted'],properties:{version:{type:'string',maxLength:100},termsHash:{type:'string',maxLength:64},accepted:{const:true}}}}},(req,reply)=>{const current=legalAuth(req,reply);if(!current)return;if(!legal.accept(current.userId,req.body.version,req.body.termsHash,req.body.accepted,current.tenantId,current.csrfHash))return reply.code(409).send({message:'Confira a versão atual dos Termos.'});return {ok:true};});
