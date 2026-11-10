@@ -25,16 +25,16 @@ test('boas-vindas bloqueia atalhos, valida mínimos, persiste conclusão e corri
  try{
   assert.equal((await app.inject('/api/products')).statusCode,428);
   assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,400);
-  assert.equal((await put('/api/company',{data:{...company,name:''},expectedRevision:0})).statusCode,400);
+  assert.equal((await put('/api/company',{data:{...company,responsible:''},expectedRevision:0})).statusCode,400);
   assert.equal((await put('/api/company',{data:company,expectedRevision:0})).statusCode,200);
-  let state=(await app.inject('/api/onboarding')).json();assert.equal(state.checks.company,true);assert.equal(state.ready,false);
+  let state=(await app.inject('/api/onboarding')).json();assert.equal(state.checks.company,true);assert.equal(state.ready,true);
   assert.equal((await app.inject({method:'POST',url:'/api/materials',payload:material})).statusCode,200);
   let stored=(await app.inject('/api/settings/fabricacao')).json();assert.equal(stored.data.wholesaleMarkup,'1.5');assert.equal(stored.data.factoryMarkup,'2.0');assert.equal(stored.data.retailMarkup,'3.0');
   assert.equal((await put('/api/settings/fabricacao',{data:{...settings,wholesaleMarkup:'0',factoryMarkup:'1',retailMarkup:'',productiveHours:'0'},expectedRevision:stored.revision})).statusCode,200);
-  assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,400,'Horas mensais zero não concluem');
+  assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,200,'Horas e custos não bloqueiam o acesso');
   stored=(await app.inject('/api/settings/fabricacao')).json();assert.equal(stored.data.wholesaleMarkup,'1.5');assert.equal(stored.data.factoryMarkup,'2.0');assert.equal(stored.data.retailMarkup,'3.0');
   await put('/api/settings/fabricacao',{data:{...stored.data,productiveHours:'160',otherCost:'0'},expectedRevision:stored.revision});
-  assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,400,'É necessário custo operacional positivo');
+  assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,200,'Conclusão é idempotente sem custos');
   stored=(await app.inject('/api/settings/fabricacao')).json();await put('/api/settings/fabricacao',{data:{...stored.data,otherCost:'160'},expectedRevision:stored.revision});
   assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,200);
   assert.equal((await app.inject('/api/products')).statusCode,200);
@@ -51,4 +51,38 @@ test('boas-vindas bloqueia atalhos, valida mínimos, persiste conclusão e corri
   stored=(await app.inject('/api/settings/fabricacao')).json();assert.equal(stored.data.wholesaleMarkup,'1.5');assert.equal(stored.data.factoryMarkup,'2.0');assert.equal(stored.data.retailMarkup,'3.0');
   const legacy=new DatabaseSync(join(dir,'validation.sqlite'));assert.equal(JSON.parse(String(legacy.prepare("SELECT data FROM products WHERE json_extract(data,'$.origin')='client'").get()!.data)).catalogVisible,false);legacy.close();
  }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('cadastro mínimo libera produtos sem fabricação, preserva Pix e isola contas',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'welcome-minimum-')),other=mkdtempSync(join(tmpdir(),'welcome-other-'));
+ const options={staticDir:resolve('dist'),mode:'local' as const,pilotFeatures:true,logRequests:false};
+ let app=await createApp({...options,dataDir:dir});const second=await createApp({...options,dataDir:other});
+ const put=(data:unknown,expectedRevision=0)=>app.inject({method:'PUT',url:'/api/company',payload:{data,expectedRevision}});
+ try{
+  assert.equal((await app.inject('/api/company/logo/meta')).statusCode,200,'Logo disponível antes da conclusão');
+  const minimal={name:'',responsible:'Ana',phone:'11999990000',email:'',pixKey:'ana@example.test'};
+  assert.equal((await put({...minimal,phone:''})).statusCode,400);
+  assert.equal((await put({...minimal,email:'inválido'})).statusCode,400);
+  assert.equal((await put({...minimal,pixKey:'inválido'})).statusCode,400);
+  assert.equal((await put(minimal)).statusCode,200);
+  assert.equal((await put({...minimal,responsible:'Outra aba'})).statusCode,409,'Revisão antiga não sobrescreve cadastro');
+  assert.equal((await app.inject('/api/onboarding')).json().ready,true);
+  assert.equal((await app.inject({method:'POST',url:'/api/onboarding/complete'})).statusCode,200);
+  assert.equal((await app.inject('/api/products')).statusCode,200);
+  const product={name:'Produto com preço pronto',origin:'own',catalogVisible:false,publicAllowed:false,prices:{retail:2500,wholesale:null,factory:null},weightGrams:null,lengthCm:null,widthCm:null,heightCm:null,colors:[],sourceKeys:[],family:'',description:''};
+  const created=await app.inject({method:'POST',url:'/api/products/editor',payload:{product,applyPrices:false}});
+  assert.equal(created.statusCode,200,created.body);
+  assert.equal(created.json().prices.retail,2500);
+  const {pixKey,...legacy}=minimal;
+  assert.equal((await put({...legacy,name:'Negócio existente'},1)).statusCode,200);
+  assert.equal((await app.inject('/api/company')).json().data.pixKey,pixKey,'Formulários antigos não apagam Pix');
+  assert.equal((await second.inject('/api/company')).json().data.responsible,'');
+  assert.equal((await second.inject('/api/onboarding')).json().complete,false);
+  assert.equal((await second.inject('/api/products')).statusCode,428);
+  await app.close();app=await createApp({...options,dataDir:dir});
+  assert.equal((await app.inject('/api/onboarding')).json().complete,true);
+  const stored=(await app.inject('/api/company')).json();assert.equal(stored.data.name,'Negócio existente');assert.equal(stored.data.pixKey,pixKey);
+  assert.equal((await app.inject('/api/products')).json().length,1);
+ }finally{await app.close();await second.close();rmSync(dir,{recursive:true,force:true});rmSync(other,{recursive:true,force:true});}
 });

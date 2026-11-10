@@ -1,3 +1,5 @@
+> **0.2.0-dev.25 — entrada e boas-vindas:** consulte [PRIMEIRO-ACESSO.md](PRIMEIRO-ACESSO.md). Atualização de interface sem mudanças de slug, volumes, autenticação ou schemas. Instalação continua manual. Notas antigas abaixo são históricas.
+
 > Desenvolvimento **0.2.0-dev.16 — UX-Loading-01**: feedback visual de espera,
 > sem mudanças de autenticação/schema/regras comerciais. Nível 1 preservado.
 > Nenhuma distribuição/deploy nesta entrega. Guia/testes em docs/UX-Loading-01.md.

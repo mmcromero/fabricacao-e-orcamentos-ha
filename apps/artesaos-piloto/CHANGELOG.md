@@ -1,3 +1,12 @@
+## 0.2.0-dev.25 — UX-PRIMEIRO-ACESSO-002
+
+- Inscrição, login e convite em estados separados, com logotipo oficial e apresentação responsiva.
+- Boas-vindas com nome/telefone obrigatórios, e-mail/Pix opcionais e logo opcional.
+- Cadastro salvo antes dos cards Produtos/Precificação; Produtos sem custos prévios; onboarding concluído não se repete.
+- Autenticação Google, convites, consentimentos, dados, slug e schemas preservados.
+- Publicação conjunta HA ARM64/Forja AMD64 autorizada pelo proprietário; instalação sempre manual.
+- Guia de entrada incluído nos dois pacotes em manuals/PRIMEIRO-ACESSO.md.
+
 ## 0.2.0-dev.23 — BR CODE-01 + RETORNO
 ## 0.2.0-dev.22 — BR CODE-01
 ## 0.2.0-dev.21 — OFF-01

@@ -1,0 +1,63 @@
+import {fileURLToPath,pathToFileURL} from 'node:url';
+const modules=process.env.WELCOME_BROWSER_MODULES;
+if(!modules)throw Error('Defina WELCOME_BROWSER_MODULES para a pasta node_modules contendo playwright e axe-core.');
+const {chromium}=await import(pathToFileURL(resolve(modules,'playwright/index.mjs')).href);
+import {createApp} from '../dist-server/app.js';
+import {mkdtemp,rm,readFile,mkdir} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {resolve,join} from 'node:path';
+import assert from 'node:assert/strict';
+const root=fileURLToPath(new URL('..',import.meta.url)), output=resolve(process.env.WELCOME_BROWSER_OUTPUT||join(tmpdir(),'welcome-evidence'));
+await mkdir(output,{recursive:true});
+const data=await mkdtemp(join(tmpdir(),'welcome-ui-'));
+process.chdir(root);
+const app=await createApp({dataDir:data,staticDir:join(root,'dist'),mode:'local',pilotFeatures:true,logRequests:false});
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try{
+ await app.listen({host:'127.0.0.1',port:0});const origin=app.server.address();const url=`http://127.0.0.1:${origin.port}/`;
+ const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/brand/logo.png',r=>r.fulfill({contentType:'image/png',path:join(root,'dist/pilot-logo.png')}));
+ await page.route('**/api/legal/status',r=>r.fulfill({json:{enabled:false,required:false}}));
+ await page.route(u=>u.pathname==='/',async r=>r.fulfill({contentType:'text/html',body:(await readFile(join(root,'dist/index.html'),'utf8')).replace('<html','<html data-app-name="Artesão Digital"')}));
+ await page.goto(url);await page.getByRole('heading',{name:'Que bom ter você aqui!'}).waitFor();
+ await page.waitForFunction(()=>!document.querySelector('input[name=responsible]').matches(':disabled'));
+ await page.screenshot({path:join(output,'desktop.png'),fullPage:true});
+ assert.equal(await page.locator('.welcome-fields input').count(),4);
+ await page.addScriptTag({path:resolve(modules,'axe-core/axe.min.js')});
+ const accessibility=await page.evaluate(async()=>await axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));assert.deepEqual(accessibility.violations.map(v=>v.id),[]);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:join(output,'mobile.png'),fullPage:true});
+ await page.getByRole('button',{name:'Cadastrar meus produtos'}).click();await page.waitForFunction(()=>document.activeElement?.getAttribute('name')==='responsible');assert.equal(new URL(page.url()).search,'');
+ await page.getByRole('textbox',{name:'Seu nome',exact:true}).fill('Ana Artesã');await page.getByRole('textbox',{name:'Telefone',exact:true}).fill('11999990000');
+ await page.getByRole('textbox',{name:'Chave Pix (opcional)',exact:true}).fill('ana@example.test');
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Sem rolagem horizontal no celular');
+ // Falha no salvamento mantém formulário e não navega.
+ await page.route('**/api/company',async r=>r.request().method()==='PUT'?r.fulfill({status:503,json:{message:'Falha simulada ao salvar.'}}):r.continue());
+ await page.getByRole('button',{name:'Cadastrar meus produtos'}).click();await page.getByRole('alert').filter({hasText:'Falha simulada'}).waitFor();assert.equal(new URL(page.url()).search,'');
+ await page.unroute('**/api/company');
+ await page.getByRole('button',{name:'Cadastrar meus produtos'}).click();await page.waitForURL('**/?view=produtos');
+ assert.equal((await (await page.request.get(url+'api/company')).json()).data.pixKey,'ana@example.test');
+ await page.reload();await page.getByRole('heading',{name:'Produtos',exact:true}).waitFor();assert.equal(await page.getByRole('heading',{name:'Que bom ter você aqui!'}).count(),0);
+ assert.deepEqual(errors,[]);
+ console.log('PASS: quatro campos, validação, erro sem navegação, cadastro persistido, Produtos, retorno sem onboarding, mobile sem overflow, nenhum erro JS.');
+  await page.close();
+ const pricingData=await mkdtemp(join(tmpdir(),'welcome-pricing-'));
+ const pricing=await createApp({dataDir:pricingData,staticDir:join(root,'dist'),mode:'local',pilotFeatures:true,logRequests:false});
+ try{
+  await pricing.listen({host:'127.0.0.1',port:0});const pricingUrl=`http://127.0.0.1:${pricing.server.address().port}/`;
+  const p=await browser.newPage({viewport:{width:1280,height:900}});
+  await p.route('**/brand/logo.png',r=>r.fulfill({contentType:'image/png',path:join(root,'dist/pilot-logo.png')}));
+  await p.route('**/api/legal/status',r=>r.fulfill({json:{enabled:false,required:false}}));
+  await p.route(u=>u.pathname==='/',async r=>r.fulfill({contentType:'text/html',body:(await readFile(join(root,'dist/index.html'),'utf8')).replace('<html','<html data-app-name="Artesão Digital"')}));
+  await p.goto(pricingUrl);await p.getByRole('heading',{name:'Que bom ter você aqui!'}).waitFor();
+  await p.waitForFunction(()=>!document.querySelector('input[name=responsible]').matches(':disabled'));
+  await p.keyboard.press('Tab');assert.equal(await p.getByRole('textbox',{name:'Seu nome',exact:true}).evaluate(el=>el===document.activeElement),true);
+  await p.getByRole('textbox',{name:'Seu nome',exact:true}).fill('Artesão de teste');await p.getByRole('textbox',{name:'Telefone',exact:true}).fill('11999990000');
+  await p.locator('input[type=file]').setInputFiles(join(root,'pilot/branding/simbolo.png'));
+  await p.getByRole('img',{name:'Prévia da nova logo'}).waitFor();
+  assert.equal(await p.getByRole('button',{name:'Aprender a calcular meus preços'}).isDisabled(),true);
+  await p.getByRole('button',{name:'Salvar logo'}).click();await p.getByRole('img',{name:'Logo atual da empresa'}).waitFor();
+  await p.getByRole('button',{name:'Aprender a calcular meus preços'}).click();await p.waitForURL('**/?view=configuracoes&area=fabricacao#config-custos');
+  await p.locator('#config-custos').waitFor();assert.equal((await (await p.request.get(pricingUrl+'api/company/logo/meta')).json()).present,true);
+  await p.close();console.log('PASS: WCAG A/AA sem violações automáticas na tela inicial, foco por teclado, upload/salvamento do logo e navegação para precificação.');
+ }finally{await pricing.close();await rm(pricingData,{recursive:true,force:true});}
+}finally{await browser.close();await app.close();await rm(data,{recursive:true,force:true});}

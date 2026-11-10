@@ -1,3 +1,5 @@
+> **0.2.0-dev.25 — entrada e boas-vindas:** consulte [PRIMEIRO-ACESSO.md](PRIMEIRO-ACESSO.md). Atualização de interface sem mudanças de slug, volumes, autenticação ou schemas. Instalação continua manual. Notas antigas abaixo são históricas.
+
 ## dev.20 — fotos de produtos sob /data
 
 IMG-PROD-001 preserva a identidade do add-on e não altera opções/portas/autenticação.
