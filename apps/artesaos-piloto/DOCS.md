@@ -48,6 +48,7 @@ Solicitamos somente openid e email; não acesso ao Gmail. Configure Client ID e 
 - `google_client_id` e `google_client_secret`: cliente Web configurado no Google.
 - `admin_emails`: contas Google autorizadas a administrar o aplicativo.
 - `smtp_host`, `smtp_port`, `smtp_user`, `smtp_password`, `smtp_from`: envio automático opcional. Deixe todos vazios para envio manual; ver CONVITES.md.
+- `mercadopago_access_token`: token privado opcional para habilitar o Pix com confirmação automática. Informe no campo protegido na configuração do add-on Home Assistant; somente e-mails listados em `admin_emails` podem solicitar cobranças. Salve e reinicie o add-on, sem desinstalar. Não cole o token no navegador, no chat, no Git nem nos logs. Para teste e retomada, consulte `docs/operacao/PIX-QR-PDV-001-TOKEN-HA.md` no repositório.
 
 Os campos antigos test_email/test_invite foram removidos a partir de 0.1.17. Seus valores restantes em opções antigas são ignorados pelo aplicativo; não recriam convites ao reiniciar. Os convites já gravados no controle são preservados. Gerencie pessoas e códigos exclusivamente na aba Convites da administração. O comando CLI invite foi desativado; permanece apenas o comando emergencial de revogação de conta, não o fluxo comum de convites.
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import Fastify from 'fastify';
 import {registerMercadoPagoPix,amountText,centsFrom,statusOf} from '../server/pilot/mercadopago-pix.ts';
 import {judgeCharge,nextPollDelay} from '../src/pix-poll.ts';
+import {pendingPixKey,readPendingPix} from '../src/pix-pending.ts';
 import {pilotConfig} from '../server/pilot/config.ts';
 
 const TOKEN='APP_USR-0123456789-abcdef-0123456789abcdef-123456789';
@@ -33,10 +34,10 @@ test('status da ordem: processed = pago; em andamento = aguardando; o resto ence
 });
 
 test('status: só liberado para e-mail administrador e com token configurado',async()=>{
- const a=setup();assert.deepEqual((await a.app.inject({url:'/p/api/pix-mp/status'})).json(),{enabled:true});
+ const a=setup();const active=(await a.app.inject({url:'/p/api/pix-mp/status'})).json();assert.equal(active.enabled,true);assert.match(active.scope,/^ad:[0-9a-f]{16}:$/);assert.ok(!JSON.stringify(active).includes(TOKEN));
  const b=setup({email:'outro@example.com'});assert.deepEqual((await b.app.inject({url:'/p/api/pix-mp/status'})).json(),{enabled:false});
  const c=setup({token:undefined});assert.deepEqual((await c.app.inject({url:'/p/api/pix-mp/status'})).json(),{enabled:false});
- const d=setup({email:'MARCO@Example.com'});assert.deepEqual((await d.app.inject({url:'/p/api/pix-mp/status'})).json(),{enabled:true});
+ const d=setup({email:'MARCO@Example.com'});const allowed=(await d.app.inject({url:'/p/api/pix-mp/status'})).json();assert.equal(allowed.enabled,true);assert.match(allowed.scope,/^ad:[0-9a-f]{16}:$/);
 });
 
 test('criar cobrança: chama a API de Orders com token, valor em texto, Pix e e-mail do administrador',async()=>{
@@ -124,7 +125,7 @@ test('consultar: devolve o status e só de cobranças criadas por este app e est
   await app.inject({method:'POST',url:'/p/api/pix-mp/charges',payload:{amountCents:4590}});
   mpStatus=mp;
   const r=await app.inject({url:'/p/api/pix-mp/charges/'+ID});
-  assert.equal(r.statusCode,200,mp);assert.deepEqual(r.json(),{id:ID,status:expected,amountCents:4590},mp);
+  assert.equal(r.statusCode,200,mp);assert.deepEqual(r.json(),{id:ID,status:expected,amountCents:4590,...(expected==='pending'?{qrCode:'00020126PIXCODE6304ABCD'}:{})},mp);
   assert.equal(calls.at(-1)!.url,'https://api.mercadopago.com/v1/orders/'+ID);assert.equal(calls.at(-1)!.init.method,'GET');
  }
 });
@@ -163,4 +164,15 @@ test('configuração: token opcional, validado e vindo só do ambiente/opções 
  assert.equal(pilotConfig({...base,MERCADOPAGO_ACCESS_TOKEN:' '+TOKEN+' '}).mercadopagoToken,TOKEN);
  assert.throws(()=>pilotConfig({...base,MERCADOPAGO_ACCESS_TOKEN:'curto'}),/token do Mercado Pago/);
  assert.throws(()=>pilotConfig({...base,MERCADOPAGO_ACCESS_TOKEN:'x'.repeat(30)+' injetado'}),/token do Mercado Pago/);
+});
+
+test('retomar Pix: chave isolada por conta, referência validada e sem token no navegador',()=>{
+ const scope='ad:0123456789abcdef:';
+ const key=pendingPixKey(scope);assert.equal(key,'artesao.pix.mp.pending.v1.'+scope);
+ assert.equal(pendingPixKey('outro'),null);
+ const record={id:ID,amountCents:4590,qrCode:'00020126PIXCODE6304ABCD',savedAt:1000};
+ assert.deepEqual(readPendingPix(JSON.stringify(record)),record);
+ for(const bad of [null,'{','{}',JSON.stringify({...record,id:'../MP'}),JSON.stringify({...record,amountCents:0}),JSON.stringify({...record,savedAt:0}),JSON.stringify({...record,qrCode:'x'})])
+  assert.equal(readPendingPix(bad),null,String(bad));
+ assert.ok(!JSON.stringify(record).includes(TOKEN));
 });

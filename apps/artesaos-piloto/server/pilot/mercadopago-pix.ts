@@ -37,7 +37,7 @@ export function registerMercadoPagoPix(app:FastifyInstance,o:MercadoPagoPixOptio
  const fetchImpl=o.fetchImpl??fetch,now=o.now??Date.now,admins=new Set(o.adminEmails.map(e=>e.toLowerCase())),lastPoll=new Map<string,number>(),retryDelay=o.retryDelayMs??700;
  const allowed=(a:PixAccount)=>!!o.token&&admins.has(a.email.toLowerCase());
  const qrOf=(body:any)=>{const q=paymentOf(body)?.payment_method?.qr_code;return typeof q==='string'&&q?q:'';};
- app.get(o.prefix+'api/pix-mp/status',(req,reply)=>{const a=o.auth(req,reply);if(!a)return;return {enabled:allowed(a)};});
+ app.get(o.prefix+'api/pix-mp/status',(req,reply)=>{const a=o.auth(req,reply);if(!a)return;return {enabled:allowed(a),...(allowed(a)?{scope:owner(a.userId)}:{})};});
  app.post<{Body:{amountCents:number;description?:string}}>(o.prefix+'api/pix-mp/charges',{bodyLimit:2048,schema:{body:{type:'object',additionalProperties:false,required:['amountCents'],properties:{amountCents:{type:'integer',minimum:1,maximum:MAX_CENTS},description:{type:'string',maxLength:60}}}}},async(req,reply)=>{
   const a=o.auth(req,reply);if(!a)return;
   if(!allowed(a))return reply.code(403).send({message:'Pix automático não está liberado para esta conta.'});
@@ -73,7 +73,8 @@ export function registerMercadoPagoPix(app:FastifyInstance,o:MercadoPagoPixOptio
    const body:any=await response.json();
    // Só devolve cobranças criadas por este app para esta conta.
    if(typeof body?.external_reference!=='string'||!body.external_reference.startsWith(owner(a.userId))||paymentOf(body)?.payment_method?.id!=='pix')return reply.code(404).send({message:'Cobrança não encontrada.'});
-   return {id:String(body.id),status:statusOf(body),amountCents:centsFrom(body.total_amount)};
+   const status=statusOf(body);
+   return {id:String(body.id),status,amountCents:centsFrom(body.total_amount),...(status==='pending'&&qrOf(body)?{qrCode:qrOf(body)}:{})};
   }catch(error){const e=error as Error&{status?:number};return reply.code(e.status??502).send({message:e.message});}
  });
 }

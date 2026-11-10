@@ -1,5 +1,5 @@
 name: "Artesão Digital — Contingência"
-version: "0.2.0-dev.23"
+version: "0.2.0-dev.24"
 slug: artesaos_piloto
 description: "Contingência temporária com acionamento manual; Forja 01 é o servidor principal. Recuperação e transferência de dados entre ambientes ainda não concluídas. Sem sincronização automática de bancos."
 arch:
@@ -24,6 +24,7 @@ options:
   smtp_user: ""
   smtp_password: ""
   smtp_from: ""
+  mercadopago_access_token: ""
 schema:
   admin_emails:
     - str
@@ -35,6 +36,7 @@ schema:
   smtp_user: str
   smtp_password: password
   smtp_from: str
+  mercadopago_access_token: password
 environment:
   ARTESAO_DISTRIBUTION: "home-assistant"
   HOST: "0.0.0.0"
