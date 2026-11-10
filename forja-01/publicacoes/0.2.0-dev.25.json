@@ -1,0 +1,29 @@
+{
+  "metadataVersion": 1,
+  "repository": "mmcromero/fabricacao_e_orcamentos",
+  "distribution": "debian",
+  "version": "0.2.0-dev.25",
+  "sourceCommit": "e3f5168c9e202e81d074b07f4904cbd593f41be4",
+  "approvalBasis": "Empacotamento no GitHub Actions autorizado em 09/11/2026; instalacao manual exige autorizacao e verificacoes proprias.",
+  "securityPolicy": {
+    "policyVersion": 1,
+    "level": 1,
+    "decision": "explicit-owner-approval",
+    "basis": "Proprietário confirmou: somente testes internos, sem dados comerciais a preservar.",
+    "productionDeploymentAuthorized": false,
+    "level2": {
+      "maxBackupAgeHours": null,
+      "retention": null,
+      "independentCopyRule": null,
+      "recoveryRule": null,
+      "backupSchedule": null
+    }
+  },
+  "package": {
+    "sha256": "334b448f8844b57267034b1421fe1b117ed4216d5cac5588f53415e08bbf7a8d",
+    "policySha256": "2932534935dd63ea911a5015714125123e52a2a72cdfee0cf91e064dd6d4abcd"
+  },
+  "runner": {
+    "sha256": "5382ba5189801862888d2f04bfd58e8afe9d5754be8ab56496a8e5eb9ffbfe79"
+  }
+}

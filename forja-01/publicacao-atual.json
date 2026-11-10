@@ -2,9 +2,10 @@
   "catalogVersion": 1,
   "repository": "mmcromero/fabricacao_e_orcamentos",
   "distribution": "debian",
-  "version": "0.2.0-dev.21",
-  "sourceCommit": "fe593b495e278cce3226439960561e6b582330a6",
-  "file": "Forja-01-0.2.0-dev.21.zip",
-  "sha256": "9a2cb361a7124b21d8f01b12c5d57d4c9cef9b9a75d8b4013b4044e8057b08ce",
-  "metadataSha256": "e771e669ef1d2f2f0a919449b3e17cc1e966af0c5668a8a03e9294f62a732d43"
+  "version": "0.2.0-dev.25",
+  "sourceCommit": "e3f5168c9e202e81d074b07f4904cbd593f41be4",
+  "file": "Forja-01-0.2.0-dev.25.zip",
+  "sha256": "48afc5c8d999e440f7ab843be939b801bb57ef006021fbcf2f66644c4d641450",
+  "metadataSha256": "811a338435d4ef7ef6546f45be5bb1f1ecf970f4358d382214697d09635d607b",
+  "downloadUrl": "https://github.com/mmcromero/fabricacao_e_orcamentos/releases/download/forja-0.2.0-dev.25/Forja-01-0.2.0-dev.25.zip"
 }
