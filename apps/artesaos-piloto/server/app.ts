@@ -1,3 +1,4 @@
+import {registerAttentionCorrections} from './attention-correction.js';
 import {registerProductPhotos} from './product-photos.js';
 import {registerSessionEngagement} from './session-engagement.js';
 import {registerShipping} from './shipping.js';
@@ -41,6 +42,19 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
 
   const app = Fastify({ logger: options.logRequests??true, bodyLimit: 4096, trustProxy: false });
   if (mode === 'home-assistant') registerHomeAssistantAccess(app);
+  if(options.pilotFeatures)app.addHook('preValidation',async(req,reply)=>{
+    // This header is supplied only by the authenticated gateway.
+    const grants=req.headers['x-pilot-modules'];if(typeof grants!=='string'||grants.split(',').includes('fabricacao')||['GET','HEAD','OPTIONS'].includes(req.method))return;
+    let path:string;try{path=decodeURIComponent(new URL(req.url,'https://internal.invalid').pathname);}catch{return reply.code(400).send({message:'Endereço inválido.'});}
+    if(!path.startsWith('/api/products'))return;
+    const body=req.body as any;if(!body)return;
+    if(path.endsWith('/reconcile')||(path.endsWith('/import')&&Array.isArray(body.products)&&body.products.some((p:any)=>p&&typeof p==='object'&&Object.hasOwn(p,'manufacturing'))))return reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'A importação técnica requer liberação de Fabricação.'});
+    const product=body.product??body;const id=path.match(/^\/api\/products\/(\d+)(?:\/editor)?$/)?.[1];
+    const row=id?db.prepare('SELECT data FROM products WHERE id=?').get(id):null;
+    const old=row?JSON.parse(String(row.data)).manufacturing:undefined;
+    if((Object.hasOwn(product,'manufacturing')&&JSON.stringify(product.manufacturing)!==JSON.stringify(old))||body.applyPrices||(body.applyTiers?.length??0)>0)return reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'Fabricação ainda não liberada. Os dados existentes foram preservados.'});
+    if(old&&!Object.hasOwn(product,'manufacturing'))product.manufacturing=old;
+  });
   app.addHook('onSend', async (_request, reply, payload) => {
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Cache-Control', 'no-store');
@@ -60,7 +74,7 @@ export async function createApp(options: { dataDir: string; staticDir: string; m
   });
   if(options.pilotFeatures)registerCompany(app,db);
   registerMaterials(app, db,options.pilotFeatures??false);
-  if(options.pilotFeatures){registerShipping(app,db,options.actorId??'local-development');registerMaterialLedger(app,db,options.actorId??'local-development');registerProductStock(app,db,options.actorId??'local-development');registerOrders(app,db,options.actorId??'local-development');registerFinance(app,db,options.actorId??'local-development');registerSales(app,db,options.actorId??'local-development');registerDistribution(app,db,options.actorId??'local-development');registerAttentionCenter(app,db,options.actorId??'local-development');}
+  if(options.pilotFeatures){registerShipping(app,db,options.actorId??'local-development');registerMaterialLedger(app,db,options.actorId??'local-development');registerProductStock(app,db,options.actorId??'local-development');registerOrders(app,db,options.actorId??'local-development');registerFinance(app,db,options.actorId??'local-development');registerSales(app,db,options.actorId??'local-development');registerDistribution(app,db,options.actorId??'local-development');registerAttentionCenter(app,db,options.actorId??'local-development');registerAttentionCorrections(app,db,options.actorId??'local-development');}
   if(options.pilotFeatures)registerProductPhotos(app,db,dataDir);
   registerProducts(app, db,options.pilotFeatures??false);
   registerCategories(app, db);

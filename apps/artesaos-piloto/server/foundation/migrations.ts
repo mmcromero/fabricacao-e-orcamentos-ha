@@ -1,3 +1,4 @@
+import {moduleGrantsSql} from '../pilot/module-grants.js';
 import {engagementSql,resourceSql} from '../evolution-schema.js';
 import {shippingSql} from '../shipping-schema.js';
 import {attentionSql} from '../attention-schema.js';
@@ -41,7 +42,7 @@ export const migrations:Record<DatabaseScope,readonly Migration[]>={
  CREATE TRIGGER interest_links_no_update BEFORE UPDATE ON pilot_interest_invitation_links BEGIN SELECT RAISE(ABORT,'Vínculo histórico imutável'); END;
  CREATE TRIGGER interest_links_no_delete BEFORE DELETE ON pilot_interest_invitation_links BEGIN SELECT RAISE(ABORT,'Vínculo histórico imutável'); END;
  CREATE TRIGGER account_registration_no_update BEFORE UPDATE ON pilot_account_registrations BEGIN SELECT RAISE(ABORT,'Data original imutável'); END;
- CREATE TRIGGER account_registration_no_delete BEFORE DELETE ON pilot_account_registrations BEGIN SELECT RAISE(ABORT,'Data original imutável'); END;`}],
+ CREATE TRIGGER account_registration_no_delete BEFORE DELETE ON pilot_account_registrations BEGIN SELECT RAISE(ABORT,'Data original imutável'); END;`},{version:5,name:'liberacao-modulos-piloto',sql:moduleGrantsSql}],
  interest:[{version:1,name:'fundacao-interesses',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.interest}],
  support:[{version:1,name:'fundacao-suporte',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.support}],
  legal:[{version:1,name:'fundacao-legal',sql:'SELECT 1;'},{version:2,name:'consolidacao-legada',sql:legacySql.legal},{version:3,name:'documentos-manuais-contribuicao',sql:resourceSql}]
