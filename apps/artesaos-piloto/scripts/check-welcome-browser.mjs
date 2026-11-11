@@ -12,7 +12,7 @@ await mkdir(output,{recursive:true});
 const data=await mkdtemp(join(tmpdir(),'welcome-ui-'));
 process.chdir(root);
 const app=await createApp({dataDir:data,staticDir:join(root,'dist'),mode:'local',pilotFeatures:true,logRequests:false});
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({...process.env.WELCOME_BROWSER_EXECUTABLE?{executablePath:process.env.WELCOME_BROWSER_EXECUTABLE}:{channel:'chrome'},headless:true});
 try{
  await app.listen({host:'127.0.0.1',port:0});const origin=app.server.address();const url=`http://127.0.0.1:${origin.port}/`;
  const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -21,11 +21,25 @@ try{
  await page.route(u=>u.pathname==='/',async r=>r.fulfill({contentType:'text/html',body:(await readFile(join(root,'dist/index.html'),'utf8')).replace('<html','<html data-app-name="Artesão Digital"')}));
  await page.goto(url);await page.getByRole('heading',{name:'Que bom ter você aqui!'}).waitFor();
  await page.waitForFunction(()=>!document.querySelector('input[name=responsible]').matches(':disabled'));
+ async function checkLayout(){
+  const selectors=['.welcome-brand','#welcome-title','input[name=responsible]','input[name=phone]','input[name=email]','input[name=pixKey]','.welcome-logo','#welcome-paths-title','button[value=products]','button[value=pricing]'];
+  const layout=await page.evaluate(selectors=>{
+   const elements=selectors.map(selector=>document.querySelector(selector));
+   const boxes=elements.map(element=>element.getBoundingClientRect());
+   return {domOrder:elements.slice(1).every((element,i)=>!!(elements[i].compareDocumentPosition(element)&Node.DOCUMENT_POSITION_FOLLOWING)),visualOrder:boxes.slice(1).every((box,i)=>box.top>=boxes[i].bottom-1||(i===8&&box.top===boxes[i].top&&box.left>boxes[i].left)),brandCenter:boxes[0].left+boxes[0].width/2,viewport:innerWidth,noOverflow:document.documentElement.scrollWidth<=innerWidth};
+  },selectors);
+  assert.equal(layout.domOrder,true,'Ordem de leitura do logo até os dois caminhos');
+  assert.equal(layout.visualOrder,true,'Ordem visual acompanha a ordem de leitura');
+  assert.ok(Math.abs(layout.brandCenter-layout.viewport/2)<2,'Marca centralizada');
+  assert.equal(layout.noOverflow,true,'Sem rolagem horizontal');
+ }
+ await page.getByRole('img',{name:'Artesão Digital',exact:true}).evaluate(img=>img.decode());
+ await checkLayout();
  await page.screenshot({path:join(output,'desktop.png'),fullPage:true});
  assert.equal(await page.locator('.welcome-fields input').count(),4);
  await page.addScriptTag({path:resolve(modules,'axe-core/axe.min.js')});
  const accessibility=await page.evaluate(async()=>await axe.run(document.querySelector('main'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));assert.deepEqual(accessibility.violations.map(v=>v.id),[]);
- await page.setViewportSize({width:390,height:844});await page.screenshot({path:join(output,'mobile.png'),fullPage:true});
+ await page.setViewportSize({width:390,height:844});await checkLayout();await page.screenshot({path:join(output,'mobile.png'),fullPage:true});
  await page.getByRole('button',{name:'Cadastrar meus produtos'}).click();await page.waitForFunction(()=>document.activeElement?.getAttribute('name')==='responsible');assert.equal(new URL(page.url()).search,'');
  await page.getByRole('textbox',{name:'Seu nome',exact:true}).fill('Ana Artesã');await page.getByRole('textbox',{name:'Telefone',exact:true}).fill('11999990000');
  await page.getByRole('textbox',{name:'Chave Pix (opcional)',exact:true}).fill('ana@example.test');
@@ -54,10 +68,12 @@ try{
   await p.getByRole('textbox',{name:'Seu nome',exact:true}).fill('Artesão de teste');await p.getByRole('textbox',{name:'Telefone',exact:true}).fill('11999990000');
   await p.locator('input[type=file]').setInputFiles(join(root,'pilot/branding/simbolo.png'));
   await p.getByRole('img',{name:'Prévia da nova logo'}).waitFor();
-  assert.equal(await p.getByRole('button',{name:'Aprender a calcular meus preços'}).isDisabled(),true);
+  assert.equal(await p.getByRole('button',{name:'Calcular meus preços'}).isDisabled(),true);
   await p.getByRole('button',{name:'Salvar logo'}).click();await p.getByRole('img',{name:'Logo atual da empresa'}).waitFor();
-  await p.getByRole('button',{name:'Aprender a calcular meus preços'}).click();await p.waitForURL('**/?view=configuracoes&area=fabricacao#config-custos');
-  await p.locator('#config-custos').waitFor();assert.equal((await (await p.request.get(pricingUrl+'api/company/logo/meta')).json()).present,true);
+  await p.getByRole('button',{name:'Calcular meus preços'}).click();await p.waitForURL('**/?view=configuracoes&area=fabricacao#config-custos');
+  await p.locator('#config-custos').waitFor();
+  assert.equal((await (await p.request.get(pricingUrl+'api/company')).json()).data.responsible,'Artesão de teste');
+  assert.equal((await (await p.request.get(pricingUrl+'api/company/logo/meta')).json()).present,true);
   await p.close();console.log('PASS: WCAG A/AA sem violações automáticas na tela inicial, foco por teclado, upload/salvamento do logo e navegação para precificação.');
  }finally{await pricing.close();await rm(pricingData,{recursive:true,force:true});}
 }finally{await browser.close();await app.close();await rm(data,{recursive:true,force:true});}

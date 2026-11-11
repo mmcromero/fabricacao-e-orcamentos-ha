@@ -1,5 +1,3 @@
-import {setModuleAccess} from '../server/pilot/module-grants.js';
-import {moduleKeys} from '../server/module-access.js';
 import {buildInfo} from '../server/pilot/build-info.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -31,7 +29,7 @@ test('convites, sessão, CSRF, abas, isolamento completo, persistência e revoga
   return callback;
  }
  function session(response:any){const cookies=response.cookies;const csrf=cookies.find((c:any)=>c.name==='__Secure-artesaos_csrf')!.value;return {cookie:cookies.filter((c:any)=>c.name!=='__Secure-artesaos_flow').map((c:any)=>`${c.name}=${c.value}`).join('; '),origin,'x-pilot-csrf':csrf} as Record<string,string>;}
- async function prepare(headers:Record<string,string>){setModuleAccess(admin.db,headers['x-pilot-context'],moduleKeys,0,'fixture');const l=(await request('api/legal/status',headers)).json();await request('api/legal/accept',headers,'POST',{version:l.version,termsHash:l.termsHash,accepted:true});
+ async function prepare(headers:Record<string,string>){const l=(await request('api/legal/status',headers)).json();await request('api/legal/accept',headers,'POST',{version:l.version,termsHash:l.termsHash,accepted:true});
   const result=await request('api/materials',headers,'POST',{name:'Material inicial',mode:'quantity',purchaseQuantity:1,purchasePrice:20,purchaseUnit:'kg',customUnit:''});assert.equal(result.statusCode,200,result.body);
   const settings=(await request('api/settings/fabricacao',headers)).json();assert.equal((await request('api/settings/fabricacao',headers,'PUT',{data:{...settings.data,humanHour:'20',productiveHours:'160',otherCost:'100'},expectedRevision:settings.revision})).statusCode,200);
   assert.equal((await request('api/onboarding/complete',headers,'POST')).statusCode,200);

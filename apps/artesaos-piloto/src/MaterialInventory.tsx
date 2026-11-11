@@ -1,4 +1,3 @@
-import {moduleEnabled} from './module-access';
 import ActionButton from './ActionButton';
 import {useEffect,useRef,useState} from 'react';
 import AreaNav from './AreaNav';
@@ -37,7 +36,7 @@ export default function MaterialInventory({embedded=false}:{embedded?:boolean}){
  let adjustmentPreview='';
  if(adjust&&current){try{const before=parseDecimal(adjust.expectedBalance,6),after=adjust.kind==='close'?0n:parseDecimal(adjust.newBalance,6),difference=before-after,lot=lots.find(l=>l.id===adjust.lotId);adjustmentPreview=`Variação: ${formatDecimal(-difference,6)} ${current.profile.unit}.`;if(adjust.kind!=='correction')adjustmentPreview+=lot?.unit_cost8!=null?` Perda analítica: ${money(Number(divideRounded(difference*BigInt(lot.unit_cost8),1000000000000n)))}. Nenhum pagamento.`:' Custo histórico desconhecido; nenhum valor será inventado.';}catch{adjustmentPreview='Informe um saldo válido para conferir a variação.';}}
  const visible=entries;
- return <main className="products-screen material-inventory">{!embedded&&<><AreaNav active="estoque"/><h1>Estoque</h1></>}<h2>Materiais e insumos</h2>{moduleEnabled('financeiro')&&<p><a href="?view=financeiro">Consultar obrigações e registrar pagamentos no Financeiro</a></p>}<p>Compras, unidades físicas e histórico. Referência de custo: última compra cadastrada com custo, mesmo com data retroativa. Nenhum pagamento é registrado automaticamente.</p>
+ return <main className="products-screen material-inventory">{!embedded&&<><AreaNav active="estoque"/><h1>Estoque</h1></>}<h2>Materiais e insumos</h2><p><a href="?view=financeiro">Consultar obrigações e registrar pagamentos no Financeiro</a></p><p>Compras, unidades físicas e histórico. Referência de custo: última compra cadastrada com custo, mesmo com data retroativa. Nenhum pagamento é registrado automaticamente.</p>
  <p role={error?'alert':'status'} className={error?'form-error':undefined}>{message}</p>
  <ActionButton disabled={busy} onClick={()=>setShowCadastro(!showCadastro)}>{showCadastro?'Recolher cadastro':'Cadastrar ou editar material'}</ActionButton><ActionButton disabled={busy||!entries.some(e=>e.profile.tracked)} onClick={()=>{return run(async()=>{const choices=await api('materials?selection=1');setPurchaseChoices(choices);setLines([newLine()]);setShowPurchase(true);});}}>Registrar compra</ActionButton>
  {showCadastro&&<MaterialSettings onChanged={()=>load()}/>}

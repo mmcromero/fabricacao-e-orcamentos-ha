@@ -1,5 +1,3 @@
-import {getModuleAccess} from './module-grants.js';
-import {allowsApi,viewModule,contextualApi} from '../module-access.js';
 import {entryPage,entryScript,entryCss} from './entry.js';
 import {offlineKey,offlineIdentity,offlineShell,offlineLockScript,offlineBinding,offlineNamespace} from './offline.js';
 import {legalBackLocation,legalReturnTarget,legalNavigationScript} from './legal-navigation.js';
@@ -45,6 +43,11 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  const setCookie=(name:string,value:string,httpOnly=true,maxAge=28800)=>`${name}=${encodeURIComponent(value)}; Path=${prefix}; Secure; SameSite=Lax; Max-Age=${maxAge}${httpOnly?'; HttpOnly':''}`;
  let community:ReturnType<typeof registerCommunity>;try{community=registerCommunity(app,config,store,provider,cookie,browserTag,versionFooter,support,mailer,legal);}catch(e){support.close();store.close();throw e;}
  function session(req:{headers:{cookie?:string}}){return store.getSession(cookie(req.headers.cookie,SESSION),config.idleMinutes);}
+ async function pendingSetup(req:{headers:{cookie?:string}}){
+  const current=session(req);if(!current)return false;
+  const status=await tenants.use(current.tenantId,inner=>inner.inject({method:'GET',url:'/api/onboarding'}));
+  return status.statusCode===200&&status.json().complete===false;
+ }
  app.addContentTypeParser('application/x-www-form-urlencoded',{parseAs:'string',bodyLimit:4096},(_req,body,done)=>{const entries=new URLSearchParams(String(body));if([...entries.keys()].some((k,i,all)=>all.indexOf(k)!==i)){done(Error('Formulário inválido.'));return;}done(null,Object.fromEntries(entries));});
  app.addHook('onRequest',async(req,reply)=>{
   reply.header('Cache-Control','no-store').header('X-Content-Type-Options','nosniff').header('Referrer-Policy','same-origin').header('X-Frame-Options','DENY').header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://accounts.google.com; base-uri 'self'; object-src 'none'");
@@ -54,8 +57,8 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  registerVersionGuard(app,prefix,buildInfo.pilotVersion,cookie,(header,admin)=>{if(admin){const a=community.current({headers:{cookie:header}});return a?{context:a.context}:null;}const a=session({headers:{cookie:header}});return a?{context:a.userId}:null;},(context,admin)=>`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Artesão Digital atualizado</title><link rel="stylesheet" href="${prefix}pilot.css">${browserTag}<meta name="artesao-update-page" content="true"><meta name="${admin?'pilot-admin-context':'pilot-context'}" content="${context}"></head><body>${versionFooter}</body></html>`);
  app.get(prefix+'version-guard.js',(_req,reply)=>reply.type('application/javascript').send(versionGuardScript(prefix)));
  app.get(prefix+'legal-navigation.js',(_req,reply)=>reply.type('application/javascript').send(legalNavigationScript(prefix)));
- app.get(prefix+'legal',(req,reply)=>{const query=req.query as Record<string,unknown>;const origin=Object.hasOwn(query,'returnTo')?query.returnTo:req.headers.referer;const target=legalReturnTarget(config,origin);return reply.type('text/html').send(legal.publicPage(prefix,target?.path??'').replace('</head>',pwaHead(prefix)+`<script defer src="${prefix}legal-navigation.js"></script>`+'</head>'));});
- app.get(prefix+'legal/back',(req,reply)=>{const origin=(req.query as Record<string,unknown>).returnTo;return reply.redirect(legalBackLocation(config,origin,!!session(req),!!community.current(req)));});
+ app.get(prefix+'legal',async(req,reply)=>{const query=req.query as Record<string,unknown>;const origin=Object.hasOwn(query,'returnTo')?query.returnTo:req.headers.referer;const target=legalReturnTarget(config,await pendingSetup(req)?prefix:origin);return reply.type('text/html').send(legal.publicPage(prefix,target?.path??'').replace('</head>',pwaHead(prefix)+`<script defer src="${prefix}legal-navigation.js"></script>`+'</head>'));});
+ app.get(prefix+'legal/back',async(req,reply)=>{if(await pendingSetup(req))return reply.redirect(prefix);const origin=(req.query as Record<string,unknown>).returnTo;return reply.redirect(legalBackLocation(config,origin,!!session(req),!!community.current(req)));});
  app.get(prefix+'entry.js',(_req,reply)=>reply.type('application/javascript').send(entryScript()));
  app.get(prefix+'login',async(req,reply)=>{if(session(req))return reply.redirect(destination);return reply.type('text/html').send(`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quero participar do piloto — Artesão Digital</title>${browserTag}<script defer src="${prefix}interest.js?v=${buildInfo.pilotVersion}"></script><script defer src="${prefix}entry.js?v=${buildInfo.pilotVersion}"></script><link rel="stylesheet" href="${prefix}pilot.css"></head><body class="pilot-entry-page">${entryPage(prefix,community.interestForm())}${versionFooter}</body></html>`);});
  app.get(prefix+'manifest.webmanifest',(_req,reply)=>reply.type('application/manifest+json').send(pwaManifest(prefix)));
@@ -96,15 +99,15 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(current)store.logout(cookie(req.headers.cookie,SESSION));
   reply.header('Set-Cookie',[setCookie(SESSION,'',true,0),setCookie(CSRF,'',false,0),offlineBinding(prefix,'')]);return {ok:true};
  });
- app.get(prefix+'api/pilot/session',async(req,reply)=>{const current=session(req);return current?{email:current.email,context:current.userId,modules:getModuleAccess(store.db,current.userId)}:reply.code(401).send({message:'Entre na sua conta.'});});
+ app.get(prefix+'api/pilot/session',async(req,reply)=>{const current=session(req);return current?{email:current.email,context:current.userId}:reply.code(401).send({message:'Entre na sua conta.'});});
  const legalRequired=(account:string)=>legal.status(account).required;
  const legalAuth=(req:Parameters<typeof session>[0]&{method:string;headers:Record<string,any>},reply:any)=>{
   const current=session(req);if(!current){reply.code(401).send({message:'Entre na sua conta.'});return null;}
   if(req.headers['x-pilot-context']!==current.userId){reply.code(409).send({message:'A conta desta janela mudou.'});return null;}
   if(req.method!=='GET'&&!equal(digest(String(req.headers['x-pilot-csrf']??'')),current.csrfHash)){reply.code(403).send({message:'Confirmação de segurança inválida.'});return null;}return current;
  };
- registerMercadoPagoPix(app,{prefix,token:config.mercadopagoToken,adminEmails:config.adminEmails??[],fetchImpl:pixFetch,createLimited:(key,max)=>store.limited(key,max),auth:(req,reply)=>{const c=legalAuth(req,reply);if(!c)return null;if(legalRequired(c.userId)){reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});return null;}if(!getModuleAccess(store.db,c.userId).enabled.includes('vendas')){reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'PDV ainda não liberado.'});return null;}return {userId:c.userId,email:c.email};}});
- app.get(prefix+'api/offline/identity',(req,reply)=>{const current=legalAuth(req,reply);if(current){if(!getModuleAccess(store.db,current.userId).enabled.includes('catalogo'))return reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'Catálogo ainda não liberado.'});const identity=offlineIdentity(offlineMaster,config,current,buildInfo.pilotVersion);return identity;}});
+ registerMercadoPagoPix(app,{prefix,token:config.mercadopagoToken,adminEmails:config.adminEmails??[],fetchImpl:pixFetch,createLimited:(key,max)=>store.limited(key,max),auth:(req,reply)=>{const c=legalAuth(req,reply);if(!c)return null;if(legalRequired(c.userId)){reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});return null;}return {userId:c.userId,email:c.email};}});
+ app.get(prefix+'api/offline/identity',(req,reply)=>{const current=legalAuth(req,reply);if(current){const identity=offlineIdentity(offlineMaster,config,current,buildInfo.pilotVersion);return identity;}});
  app.get(prefix+'api/legal/status',(req,reply)=>{const current=legalAuth(req,reply);if(current)return legal.status(current.userId);});
  app.post<{Body:{version:string;termsHash:string;accepted:boolean}}>(prefix+'api/legal/accept',{bodyLimit:2048,schema:{body:{type:'object',additionalProperties:false,required:['version','termsHash','accepted'],properties:{version:{type:'string',maxLength:100},termsHash:{type:'string',maxLength:64},accepted:{const:true}}}}},(req,reply)=>{const current=legalAuth(req,reply);if(!current)return;if(!legal.accept(current.userId,req.body.version,req.body.termsHash,req.body.accepted,current.tenantId,current.csrfHash))return reply.code(409).send({message:'Confira a versão atual dos Termos.'});return {ok:true};});
  app.get(prefix+'api/help',(req,reply)=>{const current=legalAuth(req,reply);if(!current)return;return {manual:legal.active('manual')?{id:legal.active('manual').id,version:legal.active('manual').version,publishedAt:legal.active('manual').published_at}:null,history:legal.list().filter((v:any)=>v.kind==='manual'&&v.published_at).map((v:any)=>({id:v.id,version:v.version,publishedAt:v.published_at})),contribution:legal.contribution()};});
@@ -123,7 +126,6 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
  app.get<{Params:{owner:string;file:string}}>(prefix+'api/product-photos/:owner/:file',async(req,reply)=>{
   const current=session(req);if(!current)return reply.code(401).send({message:'Entre na sua conta.'});
   if(legalRequired(current.userId))return reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});
-  if(!allowsApi(getModuleAccess(store.db,current.userId),'/api/product-photos/'+req.params.owner+'/'+req.params.file,'GET'))return reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'Módulo ainda não liberado.'});
   if(!/^[a-f0-9]{32}$/.test(req.params.owner)||!/^([a-f0-9]{64})\.png$/.test(req.params.file))return reply.code(404).send({message:'Foto não encontrada.'});
   const response=await tenants.use(current.tenantId,inner=>inner.inject({method:'GET',url:'/api/product-photos/'+req.params.owner+'/'+req.params.file}));
   reply.code(response.statusCode);if(response.headers['content-type'])reply.type(String(response.headers['content-type']));return reply.send(response.rawPayload);
@@ -134,24 +136,14 @@ export async function createPilotApp(config:PilotConfig,provider:IdentityProvide
   if(req.url.slice(prefix.length).startsWith('api/')&&req.headers['x-pilot-context']!==current.userId)return reply.code(409).send({message:'A conta desta janela mudou. Reabra a página antes de continuar.'});
   if(!['GET','HEAD','OPTIONS'].includes(req.method)&&!equal(digest(String(req.headers['x-pilot-csrf']??'')),current.csrfHash))return reply.code(403).send({message:'Confirmação de segurança inválida. Reabra a página.'});
   if(req.url.slice(prefix.length).startsWith('api/')&&legalRequired(current.userId))return reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});
-  let path='/'+req.raw.url!.slice(prefix.length);
-  const parsed=new URL(path,'https://internal.invalid'),access=getModuleAccess(store.db,current.userId);
-  let decodedPath:string;try{decodedPath=decodeURIComponent(parsed.pathname);}catch{return reply.code(400).send({message:'Endereço inválido.'});}
-  if(decodedPath.startsWith('/api/')&&req.headers['x-pilot-context']!==current.userId)return reply.code(409).send({message:'A conta desta janela mudou.'});
-  if(decodedPath.startsWith('/api/')&&legalRequired(current.userId))return reply.code(428).send({code:'LEGAL_REQUIRED',message:'Confirme os Termos antes de usar o aplicativo.'});
-  if(decodedPath.startsWith('/api/')&&!allowsApi(access,decodedPath,req.method))return reply.code(403).send({code:'MODULE_UNAVAILABLE',message:'Módulo ainda não liberado para sua conta. Solicite a liberação ao administrador.'});
-  if((parsed.pathname==='/'||parsed.pathname.endsWith('/index.html'))&&req.method==='GET'){
-   const requested=parsed.searchParams.get('view');
-   if((!requested||requested==='produtos')&&!access.enabled.includes('catalogo')){const target=access.enabled.includes('fabricacao')?'fabricacao':access.enabled.includes('vendas')?'vendas':access.enabled[0];if(target)return reply.redirect(prefix+'?view='+target);}
-   const required=viewModule(requested);
-   if(required&&!access.enabled.includes(required))return reply.code(403).type('text/html').send('<!doctype html><html lang="pt-BR"><meta charset="UTF-8"><title>Módulo não liberado</title><body><h1>Módulo ainda não liberado</h1><p>Solicite a liberação ao administrador. Seus dados foram preservados.</p><a href="'+prefix+'?view=ajuda">Ajuda</a></body></html>');
-  }
-  const contextual=contextualApi(decodedPath,req.method);
-  if(contextual){path=contextual.target+parsed.search;if(req.method==='POST'&&contextual.target==='/api/clients'&&req.body&&typeof req.body==='object')(req.body as Record<string,unknown>).registrationOrigin='sale';}
+  const path='/'+req.raw.url!.slice(prefix.length);
   let response;
-  try{response=await tenants.use(current.tenantId,inner=>inner.inject({method:req.method as HTTPMethods,url:path,headers:{'x-pilot-modules':access.enabled.join(','),...(req.headers['content-type']?{'content-type':req.headers['content-type']}:{}),...(typeof req.headers['x-expected-updated-at']==='string'?{'x-expected-updated-at':req.headers['x-expected-updated-at']}:{})},...(req.body===undefined?{}:{payload:typeof req.body==='string'?req.body:JSON.stringify(req.body)})}));}catch(error){if(error instanceof TenantCapacityError)return reply.code(503).send({message:error.message});throw error;}
+  try{response=await tenants.use(current.tenantId,inner=>inner.inject({method:req.method as HTTPMethods,url:path,headers:{...(req.headers['content-type']?{'content-type':req.headers['content-type']}:{}),...(typeof req.headers['x-expected-updated-at']==='string'?{'x-expected-updated-at':req.headers['x-expected-updated-at']}:{})},...(req.body===undefined?{}:{payload:typeof req.body==='string'?req.body:JSON.stringify(req.body)})}));}catch(error){if(error instanceof TenantCapacityError)return reply.code(503).send({message:error.message});throw error;}
   reply.code(response.statusCode);for(const header of ['content-type','content-disposition'])if(response.headers[header])reply.header(header,response.headers[header]);
-  let body:Buffer|string=response.rawPayload;if((response.headers['content-type']??'').toString().startsWith('text/html'))body=response.body.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/g,(_,src)=>`<script type="application/json" data-pilot-module="${src}"></script>`).replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/g,(_,href)=>`<link rel="stylesheet" data-pilot-href="${href}">`).replace('<html ', '<html data-app-name="Artesão Digital" ').replace(/<title>[^<]*<\/title>/,'<title>Artesão Digital</title>').replace('</head>',`${browserTag}<meta name="pilot-modules" content="${access.enabled.join(',')}"><meta name="pilot-context" content="${current.userId}"><link rel="stylesheet" href="${prefix}pilot.css"><script src="${prefix}pilot-session.js?v=${buildInfo.pilotVersion}"></script></head>`).replace('</body>',versionFooter+'</body>');
+  let body:Buffer|string=response.rawPayload;if((response.headers['content-type']??'').toString().startsWith('text/html'))body=response.body.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/g,(_,src)=>`<script type="application/json" data-pilot-module="${src}"></script>`).replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/g,(_,href)=>`<link rel="stylesheet" data-pilot-href="${href}">`).replace('<html ', '<html data-app-name="Artesão Digital" ').replace(/<title>[^<]*<\/title>/,'<title>Artesão Digital</title>').replace('</head>',`${browserTag}<meta name="pilot-context" content="${current.userId}"><link rel="stylesheet" href="${prefix}pilot.css"><script src="${prefix}pilot-session.js?v=${buildInfo.pilotVersion}"></script></head>`).replace('</body>',versionFooter+'</body>');
+  if(typeof body==='string'&&['ajuda','suporte'].includes(String((req.query as Record<string,unknown>).view))&&await pendingSetup(req)){
+   body=body.replace('<body>','<body class="pilot-first-access-detail">').replace('</body>',`<form class="pilot-first-access-back" action="${prefix}" method="get"><button type="submit">Voltar</button></form></body>`);
+  }
   return reply.send(body);
  });
  if(prefix!=='/')app.get(prefix.slice(0,-1),(_req,reply)=>reply.redirect(prefix));

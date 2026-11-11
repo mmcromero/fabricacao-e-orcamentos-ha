@@ -22,7 +22,7 @@ export function entryScript(){return `(()=>{addEventListener('DOMContentLoaded',
 export const entryCss=`
 :root body.pilot-entry-page{padding-bottom:0}
 :root .pilot-entry-page #pilot-build-info{position:static;font-size:14px;gap:8px 16px;margin-top:32px}
-:root .pilot-entry-page #pilot-build-info a:not(.pilot-support-link){display:inline-flex;align-items:center;min-height:44px}
+:root .pilot-entry-page #pilot-build-info a{display:inline-flex;align-items:center;min-height:44px}
 :root .pilot-entry{--entry-green:var(--mata,#1E4D3B);--entry-line:var(--areia,#CBB493);--entry-paper:var(--linho,#F5F5EF);--entry-text:var(--carvao,#1F2A25);width:100%;max-width:1080px;margin:32px auto;padding:0 32px;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;color:var(--entry-text)}
 :root .pilot-entry [hidden]{display:none!important}
 :root .pilot-entry .entry-brand{display:block;text-align:center;margin-bottom:24px}
@@ -47,10 +47,10 @@ export const entryCss=`
 :root .pilot-entry #interest-status{margin:16px 0 0}
 @media(max-width:1024px){:root body.pilot-entry-page{padding-bottom:0}
 :root .pilot-entry-page #pilot-build-info{position:static;font-size:14px;gap:8px 16px;margin-top:32px}
-:root .pilot-entry-page #pilot-build-info a:not(.pilot-support-link){display:inline-flex;align-items:center;min-height:44px}
+:root .pilot-entry-page #pilot-build-info a{display:inline-flex;align-items:center;min-height:44px}
 :root .pilot-entry{margin:24px auto;padding:0 24px}}
 @media(max-width:768px){:root body.pilot-entry-page{padding-bottom:0}
 :root .pilot-entry-page #pilot-build-info{position:static;font-size:14px;gap:8px 16px;margin-top:32px}
-:root .pilot-entry-page #pilot-build-info a:not(.pilot-support-link){display:inline-flex;align-items:center;min-height:44px}
+:root .pilot-entry-page #pilot-build-info a{display:inline-flex;align-items:center;min-height:44px}
 :root .pilot-entry{margin:24px auto;padding:0 16px}:root .pilot-entry .entry-card{padding:24px 20px}:root .pilot-entry h1{font-size:26px}:root .pilot-entry [data-pilot-brand] img{width:140px}}
 `;

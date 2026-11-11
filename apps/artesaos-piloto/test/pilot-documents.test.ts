@@ -1,5 +1,3 @@
-import {setModuleAccess} from '../server/pilot/module-grants.js';
-import {moduleKeys} from '../server/module-access.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync,writeFileSync,mkdirSync} from 'node:fs';
@@ -22,7 +20,7 @@ async function fixture(){
  const dir=mkdtempSync(join(tmpdir(),'pilot-documents-'));
  const config:PilotConfig={publicUrl:new URL(origin+prefix),prefix,dataDir:dir,staticDir:resolve('dist'),clientId:'fixture',clientSecret:'fixture',sessionHours:8,idleMinutes:30,maxUsers:5,adminEmails:[]};
  const control=new PilotStore(dir);
- function account(name:string){const invite=control.invite(name+'@example.test');const id=control.activate({issuer:'https://accounts.google.com',subject:name,email:name+'@example.test',verified:true},digest(invite),5);setModuleAccess(control.db,id,moduleKeys,0,'fixture');const s=control.session(id,8);return {id,headers:{cookie:'__Secure-artesaos_session='+s.value,'x-pilot-context':id,'x-pilot-csrf':s.csrf}};}
+ function account(name:string){const invite=control.invite(name+'@example.test');const id=control.activate({issuer:'https://accounts.google.com',subject:name,email:name+'@example.test',verified:true},digest(invite),5);const s=control.session(id,8);return {id,headers:{cookie:'__Secure-artesaos_session='+s.value,'x-pilot-context':id,'x-pilot-csrf':s.csrf}};}
  const a=account('a'),b=account('b');let app=await createPilotApp(config);
  const request=(path:string,who=a,method='GET',payload?:unknown)=>app.inject({method:method as any,url:prefix+path,headers:{host:new URL(origin).host,origin,...who.headers},...(payload===undefined?{}:{payload:payload as any})});
  async function ready(who:typeof a){const ls=(await request('api/legal/status',who)).json();await request('api/legal/accept',who,'POST',{version:ls.version,termsHash:ls.termsHash,accepted:true});await request('api/company',who,'PUT',{data:company,expectedRevision:0});const tenant=String(control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(who.id)!.tenant_id);const db=new DatabaseSync(join(dir,'tenants',tenant,'validation.sqlite'));db.prepare('INSERT INTO pilot_onboarding VALUES(1,?)').run(new Date().toISOString());db.close();return join(dir,'tenants',tenant,'validation.sqlite');}

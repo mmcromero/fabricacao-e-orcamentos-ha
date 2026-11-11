@@ -1,4 +1,3 @@
-import {moduleEnabled} from './module-access';
 import ActionButton from './ActionButton';
 import ValidatedForm,{RequiredMark} from './FormValidation';
 import ModalClose from './ModalClose';
@@ -30,7 +29,7 @@ export default function ClientPicker({ selected, onSelect, persistent=false,cont
   const [busy,setBusy]=useState(false);
   const [lookupBusy,setLookupBusy]=useState(false);
   const [openCycle,setOpenCycle]=useState(0);
-  async function clientRequest(path:string,method='GET',body?:unknown){const r=await fetch(new URL(context==='sale'?path.replace(/^api\/clients/,'api/context/pdv/clients'):path,document.baseURI),{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.message||'Não foi possível salvar o cliente.');return data;}
+  async function clientRequest(path:string,method='GET',body?:unknown){const r=await fetch(new URL(path,document.baseURI),{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.message||'Não foi possível salvar o cliente.');return data;}
   useEffect(()=>{if(persistent)clientRequest('api/clients').then(setClients).catch(e=>setMessage(e.message));},[persistent]);
 
   function open(client?: Client) {
@@ -73,11 +72,11 @@ export default function ClientPicker({ selected, onSelect, persistent=false,cont
     close(true);
   }
   return <div className="wf-client-picker">
-    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente{persistent&&context==='quote'&&<RequiredMark/>}</label><select aria-required={persistent&&context==='quote'||undefined} data-required-for={context==='quote'?'finalize':undefined} aria-describedby={persistent?'quote-finalize-hint':undefined} ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div>{(moduleEnabled('clientes')||(context==='sale'&&moduleEnabled('vendas')))&&<ActionButton type="button" onClick={() => open()}>+ Novo cliente</ActionButton>}</div>}
+    {!selected&&<div className="wf-client-select"><div><label htmlFor="wf-client-select">Selecionar cliente{persistent&&context==='quote'&&<RequiredMark/>}</label><select aria-required={persistent&&context==='quote'||undefined} data-required-for={context==='quote'?'finalize':undefined} aria-describedby={persistent?'quote-finalize-hint':undefined} ref={selector} id="wf-client-select" value="" onChange={e => { focusCard.current=true;onSelect(clients.find(c => c.id === Number(e.target.value)) ?? null); setMessage(''); }}><option value="">Escolha um cliente da lista</option>{clients.map(client => <option value={client.id} key={client.id}>{clientLabel(client)}</option>)}</select></div><ActionButton type="button" onClick={() => open()}>+ Novo cliente</ActionButton></div>}
     {selected ? <div ref={card} tabIndex={-1} className="wf-selected-client"><strong>{clientLabel(selected)}</strong><p>Contato: {selected.contact || 'a informar'} · CEP: {selected.postal || 'pendente'}</p><details><summary>Ver dados do cliente</summary><dl className="wf-client-details">{([
       ['Nome da empresa', selected.name], ['Nome do contato', selected.contact],
       ['Telefone', selected.phone], ['E-mail', selected.email], ['CPF ou CNPJ', selected.taxDocument], ['CEP de entrega', selected.postal],['Rua / logradouro',selected.street],['Número',selected.number],['Complemento',selected.complement],['Bairro',selected.district],['Cidade',selected.city],['Estado (UF)',selected.state],
-    ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl><p className="wf-muted">Dados para consulta. CPF/CNPJ ainda não validado neste protótipo.</p></details>{(moduleEnabled('clientes')||(context==='sale'&&moduleEnabled('vendas')))&&<ActionButton type="button" className="wf-quiet" onClick={() => open(selected)}>Editar cadastro do cliente</ActionButton>}<ActionButton type="button" className="wf-secondary" onClick={changeClient}>Trocar cliente</ActionButton></div>
+    ] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl><p className="wf-muted">Dados para consulta. CPF/CNPJ ainda não validado neste protótipo.</p></details><ActionButton type="button" className="wf-quiet" onClick={() => open(selected)}>Editar cadastro do cliente</ActionButton><ActionButton type="button" className="wf-secondary" onClick={changeClient}>Trocar cliente</ActionButton></div>
       : <p className="wf-pending">Cliente a selecionar. {context==='quote'?'O orçamento pode continuar como rascunho.':'A venda pode continuar sem identificação.'}</p>}
     <p className="wf-muted">{persistent?'O cadastro de clientes é persistente. A seleção é utilizada nesta operação.':'A lista e os cadastros são simulados nesta página; recarregar descarta as alterações.'}</p>
     <p role="status">{message}</p>

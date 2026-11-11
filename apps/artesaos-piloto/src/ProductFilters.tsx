@@ -23,7 +23,7 @@ export default function ProductFilters({search,onSearch,value,onChange,categorie
   </div>
   <div className="product-filter-status">
    <span role="status">{total} {total===1?'produto encontrado':'produtos encontrados'}</span>
-   <div className="product-filter-chips" aria-label="Filtros ativos">
+   <div className="product-filter-chips" role="group" aria-label="Filtros ativos">
     {search&&<button type="button" aria-label="Remover busca" onClick={()=>onSearch('')}>Busca: {search}<span aria-hidden="true"> ×</span></button>}
     {value.origin&&<button type="button" aria-label="Remover filtro de origem" onClick={()=>onChange({...value,origin:''})}>{originLabel(value.origin)}<span aria-hidden="true"> ×</span></button>}
     {value.category&&<button type="button" aria-label="Remover filtro de categoria" onClick={()=>onChange({...value,category:''})}>{categoryLabel(value.category)}<span aria-hidden="true"> ×</span></button>}

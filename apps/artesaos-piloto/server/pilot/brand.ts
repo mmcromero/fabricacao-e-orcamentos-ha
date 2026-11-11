@@ -81,8 +81,11 @@ export const identityCss=`
 }
 @media(max-width:480px){:root #pilot-shell .pilot-account-user{display:none}}
 
-:root #pilot-build-info .pilot-support-link{display:none;pointer-events:auto;font-weight:700;text-underline-offset:3px}
+:root #pilot-build-info .pilot-support-link{display:none;pointer-events:auto;font-weight:400;text-underline-offset:3px}
 :root .pilot-session-active #pilot-build-info .pilot-support-link{display:inline-flex}
+:root body.pilot-first-access-detail{padding-top:0!important;padding-bottom:0}
+:root .pilot-first-access-detail #pilot-build-info{display:none}
+:root .pilot-first-access-back{max-width:860px;margin:24px auto;padding:0 24px}
 :root .support-hub input,:root .support-hub select,:root .support-hub textarea,:root .support-admin input,:root .support-admin select,:root .support-admin textarea{display:block;width:100%;padding:10px;margin-top:6px;border:1px solid #789483;border-radius:8px;background:white;color:var(--carvao);font:inherit}
 :root .support-filters{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin-top:20px}
 :root .support-filters label{flex:1;min-width:160px}

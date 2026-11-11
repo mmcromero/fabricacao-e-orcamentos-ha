@@ -36,6 +36,11 @@ test('rota de Voltar valida sessão no clique; conteúdo jurídico e versões pe
   const code=store.invite('legal@example.test');const user=store.activate({issuer:'https://accounts.google.com',subject:'legal',email:'legal@example.test',verified:true},(await import('../server/pilot/store.js')).digest(code),null);
   const created=store.session(user,8),cookie='__Secure-artesaos_session='+created.value;
   const target=prefix+'?view=financeiro&id=abc&month=2026-11#entry';const url='legal/back?returnTo='+encodeURIComponent(target);
+  assert.equal((await get(url,{cookie})).headers.location,prefix,'Cadastro pendente volta diretamente às boas-vindas');
+  const pendingLegal=await get('legal?returnTo='+encodeURIComponent(target),{cookie});
+  assert.match(pendingLegal.body,/name="returnTo" value="\/artesaos-piloto\/"/);
+  const tenant=new DatabaseSync(join(dir,'tenants',store.getSession(created.value,30)!.tenantId,'validation.sqlite'));
+  tenant.prepare('INSERT INTO pilot_onboarding(id,completed_at) VALUES (1,?)').run(new Date().toISOString());tenant.close();
   assert.equal((await get(url,{cookie})).headers.location,target);
   assert.equal((await get('legal/back',{cookie})).headers.location,prefix);
   store.db.prepare('UPDATE pilot_sessions SET expires_at=0').run();assert.equal((await get(url,{cookie})).headers.location,prefix+'login');
