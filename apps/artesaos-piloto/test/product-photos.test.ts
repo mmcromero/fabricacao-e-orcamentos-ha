@@ -1,3 +1,5 @@
+import {setModuleAccess} from '../server/pilot/module-grants.js';
+import {moduleKeys} from '../server/module-access.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync,readFileSync,statSync,symlinkSync,unlinkSync} from 'node:fs';
@@ -57,7 +59,7 @@ test('photos: authenticated cookie image read, expiry, CSRF and strict tenant is
  const accounts=['a','b'].map(name=>{const invite=control.invite(name+'@example.test'),id=control.activate({issuer:'https://accounts.google.com',subject:name,email:name+'@example.test',verified:true},digest(invite),5),s=control.session(id,8);return {id,cookie:'__Secure-artesaos_session='+s.value,csrf:s.csrf};});let app=await createPilotApp(config);
  const request=(path:string,who=accounts[0],method='GET',payload?:unknown,context=true)=>app.inject({method:method as any,url:prefix+path,headers:{host:'photos.example.test',origin,cookie:who.cookie,...(context?{'x-pilot-context':who.id,'x-pilot-csrf':who.csrf}:{})},...(payload===undefined?{}:{payload:payload as any})});
  try{
-  for(const a of accounts){const status=(await request('api/legal/status',a)).json();assert.equal((await request('api/legal/accept',a,'POST',{version:status.version,termsHash:status.termsHash,accepted:true})).statusCode,200);await request('api/company',a);const tenant=String(control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(a.id)!.tenant_id);const db=new DatabaseSync(join(dir,'tenants',tenant,'validation.sqlite'));db.prepare('INSERT INTO pilot_onboarding VALUES(1,?)').run(new Date().toISOString());db.close();}
+  for(const a of accounts){setModuleAccess(control.db,a.id,moduleKeys,0,'fixture');const status=(await request('api/legal/status',a)).json();assert.equal((await request('api/legal/accept',a,'POST',{version:status.version,termsHash:status.termsHash,accepted:true})).statusCode,200);await request('api/company',a);const tenant=String(control.db.prepare('SELECT tenant_id FROM pilot_users WHERE id=?').get(a.id)!.tenant_id);const db=new DatabaseSync(join(dir,'tenants',tenant,'validation.sqlite'));db.prepare('INSERT INTO pilot_onboarding VALUES(1,?)').run(new Date().toISOString());db.close();}
   const uploaded=await request('api/product-photos',accounts[0],'POST',{png:png().toString('base64')});assert.equal(uploaded.statusCode,200,uploaded.body);const a=uploaded.json();
   assert.equal((await request(a.url,accounts[0],'GET',undefined,false)).statusCode,200);assert.equal((await request(a.url,accounts[1],'GET',undefined,false)).statusCode,404);
   assert.equal((await request('api/products',accounts[1],'POST',{...product(),imageUrl:a.url})).statusCode,400);

@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.27",
+  "version": "0.2.0-dev.28",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -7,7 +7,7 @@
   ],
   "schemaVersions": {
     "tenant": 11,
-    "control": 4,
+    "control": 5,
     "interest": 2,
     "support": 2,
     "legal": 3

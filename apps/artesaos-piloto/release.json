@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.27",
+  "version": "0.2.0-dev.28",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -7,37 +7,37 @@
   ],
   "schemaVersions": {
     "tenant": 11,
-    "control": 4,
+    "control": 5,
     "interest": 2,
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.27",
-  "sourceCommit": "99ecb5297c3983e3a8f620e22217858773dea35c",
-  "businessSourceSha256": "619fe629c3f813e11e7f22bd1d1e4394e7a2d78ce337ee13e2b79aef0cab84f2",
+  "releaseVersion": "0.2.0-dev.28",
+  "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
+  "businessSourceSha256": "94b4f3ad5da5bce2bd2f5225ac22adafe31b3225bf346903c32b55804a8d16de",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "builtAt": "2026-11-11T16:30:20.676812+00:00",
+  "builtAt": "2026-11-11T18:41:43.608919+00:00",
   "validation": {
-    "sourceCommit": "99ecb5297c3983e3a8f620e22217858773dea35c",
-    "checkedAt": "2026-11-11T16:30:20.617239+00:00",
+    "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
+    "checkedAt": "2026-11-11T18:41:43.555643+00:00",
     "status": "passed",
     "checks": [
       {
         "name": "build",
         "status": "passed",
-        "seconds": 8.8
+        "seconds": 7.36
       },
       {
         "name": "application-tests",
         "status": "passed",
-        "seconds": 35.6,
-        "testCount": 255
+        "seconds": 29.41,
+        "testCount": 266
       },
       {
         "name": "distribution-helper",
         "status": "passed",
-        "seconds": 0.08,
+        "seconds": 0.07,
         "testCount": 8
       },
       {
@@ -125,6 +125,11 @@
           "version": 4,
           "name": "interessados-convites-rastreaveis",
           "checksum": "74d9d1c01605f7110f0ec516bb34e402ce2b5e992408655b5c37f8c45fe6da6e"
+        },
+        {
+          "version": 5,
+          "name": "liberacao-modulos-piloto",
+          "checksum": "4d456eb622efc378f3d0989b64355f94405ec27effe1d5cef32e6d5a06398a29"
         }
       ],
       "interest": [
@@ -249,6 +254,11 @@
         "version": 4,
         "name": "interessados-convites-rastreaveis",
         "checksum": "74d9d1c01605f7110f0ec516bb34e402ce2b5e992408655b5c37f8c45fe6da6e"
+      },
+      {
+        "version": 5,
+        "name": "liberacao-modulos-piloto",
+        "checksum": "4d456eb622efc378f3d0989b64355f94405ec27effe1d5cef32e6d5a06398a29"
       }
     ],
     "interest": [
@@ -311,10 +321,10 @@
   "supervisorArch": "aarch64",
   "addonSlug": "artesaos_piloto",
   "repositoryPath": "apps/artesaos-piloto",
-  "runtimeSourceCommit": "99ecb5297c3983e3a8f620e22217858773dea35c",
-  "runtimeSourceImageId": "sha256:bf49bc115e3539054e8e90d22d9b2b37888c2a33a6ce7b8fd829cda28fa2a8dc",
-  "runtimePayloadSha256": "e52345b7818e9e93104303a5b9f6d94e034b3e272c601eaf92b9b46fb085a783",
-  "runtimePayloadArchiveSha256": "0613d3d178a8a852fdf79ade41a8ab4a7338a5e0238b864f8715221a10158a7c",
+  "runtimeSourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
+  "runtimeSourceImageId": "sha256:9f3dd9a3049a0c65fe9e537dfae7da4e7402312a9d398011a6ac156bc0ceea1f",
+  "runtimePayloadSha256": "2da307a8d4606962f958aa5d89077ff79b9d059d96f394088e87aad8bbf47af4",
+  "runtimePayloadArchiveSha256": "4869437e01df47798ac0ecbea2f51f3ce09afe97c2090cb54c32885f37c203ef",
   "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
   "physicalSupervisorValidation": "pending",
   "dataMount": "/data",

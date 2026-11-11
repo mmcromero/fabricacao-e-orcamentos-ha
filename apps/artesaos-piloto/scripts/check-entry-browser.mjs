@@ -99,7 +99,7 @@ try{
   await page.getByRole('heading',{name:view==='ajuda'?'Ajuda':'Suporte técnico',exact:true}).waitFor();
   await page.locator('#pilot-shell').waitFor();
   assert.equal(await page.locator('#pilot-build-info').isVisible(),true,'Rodapé normal após cadastro');
-  assert.equal(await page.locator('#pilot-navigation nav a').count(),9,'Menu normal após cadastro');
+  assert.deepEqual((await page.locator('#pilot-navigation nav a').allTextContents()).map(label=>label.trim()),['Produtos','Vendas','Configurações','Ajuda'],'Menu após cadastro mostra somente módulos permitidos à nova conta');
   assert.equal(await page.getByRole('button',{name:'Voltar',exact:true}).count(),0);
  }
  await page.getByRole('button',{name:'Sair',exact:true}).click();await page.getByRole('link',{name:'Já sou cadastrado',exact:true}).click();assert.equal(await page.locator('#invite').isDisabled(),true);

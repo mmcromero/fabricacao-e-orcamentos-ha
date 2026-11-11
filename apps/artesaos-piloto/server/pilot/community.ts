@@ -1,3 +1,4 @@
+import {getModuleAccess,setModuleAccess,ModuleAccessError} from './module-grants.js';
 import {InterestInvitations} from './interest-invitations.js';
 import {InvitationError} from './invitations.js';
 import {registerResourceAdmin} from './resource-routes.js';
@@ -69,12 +70,19 @@ export function registerCommunity(app:FastifyInstance,config:PilotConfig,store:P
  app.get<{Querystring:{page?:number;search?:string}}>(base+'api/users',{schema:{querystring:{type:'object',additionalProperties:false,properties:{page:{type:'integer',minimum:1,maximum:100000},search:{type:'string',maxLength:254}}}}},async(req,reply)=>{
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
   if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});
-  return store.listUsers(req.query.page??1,req.query.search??'');
+  const list=store.listUsers(req.query.page??1,req.query.search??'');return {...list,records:list.records.map(user=>({...user,modules:getModuleAccess(store.db,user.id)}))};
  });
  app.get<{Params:{id:string}}>(base+'api/users/:id',{schema:{params:{type:'object',required:['id'],properties:{id:{type:'string',pattern:'^[0-9a-f-]{36}$'}}}}},async(req,reply)=>{
   const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
   if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou. Reabra a administração.'});
   const details=registeredUserDetails(store,config.dataDir,req.params.id);return details?{...details,invitation:invitationControl.contactForUser(req.params.id)}:reply.code(404).send({message:'Usuário não encontrado.'});
+ });
+ app.put<{Params:{id:string};Body:{enabled:unknown;revision:unknown}}>(base+'api/users/:id/modules',{bodyLimit:2048},async(req,reply)=>{
+  const admin=current(req);if(!admin)return reply.code(401).send({message:'Acesso administrativo necessário.'});
+  if(req.headers['x-pilot-admin-context']!==admin.context)return reply.code(409).send({message:'A conta desta aba mudou.'});
+  if(!equal(digest(String(req.headers['x-pilot-admin-csrf']??'')),admin.csrfHash))return reply.code(403).send({message:'Confirmação de segurança inválida.'});
+  if(!req.body||Object.keys(req.body).some(k=>!['enabled','revision'].includes(k)))return reply.code(400).send({message:'Liberações inválidas.'});
+  try{return setModuleAccess(store.db,req.params.id,req.body.enabled,req.body.revision,admin.email);}catch(e){if(e instanceof ModuleAccessError)return reply.code(e.status).send({message:e.message});throw e;}
  });
  app.get(base+'users',async(req,reply)=>{const admin=current(req);if(!admin)return reply.redirect(base+'login');return reply.type('text/html').send(page('Usuários cadastrados',usersAdminHtml(base),`<meta name="pilot-admin-context" content="${admin.context}"><script defer src="${base}session.js"></script><script defer src="${base}users.js"></script>`));});
  app.get(base+'users.js',(_req,reply)=>reply.type('application/javascript').send(usersAdminScript(base)));

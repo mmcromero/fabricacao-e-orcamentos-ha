@@ -1,3 +1,15 @@
+## 0.2.0-dev.26 — candidata local, não publicada
+
+- Revisão contextual: Novo/Editar cliente dentro do PDV, sem liberar Clientes completo.
+- Cadastros e recebimentos de consignados no PDV; referências de materiais separadas de operações físicas gerais.
+- Correções da Central vinculadas à ocorrência/tenant, com operações originais, auditoria e idempotência; inclui pagamentos já agendados.
+- Build/navegador aprovados; regressão Windows 255/265, dez limitações de plataforma; Linux integral e homologação real pendentes.
+
+- Liberação manual de módulos por usuário na administração, com revisão e auditoria.
+- Navegação e APIs verificam disponibilidade; serviços internos de PDV/fabricação preservados.
+- Migração aditiva control 5 preserva contas existentes; novas contas iniciam com Essencial.
+- Sem instalação, restrições comerciais ou redesenho do Pacote A. Ver docs/AD_CAIXA_FERRAMENTAS_001.md.
+
 ## 0.2.0-dev.25 — UX-PRIMEIRO-ACESSO-002
 
 - Inscrição, login e convite em estados separados, com logotipo oficial e apresentação responsiva.
