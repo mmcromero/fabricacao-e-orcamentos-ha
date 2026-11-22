@@ -1,5 +1,7 @@
 # Regra de atualização e rastreabilidade do piloto
 
+**22/11/2026:** a receita local AD-ESTEIRA-RAPIDA-001 (docs/operacao/AD_ESTEIRA_RAPIDA_001.md do repositório fonte) passa a reger candidatas HA elegíveis. Testes dirigidos e exportação auditável; build no Supervisor; não exigir pré-compilação externa por rotina. As regras de identidade, versão, segurança, origem e dados permanecem. Forja mantém a trilha independente.
+
 Sempre que for solicitado compilar um novo pacote do Artesão Digital incorporando modificações do Fabricação e Orçamentos:
 
 1. Identificar a versão/commit do principal autorizados pelo usuário. Publicação de uma nova versão do principal, por si só, não autoriza promoção automática.

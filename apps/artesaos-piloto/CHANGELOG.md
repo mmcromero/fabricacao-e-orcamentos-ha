@@ -1,3 +1,9 @@
+# 0.2.0-dev.29 — candidata de UX (22/11/2026)
+
+- Organização mobile-first em categorias e abas; fichas de produto e fabricação, orçamento, estoque, pedidos, financeiro, clientes, ajuda, suporte e administração.
+- Sem alterações diretas do PDV, schemas, dependências, opções ou slug. Preservar dados e a Forja 01.
+- Candidata HA por fonte, AD-ESTEIRA-RAPIDA-001; build e homologação no Supervisor pendentes. Não representa versão estável nem atualização da Forja.
+
 ## 0.2.0-dev.26 — candidata local, não publicada
 
 - Revisão contextual: Novo/Editar cliente dentro do PDV, sem liberar Clientes completo.

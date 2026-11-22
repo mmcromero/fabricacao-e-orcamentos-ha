@@ -71,7 +71,11 @@ Para recorrências, sem alterar configuração por suposição:
 Não automatizar reinícios nem alterar configurações globais de DNS/segurança nesta
 rotina. Impacto na Central de Pendências: nenhum, diagnóstico operacional.
 
-## Preparar pacote ARM64
+## Preparar candidata HA por fonte — 22/11/2026
+
+Para alterações elegíveis (UX sem mudança de schema, dependências ou contrato operacional), usar a norma AD-ESTEIRA-RAPIDA-001 no repositório fonte, caminho docs/operacao/AD_ESTEIRA_RAPIDA_001.md. O exportador scripts/prepare-ha-source.py verifica os SHAs congelados, versão, identidade e hashes, e prepara o Dockerfile que fará npm ci/build e verificará schemas no Supervisor. Não exige build ARM64 externo, QEMU ou Actions por rotina. O pacote permanece candidato, sem homologação. Testes dirigidos e segurança proporcional antes de publicação; homologação real após atualização manual. Não modificar Forja, dados, slug ou opções.
+
+## Preparar pacote ARM64 pré-compilado — trilha alternativa
 
 1. Ler AGENTS.md, nível de segurança aprovado e docs/operacao/DISTRIBUICOES.json.
 2. Em commit limpo, gerar recibo pelo release-evidence.py e exportar pelo
@@ -98,12 +102,11 @@ nunca gravar tokens na URL, no pacote ou no Git. Não depende do acesso SSH ao F
 
 1. Conferir remote, branch, árvore limpa e fetch origin main; não sobrescrever
    alterações remotas. Exigir avanço normal, sem force push.
-2. Reutilizar prepare-distributions.py e prepare-ha-aarch64.py acima. Comparar versão
-   do config.yaml com a remota: deve ser superior para o Supervisor oferecer atualização.
+2. Usar prepare-ha-source.py pela receita rápida quando elegível; caso de risco específico, reutilizar a trilha pré-compilada acima. Conferir versão superior, autorização e SHA remoto.
 3. Promover somente o conteúdo validado apps/artesaos-piloto, preservando exatamente
    repository.yaml e apps/umdoislab legado. Incluir nota PUBLICACAO-VERSAO.md com
    origem/testes/limitações; recalcular SHA256SUMS após acrescentar a nota.
-4. Verificar checksums e concordância config.yaml/release.json/runtime.tar.gz/labels.
+4. Verificar checksums e concordância config.yaml/release.json/Dockerfile/labels. Conferir runtime.tar.gz apenas quando a trilha pré-compilada o gerar.
    Revisar git diff --stat e arquivos, commit e git push origin HEAD:main.
 5. Comparar git rev-parse HEAD com git ls-remote origin refs/heads/main. Em um clone
    novo do commit remoto, repetir checksums e conferência de versão/runtime. Registrar

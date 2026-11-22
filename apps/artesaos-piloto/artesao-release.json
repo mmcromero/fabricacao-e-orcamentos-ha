@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.28",
+  "version": "0.2.0-dev.29",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",

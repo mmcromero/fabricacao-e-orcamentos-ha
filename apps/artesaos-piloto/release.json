@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.28",
+  "version": "0.2.0-dev.29",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -12,169 +12,43 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.28",
-  "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
-  "businessSourceSha256": "94b4f3ad5da5bce2bd2f5225ac22adafe31b3225bf346903c32b55804a8d16de",
+  "releaseVersion": "0.2.0-dev.29",
+  "sourceCommit": "f7aa9b56cb3a0a56e601ef6d48d941534eca3d9a",
+  "distribution": "home-assistant",
+  "packageKind": "source-addon",
+  "architecture": "linux/arm64",
+  "supervisorArch": "aarch64",
+  "addonSlug": "artesaos_piloto",
+  "repositoryPath": "apps/artesaos-piloto",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "builtAt": "2026-11-11T18:41:43.608919+00:00",
+  "preparedAt": "2026-11-22T16:23:37.278Z",
+  "builtAt": null,
+  "businessSourceSha256": "a0d2609f8e8f347453aba56ea55efd1ae6e3d7f9a4c0240c225067938c622434",
   "validation": {
-    "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
-    "checkedAt": "2026-11-11T18:41:43.555643+00:00",
-    "status": "passed",
-    "checks": [
+    "sourceCommit": "f7aa9b56cb3a0a56e601ef6d48d941534eca3d9a",
+    "status": "pending-supervisor",
+    "directedChecks": [
       {
-        "name": "build",
+        "name": "config-navigation",
         "status": "passed",
-        "seconds": 7.36
+        "evidence": "Issue #84 UX-M001: 2/2 unit tests; tested files unchanged"
       },
       {
-        "name": "application-tests",
+        "name": "admin-script-syntax",
         "status": "passed",
-        "seconds": 29.41,
-        "testCount": 266
+        "evidence": "Issue #84 UX-M002: four script templates parsed with synthetic substitutions; blobs unchanged"
       },
       {
-        "name": "distribution-helper",
+        "name": "source-export-tool",
         "status": "passed",
-        "seconds": 0.07,
-        "testCount": 8
-      },
-      {
-        "name": "operations",
-        "status": "passed",
-        "seconds": 0.15,
-        "testCount": 18
+        "evidence": "Issue #67 comment 7081699208: 6/6 synthetic Git fixture tests; exporter unchanged"
       }
     ],
-    "schemaChecksums": {
-      "tenant": [
-        {
-          "version": 1,
-          "name": "fundacao-operacoes",
-          "checksum": "6cc52beab75f7d98147a22370196ec4e7d223cbecadb0d5a7c7297fcc5874824"
-        },
-        {
-          "version": 2,
-          "name": "consolidacao-legada",
-          "checksum": "65293ba874c2d4b2321ee6acff45b37117cbf47e32fe17d79b314fa587416a97"
-        },
-        {
-          "version": 3,
-          "name": "materiais-compras",
-          "checksum": "b994b7d9b7c8457557c7b0442fb95e494a65ed329ed63ab18f08fea8ab4bbc7a"
-        },
-        {
-          "version": 4,
-          "name": "estoque-produtos-fabricacao",
-          "checksum": "b049a1c8ee2e44e450a29bac9b98119efe7d594f9d54bdd9c811a117856adca9"
-        },
-        {
-          "version": 5,
-          "name": "pedidos-reservas",
-          "checksum": "efa5e7debdd81656a05fe907807c244f36bcb89bd9ecb7d39828b0c011bb9981"
-        },
-        {
-          "version": 6,
-          "name": "financeiro-liquidacoes",
-          "checksum": "549992dd711563a1d2fb09650d3ee4fbc07c8b149196af468cf06601f70e132e"
-        },
-        {
-          "version": 7,
-          "name": "vendas-cupons-divergencias",
-          "checksum": "01db8cc455d5b72da558cfd65cf5217c3bd85c98c566293193d635d533de481e"
-        },
-        {
-          "version": 8,
-          "name": "sessoes-consignacoes",
-          "checksum": "de04c32bb3f21be213c20481e43063977b43329eab0bcc6796ecb1253e47d74b"
-        },
-        {
-          "version": 9,
-          "name": "central-pendencias",
-          "checksum": "0dac0b67b8ab4231a3e0bd64bac57e3c1bbc2daa70286a608370dae6d38c4c40"
-        },
-        {
-          "version": 10,
-          "name": "preparo-expedicao",
-          "checksum": "259932bc64f39b1e24551280bc938738a0da5004fdb95f1af0c24ad49b02339f"
-        },
-        {
-          "version": 11,
-          "name": "clientes-visitantes-rastreabilidade",
-          "checksum": "f66a30267f66acb43b483473e36f7afe7ec5bdb39512130c2e9c65651020dce6"
-        }
-      ],
-      "control": [
-        {
-          "version": 1,
-          "name": "fundacao-controle",
-          "checksum": "0d24231e562e3040c0a9c6bd142c9581e8faf768d648538747cba445d41cda62"
-        },
-        {
-          "version": 2,
-          "name": "administracao-local-debian",
-          "checksum": "ad791f81c932d64195d5ef6cd71a82fe6217cc89be82f2b75de637c5279078ae"
-        },
-        {
-          "version": 3,
-          "name": "consolidacao-legada",
-          "checksum": "a3498923f965e477e9ac60152628619e4843db7dc86933b1f6c9c849792b7913"
-        },
-        {
-          "version": 4,
-          "name": "interessados-convites-rastreaveis",
-          "checksum": "74d9d1c01605f7110f0ec516bb34e402ce2b5e992408655b5c37f8c45fe6da6e"
-        },
-        {
-          "version": 5,
-          "name": "liberacao-modulos-piloto",
-          "checksum": "4d456eb622efc378f3d0989b64355f94405ec27effe1d5cef32e6d5a06398a29"
-        }
-      ],
-      "interest": [
-        {
-          "version": 1,
-          "name": "fundacao-interesses",
-          "checksum": "a3e7bc68fbdf3721c9ef29cffedf8f88857a67198a39e7df835dc0e59f4f8d47"
-        },
-        {
-          "version": 2,
-          "name": "consolidacao-legada",
-          "checksum": "6170c605b609813d6e8c68b9bca7f4906afcd2eacd319997d84ed04bfef45e36"
-        }
-      ],
-      "support": [
-        {
-          "version": 1,
-          "name": "fundacao-suporte",
-          "checksum": "c81ce0b8aaca065eb90b863b74a6b3c81d8d18f7e69f220f913ac9f5db5db130"
-        },
-        {
-          "version": 2,
-          "name": "consolidacao-legada",
-          "checksum": "9da3c84bceacac3265ab05326e449454092fa9d6286206f76a3c7c111fb4dc7e"
-        }
-      ],
-      "legal": [
-        {
-          "version": 1,
-          "name": "fundacao-legal",
-          "checksum": "3c71da20c357d6e4fb21113c909f8eefc4276f2b8569ec4d77527161dd95b69d"
-        },
-        {
-          "version": 2,
-          "name": "consolidacao-legada",
-          "checksum": "d169244c0ff79e1c98903a734d23ab8ddb3205e76c88626b794b558ed844d3e8"
-        },
-        {
-          "version": 3,
-          "name": "documentos-manuais-contribuicao",
-          "checksum": "e81beb3d4d43f5fa87b6baecc01c1fe54df6b51a7f434b08d08d7aa553f1a3f4"
-        }
-      ]
-    },
-    "physicalValidation": "not-performed"
+    "build": "not-performed",
+    "physicalValidation": "not-performed",
+    "browserJourneys": "pending",
+    "exportMethod": "GitHub API equivalent of prepare-ha-source.py; unchanged blobs mapped to prior published SHA256SUMS; changed blobs hashed and matched to source tree"
   },
   "schemaChecksums": {
     "tenant": [
@@ -303,30 +177,17 @@
       }
     ]
   },
+  "schemaEvidence": {
+    "mode": "unchanged-from-validated-source",
+    "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
+    "publishedCommit": "1feda4ed6176ea2aad84cda4fffa322581c701b6",
+    "supervisorCheck": "pending"
+  },
   "compatibility": {
     "policy": "same-schema-only",
     "migrationAuthorizationRequired": true
   },
-  "procedures": {
-    "install": "manuals/HOME-ASSISTANT.md",
-    "update": "manuals/ATUALIZACOES.md",
-    "rollback": "manuals/RECUPERACAO.md"
-  },
-  "physicalValidation": "pending",
   "stable": false,
-  "validationReport": null,
-  "distribution": "home-assistant",
-  "packageKind": "home-assistant-precompiled-aarch64",
-  "architecture": "linux/arm64",
-  "supervisorArch": "aarch64",
-  "addonSlug": "artesaos_piloto",
-  "repositoryPath": "apps/artesaos-piloto",
-  "runtimeSourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
-  "runtimeSourceImageId": "sha256:9f3dd9a3049a0c65fe9e537dfae7da4e7402312a9d398011a6ac156bc0ceea1f",
-  "runtimePayloadSha256": "2da307a8d4606962f958aa5d89077ff79b9d059d96f394088e87aad8bbf47af4",
-  "runtimePayloadArchiveSha256": "4869437e01df47798ac0ecbea2f51f3ce09afe97c2090cb54c32885f37c203ef",
-  "nodeBaseImage": "node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df",
-  "physicalSupervisorValidation": "pending",
-  "dataMount": "/data",
-  "productionUpdateAuthorized": false
+  "physicalValidation": "pending",
+  "publicationReady": false
 }
