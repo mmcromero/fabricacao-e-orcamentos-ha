@@ -1,3 +1,8 @@
+# 0.2.0-dev.30 — identidade da loja HA (22/11/2026)
+
+- Nome de apresentação Fábrica de Softwares - Artesão Digital e PNGs oficiais do catálogo (icon.png e logo.png).
+- Preservados slug, pasta, origem, dados, identidade interna, código UX da dev.29 e Forja. Build Supervisor/homologação pendentes.
+
 # 0.2.0-dev.29 — candidata de UX (22/11/2026)
 
 - Organização mobile-first em categorias e abas; fichas de produto e fabricação, orçamento, estoque, pedidos, financeiro, clientes, ajuda, suporte e administração.

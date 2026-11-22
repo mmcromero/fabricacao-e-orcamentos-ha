@@ -1,3 +1,3 @@
-# Candidata 0.2.0-dev.29
+# Candidata 0.2.0-dev.30
 
-Fonte: f7aa9b56cb3a0a56e601ef6d48d941534eca3d9a. Exportação por fonte; compilação no Supervisor pendente. Não homologada. Publicação da candidata de teste autorizada pelo proprietário em 22/11/2026, exclusivamente HA. Verificação dirigida parcial registrada nas Issues #67/#84; jornadas de interface completas pendentes. Forja, origem, slug e dados preservados. Não desinstalar/reinstalar para atualizar.
+Fonte: bb7fe4a23aa1316254e715de4e17bf4759d68f1e. Correção exclusiva da identidade da loja e metadados da candidata UX dev.29. Nome Fábrica de Softwares - Artesão Digital; icon.png e logo.png idênticos ao catálogo oficial. Slug, dados, identidade interna, Forja e código UX preservados. Build Supervisor e homologação pendentes. Publicação HA autorizada em 22/11/2026. Não desinstalar/reinstalar.

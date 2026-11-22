@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.29",
+  "version": "0.2.0-dev.30",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -12,8 +12,8 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.29",
-  "sourceCommit": "f7aa9b56cb3a0a56e601ef6d48d941534eca3d9a",
+  "releaseVersion": "0.2.0-dev.30",
+  "sourceCommit": "bb7fe4a23aa1316254e715de4e17bf4759d68f1e",
   "distribution": "home-assistant",
   "packageKind": "source-addon",
   "architecture": "linux/arm64",
@@ -22,33 +22,33 @@
   "repositoryPath": "apps/artesaos-piloto",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "preparedAt": "2026-11-22T16:23:37.278Z",
+  "preparedAt": "2026-11-22T17:11:08.272Z",
   "builtAt": null,
-  "businessSourceSha256": "a0d2609f8e8f347453aba56ea55efd1ae6e3d7f9a4c0240c225067938c622434",
+  "businessSourceSha256": "69df933ca34e2e33537af9687612e538e3efd6ceb3f414f3dbeec5ff0d2476fa",
   "validation": {
-    "sourceCommit": "f7aa9b56cb3a0a56e601ef6d48d941534eca3d9a",
+    "sourceCommit": "bb7fe4a23aa1316254e715de4e17bf4759d68f1e",
     "status": "pending-supervisor",
     "directedChecks": [
       {
         "name": "config-navigation",
         "status": "passed",
-        "evidence": "Issue #84 UX-M001: 2/2 unit tests; tested files unchanged"
+        "evidence": "Issue #84 UX-M001: 2/2 unit tests; tested files unchanged; runtime blobs identical to dev.29"
       },
       {
         "name": "admin-script-syntax",
         "status": "passed",
-        "evidence": "Issue #84 UX-M002: four script templates parsed with synthetic substitutions; blobs unchanged"
+        "evidence": "Issue #84 UX-M002: four script templates parsed with synthetic substitutions; blobs unchanged; runtime blobs identical to dev.29"
       },
       {
-        "name": "source-export-tool",
+        "name": "store-branding",
         "status": "passed",
-        "evidence": "Issue #67 comment 7081699208: 6/6 synthetic Git fixture tests; exporter unchanged"
+        "evidence": "Official catalog Git blobs exact; installed identity/config unchanged except display name and version; source runtime unchanged."
       }
     ],
     "build": "not-performed",
     "physicalValidation": "not-performed",
     "browserJourneys": "pending",
-    "exportMethod": "GitHub API equivalent of prepare-ha-source.py; unchanged blobs mapped to prior published SHA256SUMS; changed blobs hashed and matched to source tree"
+    "exportMethod": "GitHub API equivalent; unchanged payload retained with prior SHA256SUMS, changed data hashed and verified against source; source exporter regression tests prepared, not executed."
   },
   "schemaChecksums": {
     "tenant": [
@@ -180,7 +180,7 @@
   "schemaEvidence": {
     "mode": "unchanged-from-validated-source",
     "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
-    "publishedCommit": "1feda4ed6176ea2aad84cda4fffa322581c701b6",
+    "publishedCommit": "6b95d0563d488c8658d12606325c1cd9db574d52",
     "supervisorCheck": "pending"
   },
   "compatibility": {
@@ -189,5 +189,14 @@
   },
   "stable": false,
   "physicalValidation": "pending",
-  "publicationReady": false
+  "publicationReady": false,
+  "storeBranding": {
+    "name": "Fábrica de Softwares - Artesão Digital",
+    "catalogRepository": "mmcromero/hassio-addons",
+    "catalogCommit": "8666d9ab6c2967985e5160afc4aaeedf145dba71",
+    "gitBlobs": {
+      "icon.png": "a0fdd10938db1b6a65aa60469e83ed1c7c9bd33a",
+      "logo.png": "7e500016222b0a5bf395be8ed17447edeb3e2af9"
+    }
+  }
 }
