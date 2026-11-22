@@ -1,3 +1,9 @@
+# 0.2.0-dev.32 — recuperação de UX de 13/11 (22/11/2026)
+
+- PDV e Produtos compartilham cabeçalho e menu geral; largura normal no desktop, catálogo interno separado, sem barra inferior na entrada do PDV e rodapé fluido.
+- Preservados motor de venda, ficha técnica, materiais, schema, identidade da loja, dados e Forja.
+- Autorização excepcional do proprietário via modo pair: publicação de candidata para validação no HA antes do teste automatizado de navegador; build e homologação pendentes.
+
 # 0.2.0-dev.31 — recuperação PDV (22/11/2026)
 
 - Restaura o último código preservado do PR #82; configurações gerais mantêm navegação UX e controle de cor do PDV.

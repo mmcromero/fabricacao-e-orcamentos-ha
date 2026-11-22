@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.31",
+  "version": "0.2.0-dev.32",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -12,8 +12,8 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.31",
-  "sourceCommit": "9cdacd219148ae9b733942a7fd137261656b8613",
+  "releaseVersion": "0.2.0-dev.32",
+  "sourceCommit": "390781e07e85eee262f9d7792c104f5de99397c1",
   "distribution": "home-assistant",
   "packageKind": "source-addon",
   "architecture": "linux/arm64",
@@ -22,33 +22,29 @@
   "repositoryPath": "apps/artesaos-piloto",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "preparedAt": "2026-11-22T18:14:25.383Z",
+  "preparedAt": "2026-11-22T20:13:28.243Z",
   "builtAt": null,
-  "businessSourceSha256": "e8feaf38f443d14eb014e72417e94ce0a59badf837921568d4f9e5409bf70693",
+  "businessSourceSha256": "4a157d806e3b721a47cc39cfcee1d697dcdd4be8a5e1932770a59cc68e052070",
   "validation": {
-    "sourceCommit": "9cdacd219148ae9b733942a7fd137261656b8613",
+    "sourceCommit": "390781e07e85eee262f9d7792c104f5de99397c1",
     "status": "pending-supervisor",
     "directedChecks": [
       {
-        "name": "pdv-original-source",
+        "name": "reference-source-and-scope",
         "status": "passed",
-        "evidence": "8 PDV runtime Git blobs exactly match PR #82 latest HEAD d6b98565d01c9fd7bb63b978b78c95c1ab70d5ed; no redesign; actual current integrated visual/browser tests pending."
-      },
-      {
-        "name": "protected-ux-and-domain",
-        "status": "passed",
-        "evidence": "128 protected backend, dependencies, assets, ProductForm/ProductionFields/SectionTabs blobs unchanged from dev.30. Settings reconciled; original ProductForm and materials tabs retained. Filter and batch placement static review only."
+        "evidence": "Reference prototype a727594 verified; source static checks and 165 protected blobs unchanged before version bump. Not a visual or functional PASS."
       },
       {
         "name": "store-and-configuration",
         "status": "passed",
-        "evidence": "HA config identical except version; official icon/logo unchanged."
+        "evidence": "Config exact except version; official PNGs unchanged."
       }
     ],
     "build": "not-performed",
     "physicalValidation": "not-performed",
     "browserJourneys": "pending",
-    "exportMethod": "GitHub API equivalent; verified source blobs and checksum inventory; no local build or browser run."
+    "exception": "Explicit owner authorization 22/11/2026, PAIR-PROT-001 v2.2, candidate-only HA publication for manual visual validation before browser automation.",
+    "exportMethod": "GitHub API source delta, hash and blob verification; no local build or browser execution."
   },
   "schemaChecksums": {
     "tenant": [
@@ -180,7 +176,7 @@
   "schemaEvidence": {
     "mode": "unchanged-from-validated-source",
     "sourceCommit": "e6b48ed1149a0e06fb74c268acfd20253306035c",
-    "publishedCommit": "915b2d2f1109256f9a2a4a4742666a9051e3da10",
+    "publishedCommit": "0ed4a368cdbbe706e239f2845473336b54285ea9",
     "supervisorCheck": "pending"
   },
   "compatibility": {

@@ -33,7 +33,7 @@ export function pdvTheme(): CSSProperties | undefined {
  } as CSSProperties;
 }
 
-export function PdvColorSettings() {
+export function PdvColorSettings({onSaved}:{onSaved?:()=>void}={}) {
  const [saved, setSaved] = useState(readColor);
  const [color, setColor] = useState(saved || defaultColor);
  const [message, setMessage] = useState('');
@@ -45,6 +45,7 @@ export function PdvColorSettings() {
    setSaved(next);
    setColor(next || defaultColor);
    setMessage(next ? 'Cor do PDV salva.' : 'Cor padrão restaurada.');
+   onSaved?.();
   } catch {
    setMessage('Não foi possível salvar a cor neste navegador.');
   }

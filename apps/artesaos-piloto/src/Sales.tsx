@@ -1,4 +1,4 @@
-import {moduleEnabled,viewEnabled} from './module-access';
+import {moduleEnabled} from './module-access';
 import ActionButton from './ActionButton';
 import ClientPicker from './ClientPicker';
 import SalesSessions from './SalesSessions';
@@ -7,8 +7,8 @@ import {useEffect,useRef,useState} from 'react';
 import type {Cart, SaleLine} from '../server/sales';
 import AreaNav from './AreaNav';
 import ValidatedForm from './FormValidation';
-import PdvIdentity from './PdvIdentity';
-import {pdvTheme} from './pdv-theme';
+import ModuleHeading from './ModuleHeading';
+import {PdvColorSettings,pdvTheme} from './pdv-theme';
 import BrandIcon from './BrandIcon';
 import {productCategory} from './product-category';
 
@@ -38,7 +38,7 @@ async function api(path:string,method='GET',body?:unknown){const r=await fetch(n
 export default function Sales(){
  const [catalog,setCatalog]=useState<any[]>([]),[clients,setClients]=useState<any[]>([]),[accounts,setAccounts]=useState<any[]>([]),[methods,setMethods]=useState<any[]>([]),[sales,setSales]=useState<any[]>([]),[coupons,setCoupons]=useState<any[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(1),[tier,setTier]=useState('retail'),[cart,setCart]=useState<Cart>({...(new URLSearchParams(location.search).get('session')&&!new URLSearchParams(location.search).get('attention')?{sessionId:new URLSearchParams(location.search).get('session')??undefined}:{}),clientId:null,items:[],discount:null,couponCode:'',discountChoice:'manual'}),[pricing,setPricing]=useState<{cart:Cart;data:any}|null>(null),[payments,setPayments]=useState<PaymentRow[]>([]),[receipt,setReceipt]=useState<any>(null),[receiptText,setReceiptText]=useState(''),[file,setFile]=useState<File|null>(null),[fileUrl,setFileUrl]=useState(''),[couponForm,setCouponForm]=useState<any>(null),[couponHistory,setCouponHistory]=useState<any[]|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [step,setStep] = useState<Step>(0);
- const [theme] = useState(pdvTheme);
+ const [theme,setTheme] = useState(pdvTheme);
  const [completed,setCompleted] = useState<SaleConfirmation|null>(null);
  const [panel,setPanel] = useState<Panel|null>(() => new URLSearchParams(location.search).has('session') ? 'sessions' : null);
  const [sessions,setSessions] = useState<SaleSession[]>([]);
@@ -46,7 +46,6 @@ export default function Sales(){
  const [category,setCategory] = useState('');
  const [paymentMode,setPaymentMode] = useState<PaymentMode>('integral');
  const [paymentChoice,setPaymentChoice] = useState<PaymentChoice>('pix');
- const [showGlobal,setShowGlobal] = useState(false);
  const [lineIndex,setLineIndex] = useState(0);
  const [paymentId,setPaymentId] = useState<number|null>(null);
  const [panelMessage,setPanelMessage] = useState('');
@@ -87,7 +86,7 @@ export default function Sales(){
  useEffect(() => {
   if (!stageChanged.current) return;
   stageChanged.current = false;
-  if (scroll.current) scroll.current.scrollTop = 0;
+  if (scroll.current) window.scrollTo({top:0,behavior:'auto'});
   document.getElementById('pdv-stage-title')?.focus({preventScroll:true});
  }, [step]);
 
@@ -167,6 +166,7 @@ export default function Sales(){
  }
  const remaining = Math.max(0,total-received);
  const paymentReady = !!preview && payments.every(row=>row.saved) && nonCash<=total;
+ useEffect(()=>{if(!itemCount||completed)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[itemCount,completed]);
 
  function editPayment(row: PaymentRow) {
   setPaymentId(row.id);
@@ -237,29 +237,23 @@ export default function Sales(){
  const totalText = preview ? money(total) : '—';
  const paymentLabel = paymentId===null ? panelTitles.payment : payments.find(row=>row.id===paymentId)?.methodId==='pix' ? 'Receber por Pix' : 'Outro meio de pagamento';
 
- return <main className="products-screen pdv" style={theme} data-global={showGlobal || undefined} aria-labelledby="pdv-stage-title">
-  <PdvIdentity step={step} showGlobal={showGlobal}
-   onBack={step===4?()=>{if(!busy){if(completed){setCompleted(null);goTo(0);}else goTo(3);}}:undefined}
-   onOptions={()=>{if(!busy){if(showGlobal)setShowGlobal(false);else openPanel('options');}}}/>
-  <AreaNav active="vendas" attentionHostId="pdv-attention-host"/>
-  <div ref={scroll} className="pdv-scroll" tabIndex={0} role="region" aria-label="Conteúdo da etapa">
+ return <main className="products-screen pdv ad-module-screen" style={theme} aria-labelledby="pdv-stage-title">
+  <AreaNav active="vendas"/>
+  <div ref={scroll} className="pdv-scroll">
+   <ModuleHeading id="pdv-stage-title" symbol={(['store','produtos','cart','card','orcamentos'] as const)[step]} title={completed?'Venda concluída!':stepTitles[step]} description={step===0?'Inicie um novo evento, retome um evento existente ou faça uma venda avulsa.':undefined}
+    action={step===0?<ActionButton className="pdv-secondary" disabled={busy} onClick={()=>openPanel('options')}>Opções do PDV</ActionButton>:<div className="pdv-context-actions">
+      <ActionButton className="pdv-secondary" disabled={busy} aria-label="Voltar uma etapa" onClick={()=>{if(completed){setCompleted(null);goTo(0);}else goTo(Math.max(0,step-1) as Step);}}><BrandIcon name="back"/>Voltar</ActionButton>
+      {step===2&&itemCount>0&&<ActionButton className="pdv-ghost pdv-clear" aria-label="Esvaziar carrinho" onClick={()=>{if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();goTo(1);}}}><BrandIcon name="trash"/></ActionButton>}
+    </div>}/>
    <p className="pdv-message" role="status">{message}</p>
-   {!completed && <div className="pdv-row pdv-stage-heading">
-    <h1 id="pdv-stage-title" tabIndex={-1}><BrandIcon name={(['store','produtos','cart','card','orcamentos'] as const)[step]}/>{stepTitles[step]}</h1>
-    {step===2 && itemCount>0 && <ActionButton className="pdv-ghost pdv-clear" aria-label="Esvaziar carrinho" onClick={()=>{
-     if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();goTo(1);}
-    }}><BrandIcon name="trash"/></ActionButton>}
-   </div>}
    {step===0 && <div className="pdv-stack">
-    <div className="pdv-card pdv-session-intro">
-     <span className="pdv-session-icon"><BrandIcon name="store"/></span>
-     <div><strong>{currentSession?'Sessão em andamento':'Iniciar sessão de venda'}</strong>
-      <p className="pdv-muted">{currentSession?.name ?? 'Organize suas vendas e acompanhe os pagamentos.'}</p></div>
-    </div>
-    {currentSession && <ActionButton className="pdv-primary" onClick={()=>goTo(1)}>Continuar venda</ActionButton>}
-    <ActionButton className={currentSession?'pdv-secondary':'pdv-primary'} onClick={()=>openSessions('open')}>▶ Nova sessão</ActionButton>
-    <ActionButton className="pdv-secondary" onClick={()=>openSessions('resume')}>↻ Retomar sessão</ActionButton>
-    {!currentSession && <ActionButton className="pdv-ghost" onClick={()=>goTo(1)}>Venda avulsa</ActionButton>}
+    <section className="pdv-entry-actions" aria-label="Iniciar venda">
+     <ActionButton className="pdv-entry-action pdv-primary" aria-label={currentSession||itemCount?'Continuar venda':'Nova sessão'} aria-describedby="pdv-entry-first-description" disabled={busy} onClick={()=>currentSession||itemCount?goTo(1):openSessions('open')}>
+      <span className="pdv-entry-icon"><BrandIcon name={currentSession||itemCount?'clock':'store'}/></span><span className="pdv-entry-copy"><strong>{currentSession||itemCount?'Continuar venda':'Nova sessão'}</strong><small id="pdv-entry-first-description">{currentSession?.name??(itemCount?'Retomar o carrinho em andamento':'Iniciar um evento de vendas')}</small></span><span aria-hidden="true">›</span>
+     </ActionButton>
+     <ActionButton className="pdv-entry-action pdv-secondary" aria-label="Retomar sessão" aria-describedby="pdv-entry-resume-description" disabled={busy} onClick={()=>openSessions('resume')}><span className="pdv-entry-icon"><BrandIcon name="clock"/></span><span className="pdv-entry-copy"><strong>Retomar sessão</strong><small id="pdv-entry-resume-description">Continuar um evento em andamento</small></span><span aria-hidden="true">›</span></ActionButton>
+     <ActionButton className="pdv-entry-action pdv-soft" aria-label="Venda avulsa" aria-describedby="pdv-entry-walkin-description" disabled={busy||!!currentSession} onClick={()=>goTo(1)}><span className="pdv-entry-icon"><BrandIcon name="cart"/></span><span className="pdv-entry-copy"><strong>Venda avulsa</strong><small id="pdv-entry-walkin-description">Venda rápida, sem evento</small></span><span aria-hidden="true">›</span></ActionButton>
+    </section>
     <div className="pdv-card pdv-stack pdv-recent">
      <div className="pdv-row"><h2>Sessões recentes</h2><ActionButton className="pdv-ghost pdv-inline" onClick={()=>openSessions('resume')}>Ver todas ›</ActionButton></div>
      {!sessions.length && <p className="pdv-muted">Nenhuma sessão registrada.</p>}
@@ -387,7 +381,7 @@ export default function Sales(){
    {step===4 && (completed ? <div className="pdv-stack">
     <div className="pdv-success" role="status">
      <span className="pdv-success-mark" aria-hidden="true">✓</span>
-     <h1 id="pdv-stage-title" tabIndex={-1}>Venda concluída!</h1>
+     <p className="pdv-confirmation-title">Venda concluída!</p>
      <p>{completed.sessionName || 'Venda avulsa'} · Nº {completed.number}</p>
     </div>
     <div className="pdv-card pdv-completed">
@@ -422,13 +416,7 @@ export default function Sales(){
    </div>)}
   </div>
 
-  {(step!==4||!completed) && <footer className="pdv-footer">
-   {step===0 && <nav className="pdv-nav" aria-label="Navegação do PDV">
-    <span aria-current="page"><BrandIcon name="vendas"/>PDV</span>
-    {viewEnabled('produtos') && <a href="?view=produtos"><BrandIcon name="produtos"/>Produtos</a>}
-    <ActionButton onClick={()=>openPanel('history')}><BrandIcon name="orcamentos"/>Vendas</ActionButton>
-    <ActionButton onClick={()=>openPanel('options')}><BrandIcon name="menu"/>Mais</ActionButton>
-   </nav>}
+  {step>0&&!completed&& <footer className="pdv-footer">
    {step===1 && <ActionButton className="pdv-primary pdv-full" disabled={busy||!itemCount} onClick={()=>goTo(2)}>
     <BrandIcon name="cart"/> {itemCount} {itemCount===1?'item':'itens'} · {money(preview?.subtotal??gross)} ›
    </ActionButton>}
@@ -442,6 +430,12 @@ export default function Sales(){
     <ActionButton className="pdv-primary" disabled={!paymentReady||busy} onClick={finalize}>Concluir venda</ActionButton>
    </div>}
   </footer>}
+  {step>0&&!completed&&<nav className="pdv-nav" aria-label="Navegação do PDV">
+    <ActionButton disabled={busy} onClick={()=>goTo(0)}><BrandIcon name="store"/>PDV</ActionButton>
+    <ActionButton disabled={busy} aria-current={step===1?'page':undefined} onClick={()=>goTo(1)}><BrandIcon name="produtos"/>Catálogo</ActionButton>
+    <ActionButton disabled={busy} aria-current={step>=2?'page':undefined} onClick={()=>goTo(2)}><BrandIcon name="cart"/>Carrinho</ActionButton>
+    <ActionButton disabled={busy} onClick={()=>openPanel('options')}><BrandIcon name="menu"/>Mais</ActionButton>
+  </nav>}
 
   <dialog ref={dialog} className="pdv-sheet" aria-labelledby="pdv-sheet-title"
    onCancel={event=>{event.preventDefault();closePanel();}}
@@ -455,7 +449,7 @@ export default function Sales(){
     <ActionButton onClick={()=>openSessions()}>{cart.sessionId?'Sessão selecionada':'Sessão de venda'}</ActionButton>
     <ActionButton onClick={()=>openPanel('coupons')}>Gerenciar cupons</ActionButton>
     {itemCount>0 && <ActionButton onClick={()=>{if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();closePanel();goTo(0);}}}>Cancelar carrinho</ActionButton>}
-    <ActionButton onClick={()=>{closePanel();setShowGlobal(true);}}>Menu e conta do Artesão Digital</ActionButton>
+    <details><summary>Configurações do PDV</summary><PdvColorSettings onSaved={()=>setTheme(pdvTheme())}/></details>
     <details><summary>Outras operações</summary>
   <p><a href="?view=consignados">Cadastrar e receber consignados</a></p>
   <p><a href="?view=pagamentos">Configurar contas e formas de pagamento</a></p>
