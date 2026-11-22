@@ -1,3 +1,3 @@
-# Candidata 0.2.0-dev.30
+# Candidata 0.2.0-dev.31
 
-Fonte: bb7fe4a23aa1316254e715de4e17bf4759d68f1e. Correção exclusiva da identidade da loja e metadados da candidata UX dev.29. Nome Fábrica de Softwares - Artesão Digital; icon.png e logo.png idênticos ao catálogo oficial. Slug, dados, identidade interna, Forja e código UX preservados. Build Supervisor e homologação pendentes. Publicação HA autorizada em 22/11/2026. Não desinstalar/reinstalar.
+Fonte: 9cdacd219148ae9b733942a7fd137261656b8613. Recuperação de PDV do último HEAD do PR #82 e organização de Produtos, sem substituir a ficha técnica UX. Nome, slug, dados, schemas, API e Forja preservados. Build Supervisor e validação visual/funcional pendentes. Atualizar o add-on existente, sem desinstalar/reinstalar.

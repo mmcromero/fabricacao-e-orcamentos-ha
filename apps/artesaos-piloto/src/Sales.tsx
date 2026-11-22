@@ -1,36 +1,540 @@
-import {moduleEnabled} from './module-access';
+import {moduleEnabled,viewEnabled} from './module-access';
 import ActionButton from './ActionButton';
 import ClientPicker from './ClientPicker';
 import SalesSessions from './SalesSessions';
 import PixQr from './PixQr';
 import {useEffect,useRef,useState} from 'react';
+import type {Cart, SaleLine} from '../server/sales';
 import AreaNav from './AreaNav';
 import ValidatedForm from './FormValidation';
+import PdvIdentity from './PdvIdentity';
+import {pdvTheme} from './pdv-theme';
+import BrandIcon from './BrandIcon';
+import {productCategory} from './product-category';
+
+const stepTitles = ['PDV – Ponto de Venda', 'Selecionar produtos', 'Carrinho de venda', 'Pagamento', 'Concluir venda'] as const;
+type Step = 0 | 1 | 2 | 3 | 4;
+type PaymentMode = 'integral' | 'partial' | 'split';
+const paymentModes = {integral:'Integral',partial:'Parcial',split:'Dividido'} as const;
+const paymentChoices = {pix:'Pix',card:'Cartão (Débito / Crédito)',cash:'Dinheiro',other:'Outros'} as const;
+type PaymentChoice = keyof typeof paymentChoices;
+type SaleSession = {id:string; name:string; date_on:string; tier:string; financial_closed_at:string|null};
+type Panel = 'options' | 'tier' | 'item' | 'client' | 'categories' | 'coupon' | 'sessions' | 'coupons' | 'payment' | 'history' | 'receipt';
+const panelTitles: Record<Panel,string> = {
+ options:'Opções do PDV', tier:'Tabela de preços', item:'Editar item', client:'Cliente da venda',
+ categories:'Categorias', coupon:'Cupom', sessions:'Sessões de venda', coupons:'Cupons',
+ payment:'Pagamento', history:'Vendas confirmadas', receipt:'Comprovante não fiscal',
+};
+type PaymentRow = {
+ id: number; amount: string; methodId: string; accountId: string; fee: string;
+ expectedOn: string; settleNow: boolean; saved: boolean;
+};
+type CompletedSale = {id:string;number:number;total:number;change:number;attentions:string[]};
+type SaleConfirmation = CompletedSale & {received:number;remaining:number;scheduled:number;sessionName?:string};
+
 const money=(n:number)=>(n/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),cents=(s:string)=>Math.round(Number(s.replace(',','.'))*100);
 const tiers=['wholesale','factory','retail'] as const,labels={wholesale:'Atacado',factory:'Loja de fábrica',retail:'Varejo',custom:'Personalizado'};
 async function api(path:string,method='GET',body?:unknown){const r=await fetch(new URL('api/'+path,document.baseURI),{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await r.json();if(!r.ok)throw Error(data.message||'Não foi possível concluir.');if(method!=='GET')window.dispatchEvent(new Event('artesao-data-changed'));return data;}
 export default function Sales(){
- const [catalog,setCatalog]=useState<any[]>([]),[clients,setClients]=useState<any[]>([]),[accounts,setAccounts]=useState<any[]>([]),[methods,setMethods]=useState<any[]>([]),[sales,setSales]=useState<any[]>([]),[coupons,setCoupons]=useState<any[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(1),[tier,setTier]=useState('retail'),[cart,setCart]=useState<any>({...(new URLSearchParams(location.search).get('session')&&!new URLSearchParams(location.search).get('attention')?{sessionId:new URLSearchParams(location.search).get('session')}:{}),clientId:null,items:[],discount:null,couponCode:'',discountChoice:'manual'}),[preview,setPreview]=useState<any>(null),[payments,setPayments]=useState<any[]>([]),[receipt,setReceipt]=useState<any>(null),[receiptText,setReceiptText]=useState(''),[file,setFile]=useState<File|null>(null),[fileUrl,setFileUrl]=useState(''),[couponForm,setCouponForm]=useState<any>(null),[couponHistory,setCouponHistory]=useState<any[]|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ const [catalog,setCatalog]=useState<any[]>([]),[clients,setClients]=useState<any[]>([]),[accounts,setAccounts]=useState<any[]>([]),[methods,setMethods]=useState<any[]>([]),[sales,setSales]=useState<any[]>([]),[coupons,setCoupons]=useState<any[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(1),[tier,setTier]=useState('retail'),[cart,setCart]=useState<Cart>({...(new URLSearchParams(location.search).get('session')&&!new URLSearchParams(location.search).get('attention')?{sessionId:new URLSearchParams(location.search).get('session')??undefined}:{}),clientId:null,items:[],discount:null,couponCode:'',discountChoice:'manual'}),[pricing,setPricing]=useState<{cart:Cart;data:any}|null>(null),[payments,setPayments]=useState<PaymentRow[]>([]),[receipt,setReceipt]=useState<any>(null),[receiptText,setReceiptText]=useState(''),[file,setFile]=useState<File|null>(null),[fileUrl,setFileUrl]=useState(''),[couponForm,setCouponForm]=useState<any>(null),[couponHistory,setCouponHistory]=useState<any[]|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ const [step,setStep] = useState<Step>(0);
+ const [theme] = useState(pdvTheme);
+ const [completed,setCompleted] = useState<SaleConfirmation|null>(null);
+ const [panel,setPanel] = useState<Panel|null>(() => new URLSearchParams(location.search).has('session') ? 'sessions' : null);
+ const [sessions,setSessions] = useState<SaleSession[]>([]);
+ const [sessionAction,setSessionAction] = useState<'open'|'resume'|'close'|undefined>();
+ const [category,setCategory] = useState('');
+ const [paymentMode,setPaymentMode] = useState<PaymentMode>('integral');
+ const [paymentChoice,setPaymentChoice] = useState<PaymentChoice>('pix');
+ const [showGlobal,setShowGlobal] = useState(false);
+ const [lineIndex,setLineIndex] = useState(0);
+ const [paymentId,setPaymentId] = useState<number|null>(null);
+ const [panelMessage,setPanelMessage] = useState('');
+ const nextPayment = useRef(0);
+ const dialog = useRef<HTMLDialogElement>(null);
+ const scroll = useRef<HTMLDivElement>(null);
+ const stageChanged = useRef(false);
+ const preview = pricing?.cart === cart ? pricing.data : null;
+
+ function goTo(next: Step) {
+  if (next === step) return;
+  stageChanged.current = true;
+  setStep(next);
+ }
+ function openPanel(next: Panel) {
+  setPanelMessage('');
+  setPanel(next);
+ }
+ function openSessions(action?: 'open'|'resume'|'close') {
+  setSessionAction(action);
+  openPanel('sessions');
+ }
+ function closePanel() {
+  setPanelMessage('');
+  setPanel(null);
+ }
+ useEffect(() => {
+  const sheet = dialog.current;
+  if (!sheet) return;
+  if (!panel) {
+   if (sheet.open) sheet.close();
+   return;
+  }
+  if (!sheet.open) sheet.showModal();
+  sheet.scrollTop = 0;
+  sheet.querySelector<HTMLButtonElement>('.pdv-close')?.focus({preventScroll:true});
+ }, [panel]);
+ useEffect(() => {
+  if (!stageChanged.current) return;
+  stageChanged.current = false;
+  if (scroll.current) scroll.current.scrollTop = 0;
+  document.getElementById('pdv-stage-title')?.focus({preventScroll:true});
+ }, [step]);
+
  const keys=useRef<Record<string,{signature:string;key:string}>>({});function key(name:string,input:unknown){const signature=JSON.stringify(input);if(keys.current[name]?.signature!==signature)keys.current[name]={signature,key:crypto.randomUUID()};return keys.current[name].key;}
- async function load(){const [p,stock,c,a,m,s,u,third]=await Promise.all([api('products'),api('inventory/product-stock'),api('clients'),api('finance/accounts'),api('finance/methods'),api('sales'),api('sale-coupons'),api('inventory/consigned')]);setCatalog([...p.filter((x:any)=>x.origin==='own').map((x:any)=>({...x,kind:'own',prices:stock.find((r:any)=>r.product_id===x.id&&r.kind==='own')?.prices??x.prices})),...third.filter((x:any)=>x.active).map((x:any)=>({...x,kind:'consigned',imageUrl:x.image_url,prices:{wholesale:null,factory:null,retail:x.sale_price}}))]);setClients(c);setAccounts(a);setMethods(m);setSales(s);setCoupons(u);}
+ async function load(){const [p,stock,c,a,m,s,u,third,recent]=await Promise.all([api('products'),api('inventory/product-stock'),api('clients'),api('finance/accounts'),api('finance/methods'),api('sales'),api('sale-coupons'),api('inventory/consigned'),api('sales-sessions').catch(()=>null)]);setCatalog([...p.filter((x:any)=>x.origin==='own').map((x:any)=>({...x,kind:'own',prices:stock.find((r:any)=>r.product_id===x.id&&r.kind==='own')?.prices??x.prices})),...third.filter((x:any)=>x.active).map((x:any)=>({...x,kind:'consigned',imageUrl:x.image_url,prices:{wholesale:null,factory:null,retail:x.sale_price}}))]);setClients(c);setAccounts(a);setMethods(m);setSales(s);setCoupons(u);if(recent)setSessions(recent);}
  useEffect(()=>{void load().catch(e=>setMessage(e.message));},[]);
- useEffect(()=>{if(!cart.items.length){setPreview(null);return;}let active=true;setPreview(null);const timer=setTimeout(()=>void api('sales/preview','POST',cart).then(p=>{if(active){setPreview(p);setMessage('');}}).catch(e=>{if(active)setMessage(e.message);}),150);return()=>{active=false;clearTimeout(timer);};},[cart]);
+ useEffect(()=>{if(!cart.items.length){return;}let active=true;const timer=setTimeout(()=>void api('sales/preview','POST',cart).then(p=>{if(active){setPricing({cart,data:p});setMessage('');}}).catch(e=>{if(active)setMessage(e.message);}),150);return()=>{active=false;clearTimeout(timer);};},[cart]);
  useEffect(()=>{if(!file){setFileUrl('');return;}const url=URL.createObjectURL(file);setFileUrl(url);return()=>URL.revokeObjectURL(url);},[file]);
- const row0=(i:number)=>payments[i]??{amount:''};
- async function run(work:()=>Promise<void>){setBusy(true);setMessage('');try{await work();await load();}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}
- function changeLine(index:number,patch:unknown){setCart({...cart,items:cart.items.map((l:any,i:number)=>i===index?{...l,...patch as any}:l)});}
- function add(product:any){const priceKey=product.prices[tier]!=null?tier:tiers.find(t=>product.prices[t]!=null)??'custom';setCart({...cart,items:[...cart.items,{kind:product.kind,ref:String(product.id),quantity:1,priceKey,customPriceCents:null,discount:null}]});}
- async function selectSale(id:string){setReceipt(await api('sales/'+id));setReceiptText((await api('sales/'+id+'/receipt')).text);setFile(null);}
- async function finalize(){if(!preview)return;const input={...cart,previewToken:preview.previewToken,payments:payments.filter(p=>Number(p.amount)>0).map(p=>({amountCents:cents(p.amount),methodId:p.methodId,accountId:p.accountId,...(p.fee!==''?{feeCents:cents(p.fee)}:{}),...(p.expectedOn?{expectedOn:p.expectedOn}:{}),settleNow:p.settleNow}))};const result=await api('sales','POST',{...input,requestKey:key('sale',input)});delete keys.current.sale;window.dispatchEvent(new Event('artesao-sale-finalized'));setCart({...cart,items:[],discount:null,couponCode:'',discountChoice:'manual'});setPayments([]);await selectSale(result.id);setMessage(result.attentions.length?'Venda concluída. Divergência registrada para conferência posterior.':'Venda concluída.');}
- async function prepare(){if(!receipt)return;const response=await fetch(new URL('api/sales/'+receipt.id+'/receipt.pdf',document.baseURI));if(!response.ok)throw Error('Não foi possível preparar o comprovante.');setFile(new File([await response.blob()],`comprovante-venda-${receipt.number}.pdf`,{type:'application/pdf'}));}
+ async function run(work:()=>Promise<void>){
+  setBusy(true);
+  setMessage('');
+  try {await work(); await load();}
+  catch(error) {setMessage((error as Error).message);}
+  finally {setBusy(false);}
+ }
+
+ function changeLine(index: number, patch: Partial<SaleLine>) {
+  setCart(old=>({...old,items:old.items.map((line,i)=>i===index?{...line,...patch}:line)}));
+ }
+ function removeLine(index: number) {
+  setCart(old=>({...old,items:old.items.filter((_,i)=>i!==index)}));
+ }
+ function add(product: any) {
+  const priceKey = product.prices[tier]!=null ? tier : tiers.find(t=>product.prices[t]!=null)??'custom';
+  setCart(old=>{
+   const ref = String(product.id);
+   const index = old.items.findIndex(line=>line.ref===ref && line.kind===product.kind && line.priceKey===priceKey && line.customPriceCents===null && !line.discount);
+   const line = old.items[index];
+   if (line ? line.quantity>=1000000 : old.items.length>=100) return old;
+   const items = line
+    ? old.items.map((item,i)=>i===index?{...item,quantity:item.quantity+1}:item)
+    : [...old.items,{kind:product.kind,ref,quantity:1,priceKey,customPriceCents:null,discount:null} as SaleLine];
+   return {...old,items};
+  });
+ }
+ function productFor(line: SaleLine) {
+  return catalog.find(product=>product.kind===line.kind && String(product.id)===line.ref);
+ }
+ function unitPrice(line: SaleLine) {
+  return line.priceKey==='custom' ? line.customPriceCents : productFor(line)?.prices[line.priceKey];
+ }
+ function resetSale() {
+  setCart(old=>({...old,items:[],discount:null,couponCode:'',discountChoice:'manual'}));
+  setPayments([]);
+  setPaymentMode('integral');
+  setPaymentChoice('pix');
+  setMessage('');
+ }
+ function newSale() {
+  resetSale();
+  setCompleted(null);
+  setFile(null);
+  goTo(cart.sessionId ? 1 : 0);
+ }
+
+ const entered = payments.filter(row=>row.saved && cents(row.amount)>0);
+ const paymentName = (row: PaymentRow) => methods.find(method=>method.id===row.methodId)?.name ?? row.methodId;
+ const paymentStatus = (row: PaymentRow) => !row.saved
+  ? 'Em edição'
+  : row.settleNow ? 'Recebimento confirmado' : 'Agendado · a receber';
+ const total = preview?.total ?? 0;
+ const itemCount = cart.items.reduce((count,line)=>count+line.quantity,0);
+ const gross = cart.items.reduce((sum,line)=>sum+(unitPrice(line)??0)*line.quantity,0);
+ const enteredAmount = entered.reduce((sum,row)=>sum+cents(row.amount),0);
+ const nonCash = entered.filter(row=>row.methodId!=='cash').reduce((sum,row)=>sum+cents(row.amount),0);
+ let cashAvailable = Math.max(0,total-nonCash);
+ let received = 0, scheduled = 0, change = 0;
+ for (const row of entered.filter(row=>row.methodId!=='cash').concat(entered.filter(row=>row.methodId==='cash'))) {
+  const amount = cents(row.amount);
+  const applied = row.methodId==='cash' ? Math.min(amount,cashAvailable) : amount;
+  if (row.methodId==='cash') {
+   cashAvailable -= applied;
+   change += amount-applied;
+  }
+  if (row.settleNow) received += applied;
+  else scheduled += applied;
+ }
+ const remaining = Math.max(0,total-received);
+ const paymentReady = !!preview && payments.every(row=>row.saved) && nonCash<=total;
+
+ function editPayment(row: PaymentRow) {
+  setPaymentId(row.id);
+  openPanel('payment');
+ }
+ const choiceMethod = (choice: PaymentChoice) => choice==='card'
+  ? methods.find(m=>m.id==='debit') ?? methods.find(m=>m.id==='credit')
+  : choice==='other' ? methods.find(m=>!['pix','debit','credit','cash'].includes(m.id)) ?? methods.find(m=>m.id==='cash') ?? methods[0]
+  : methods.find(m=>m.id===choice);
+ function addPayment() {
+  const method = choiceMethod(paymentChoice);
+  const pix = method?.id==='pix';
+  const account = accounts.find(a=>a.active && a.id==='general') ?? accounts.find(a=>a.active);
+  if (!method || !account) return;
+  const row = {
+   id:++nextPayment.current, amount:paymentMode==='integral' && total>enteredAmount ? ((total-enteredAmount)/100).toFixed(2) : '',
+   methodId:method.id,accountId:account.id,fee:'',expectedOn:'',settleNow:!pix&&method.delay_days===0,saved:false,
+  };
+  setPayments(old=>[...old,row]);
+  editPayment(row);
+ }
+ function changePayment(id: number, patch: Partial<PaymentRow>) {
+  setPayments(old=>old.map(row=>row.id===id?{...row,saved:false,...patch}:row));
+ }
+
+ async function readReceiptAction(work:()=>Promise<void>) {
+  setBusy(true);
+  setPanelMessage('');
+  try {await work();}
+  catch(error) {setPanelMessage((error as Error).message);}
+  finally {setBusy(false);}
+ }
+ async function openReceipt(id: string, withPdf = false) {
+  await readReceiptAction(async()=>{
+   const [sale,receiptData] = await Promise.all([api('sales/'+id),api('sales/'+id+'/receipt')]);
+   setReceipt(sale);
+   setReceiptText(receiptData.text);
+   setFile(null);
+   openPanel('receipt');
+   if(withPdf)await prepare(id,sale.number);
+  });
+ }
+ async function finalize(){
+  if (!paymentReady || !preview) return;
+  if (remaining>0 && !confirm('Esta venda ficará com saldo a receber de '+money(remaining)+'. Concluir mesmo assim?')) return;
+  await run(async()=>{
+   const input = {...cart,previewToken:preview.previewToken,payments:entered.map(p=>({
+    amountCents:cents(p.amount),methodId:p.methodId,accountId:p.accountId,
+    ...(p.fee!==''?{feeCents:cents(p.fee)}:{}),...(p.expectedOn?{expectedOn:p.expectedOn}:{}),settleNow:p.settleNow,
+   }))};
+   const result: CompletedSale = await api('sales','POST',{...input,requestKey:key('sale',input)});
+   delete keys.current.sale;
+   window.dispatchEvent(new Event('artesao-sale-finalized'));
+   resetSale();
+   setCompleted({...result,received,remaining,scheduled,sessionName:sessions.find(session=>session.id===cart.sessionId)?.name});
+  });
+ }
+ async function prepare(id=receipt?.id,number=receipt?.number){if(!id)return;const response=await fetch(new URL('api/sales/'+id+'/receipt.pdf',document.baseURI));if(!response.ok)throw Error('Não foi possível preparar o comprovante.');setFile(new File([await response.blob()],`comprovante-venda-${number}.pdf`,{type:'application/pdf'}));}
  function discountFields(value:any,onChange:(v:any)=>void){return <><select aria-label="Tipo de desconto" value={value?.kind??''} onChange={e=>onChange(e.target.value?{kind:e.target.value,value:0}:null)}><option value="">Sem desconto</option><option value="percent">Percentual (%)</option><option value="fixed">Valor (R$)</option></select>{value&&<input aria-label="Valor do desconto" type="number" min="0" step="0.01" max={value.kind==='percent'?'100':'100000000'} value={value.kind==='percent'?value.value/100:value.value/100} onChange={e=>onChange({...value,value:cents(e.target.value)})}/>}</>;}
- const filtered=catalog.filter(p=>`${p.name} ${p.sku??''}`.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'))),pages=Math.max(1,Math.ceil(filtered.length/20)),current=Math.min(page,pages);
- return <main className="products-screen"><AreaNav active="vendas"/><h1>Vendas</h1><p><a href="?view=consignados">Cadastrar e receber consignados para o PDV</a> · <a href="?view=pagamentos">Configurar contas e formas de pagamento</a></p><p>Venda Rápida: peça em mãos e entrega imediata. {moduleEnabled('pedidos')&&<>Para encomendas, use <a href="?view=pedidos">Pedido direto</a>. </>}{moduleEnabled('orcamentos')&&<><a href="?view=orcamentos">Orçamento</a>. </>} Sessão é opcional.</p><p role="status">{message}</p><SalesSessions sessionId={cart.sessionId} catalog={catalog} onSelect={(id,selectedTier)=>{setCart((old:any)=>{const next={...old};if(id)next.sessionId=id;else delete next.sessionId;return next;});if(selectedTier)setTier(selectedTier);}} onDone={load}/><label>Buscar produto<input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/></label><label>Tabela principal<select value={tier} onChange={e=>setTier(e.target.value)}>{tiers.map(t=><option key={t} value={t}>{labels[t]}</option>)}</select></label><section><h2>Produtos para venda imediata</h2>{filtered.slice((current-1)*20,current*20).map(p=><article className="stock-product-card" key={p.id}>{p.imageUrl?<img src={p.imageUrl} alt={p.name} loading="lazy" referrerPolicy="no-referrer" width="64"/>:<span>Sem foto</span>}<h3>{p.name}</h3><p>{p.kind==='consigned'&&<p>Consignado · Repasse fixo ao fornecedor</p>}{p.prices[tier]==null?'Escolha outra faixa ou personalize o preço':money(p.prices[tier])}</p><ActionButton disabled={busy} onClick={()=>add(p)}>Adicionar {p.name}</ActionButton></article>)}{!filtered.length&&<p>Nenhum produto encontrado.</p>}<p>Página {current} de {pages}</p><ActionButton disabled={current<=1} onClick={()=>setPage(current-1)}>Anterior</ActionButton><ActionButton disabled={current>=pages} onClick={()=>setPage(current+1)}>Próxima</ActionButton></section>
- <section className="stock-product-card"><h2>Carrinho</h2><ClientPicker persistent context="sale" sessionId={cart.sessionId} selected={clients.find(c=>c.id===cart.clientId)??null} onSelect={c=>{if(c)setClients(old=>old.some(x=>x.id===c.id)?old.map(x=>x.id===c.id?c:x):[...old,c]);setCart((old:any)=>({...old,clientId:c?.id??null}));}}/><fieldset disabled={busy}>{cart.items.map((l:any,i:number)=>{const p=catalog.find(p=>String(p.id)===l.ref);return <article key={i}><h3>{p?.name??'Produto'}</h3><label>Quantidade do item {i+1} (un)<input aria-label={'Quantidade do item '+(i+1)+' (un)'} type="number" min="1" max="1000000" step="1" value={l.quantity} onChange={e=>changeLine(i,{quantity:Number(e.target.value)})}/></label><label>Faixa do item {i+1}<select value={l.priceKey} onChange={e=>changeLine(i,{priceKey:e.target.value})}>{[...tiers,'custom'].map(t=><option key={t} value={t}>{labels[t as keyof typeof labels]}</option>)}</select></label><details><summary>Consultar outros preços</summary>{tiers.map(t=><p key={t}>{labels[t]}: {p?.prices[t]==null?'não informado':money(p.prices[t])}</p>)}</details>{l.priceKey==='custom'&&<label>Preço personalizado unitário (R$)<input type="number" min="0" step="0.01" value={l.customPriceCents===null?'':l.customPriceCents/100} onChange={e=>changeLine(i,{customPriceCents:e.target.value===''?null:cents(e.target.value)})}/></label>}<label>Desconto do item {i+1} (total da linha)</label>{discountFields(l.discount,v=>changeLine(i,{discount:v}))}<ActionButton onClick={()=>setCart({...cart,items:cart.items.filter((_:any,j:number)=>i!==j)})}>Remover item {i+1}</ActionButton></article>;})}<h3>Desconto da venda</h3>{discountFields(cart.discount,v=>setCart({...cart,discount:v}))}<label>Código do cupom<input maxLength={40} value={cart.couponCode} onChange={e=>setCart({...cart,couponCode:e.target.value,discountChoice:e.target.value?'coupon':'manual'})}/></label>{cart.couponCode&&<label>Como aplicar descontos<select value={cart.discountChoice} onChange={e=>setCart({...cart,discountChoice:e.target.value})}><option value="coupon">Usar somente cupom</option><option value="manual">Usar somente desconto manual</option><option value="combine">Combinar (somente se o cupom permitir)</option></select></label>}
- {preview&&<><p>Subtotal: {money(preview.subtotal)} · Descontos dos itens: {money(preview.itemDiscount)} · Desconto da venda: {money(preview.saleDiscount)} · Cupom: {money(preview.couponDiscount)}</p><h3>Total da venda: {money(preview.total)}</h3><p>{preview.sequence}</p>{preview.lines.some((l:any)=>l.kind==='consigned'&&l.finalTotal<l.quantity*(l.repass??0))&&<p>Desconto pode comprometer o resultado: o repasse fixo do fornecedor será preservado.</p>}{preview.warnings.length>0&&<p>Há divergência no saldo registrado. A venda imediata poderá ser concluída e ficará registrada para conferência posterior.</p>}</>}
- <h3>Pagamentos (opcionais; saldo pode ficar pendente)</h3>{payments.map((p:any,i:number)=><section key={i}><label>Valor recebido {i+1} (R$)<input aria-label={'Valor recebido '+(i+1)+' (R$)'} type="number" min="0" step="0.01" value={p.amount} onChange={e=>setPayments(payments.map((row,j)=>j===i?{...row,amount:e.target.value}:row))}/></label><label>Forma de pagamento {i+1}<select aria-label={'Forma de pagamento '+(i+1)} value={p.methodId} onChange={e=>{const method=methods.find(m=>m.id===e.target.value);const rest=preview&&e.target.value==='pix'&&row0(i).amount===''?Math.max(0,preview.total-payments.reduce((n,p,j)=>j===i||!Number.isFinite(cents(p.amount))?n:n+cents(p.amount),0)):0;setPayments(payments.map((row,j)=>j===i?{...row,methodId:e.target.value,expectedOn:'',fee:'',settleNow:method.delay_days===0,...(rest>0?{amount:(rest/100).toFixed(2)}:{})}:row));}}>{methods.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label><label>Conta<select value={p.accountId} onChange={e=>setPayments(payments.map((row,j)=>j===i?{...row,accountId:e.target.value}:row))}>{accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>{p.methodId==='pix'&&Number.isFinite(cents(p.amount))&&cents(p.amount)>0&&<PixQr amountCents={cents(p.amount)} onPaid={()=>setPayments((rows:any[])=>rows.map((row,j)=>j===i?{...row,settleNow:true}:row))}/>}<details><summary>Taxa e prazo do pagamento {i+1}</summary><label>Taxa (R$; vazio usa padrão)<input type="number" min="0" step="0.01" value={p.fee} onChange={e=>setPayments(payments.map((row,j)=>j===i?{...row,fee:e.target.value}:row))}/></label><label>Data prevista<input type="date" value={p.expectedOn} onChange={e=>setPayments(payments.map((row,j)=>j===i?{...row,expectedOn:e.target.value,settleNow:!!e.target.value&&e.target.value<=new Date().toISOString().slice(0,10)}:row))}/></label></details><label><input type="checkbox" checked={p.settleNow} onChange={e=>setPayments(payments.map((row,j)=>j===i?{...row,settleNow:e.target.checked}:row))}/>Liquidado na conta</label><ActionButton onClick={()=>setPayments(payments.filter((_,j)=>i!==j))}>Remover pagamento {i+1}</ActionButton></section>)}<ActionButton onClick={()=>setPayments([...payments,{amount:'',methodId:'cash',accountId:'general',fee:'',expectedOn:'',settleNow:true}])}>Adicionar pagamento</ActionButton>{preview&&<p>Pagamentos informados (incluindo agendados): {money(payments.reduce((n,p)=>n+(Number.isFinite(cents(p.amount))?cents(p.amount):0),0))} · Troco previsto: {money(Math.max(0,payments.filter(p=>p.methodId==='cash').reduce((n,p)=>n+(Number.isFinite(cents(p.amount))?cents(p.amount):0),0)-Math.max(0,preview.total-payments.filter(p=>p.methodId!=='cash').reduce((n,p)=>n+(Number.isFinite(cents(p.amount))?cents(p.amount):0),0))))}</p>}<p>Dinheiro pode incluir troco. Cartão futuro permanece agendado; não é recebido até liquidação.</p><ActionButton disabled={!preview} onClick={()=>run(finalize)}>Finalizar venda e entrega</ActionButton><ActionButton onClick={()=>{if(cart.items.length&&!confirm('Cancelar este carrinho sem alterar estoque ou caixa?'))return;setCart({...cart,items:[],discount:null,couponCode:'',discountChoice:'manual'});setPayments([]);}}>Cancelar carrinho</ActionButton></fieldset></section>
- {receipt&&<section className="stock-product-card sales-receipt"><h2>Comprovante não fiscal — Venda {receipt.number}</h2><pre className="stock-snapshot">{receiptText}</pre><ActionButton disabled={busy} onClick={()=>run(prepare)}>Preparar comprovante PDF</ActionButton>{file&&fileUrl&&<><p><a href={fileUrl} download={file.name}>Baixar PDF</a> · <a href={fileUrl} target="_blank" rel="noopener">Abrir para impressão</a></p>{navigator.canShare?.({files:[file]})&&<ActionButton onClick={()=>navigator.share({files:[file],title:'Comprovante não fiscal'}).catch(()=>setMessage('Compartilhamento cancelado ou indisponível. Use Baixar PDF.'))}>Compartilhar PDF</ActionButton>}<a href={'https://wa.me/?text='+encodeURIComponent(receiptText)} target="_blank" rel="noopener">Abrir texto no WhatsApp</a><p>O WhatsApp abre com o texto; anexe o PDF baixado se desejar. Não há envio automático.</p></>}</section>}
- <details><summary>Vendas confirmadas</summary>{sales.map(s=><p key={s.id}>Venda {s.number} · {s.registered_at} · {money(s.total_cents)} <ActionButton disabled={busy} onClick={()=>run(()=>selectSale(s.id))}>Consultar comprovante</ActionButton></p>)}{sales.length>=200&&<ActionButton disabled={busy} onClick={()=>{setBusy(true);return api('sales?before='+sales[sales.length-1].number).then(rows=>setSales(old=>[...old,...rows])).catch(e=>setMessage(e.message)).finally(()=>setBusy(false));}}>Carregar vendas anteriores</ActionButton>}</details>
- <details><summary>Cupons</summary><ActionButton disabled={busy} onClick={()=>setCouponForm({code:'',kind:'percent',value:'',startsOn:'',endsOn:'',maxUses:'',active:true,allowManual:false})}>Cadastrar cupom</ActionButton>{coupons.map(c=><p key={c.id}>{c.code} · {c.kind==='percent'?c.value/100+'%':money(c.value)} · Usos {c.uses}/{c.max_uses??'sem limite'} · {c.active?'Ativo':'Inativo'} <ActionButton disabled={busy} onClick={()=>setCouponForm({id:c.id,expectedRevision:c.revision,code:c.code,kind:c.kind,value:String(c.value/100),startsOn:c.starts_on??'',endsOn:c.ends_on??'',maxUses:c.max_uses===null?'':String(c.max_uses),active:!!c.active,allowManual:!!c.allow_manual})}>Editar cupom</ActionButton><ActionButton disabled={busy} onClick={()=>run(async()=>setCouponHistory(await api('sale-coupons/'+c.id+'/history')))}>Histórico de usos</ActionButton></p>)}{couponHistory&&<section><h3>Aplicações confirmadas</h3>{couponHistory.map(u=><p key={u.id}>Venda {u.number} · {u.registered_at} · Desconto {money(u.discount_cents)}</p>)}</section>}{couponForm&&<ValidatedForm onSubmit={e=>{e.preventDefault();const body={...couponForm,value:cents(couponForm.value),maxUses:couponForm.maxUses===''?null:Number(couponForm.maxUses)};return run(async()=>{await api('sale-coupons','POST',{...body,requestKey:key('coupon',body)});delete keys.current.coupon;setCouponForm(null);});}}><fieldset disabled={busy}><label>Código do cupom<input required minLength={3} maxLength={40} pattern="[A-Za-z0-9_-]+" value={couponForm.code} onChange={e=>setCouponForm({...couponForm,code:e.target.value})}/></label><label>Tipo<select value={couponForm.kind} onChange={e=>setCouponForm({...couponForm,kind:e.target.value})}><option value="percent">Percentual (%)</option><option value="fixed">Valor fixo (R$)</option></select></label><label>Valor do cupom<input required type="number" min="0" max={couponForm.kind==='percent'?'100':'100000000'} step="0.01" value={couponForm.value} onChange={e=>setCouponForm({...couponForm,value:e.target.value})}/></label><label>Início (opcional)<input type="date" value={couponForm.startsOn} onChange={e=>setCouponForm({...couponForm,startsOn:e.target.value})}/></label><label>Fim (opcional)<input type="date" value={couponForm.endsOn} onChange={e=>setCouponForm({...couponForm,endsOn:e.target.value})}/></label><label>Limite de usos (opcional)<input type="number" min="1" step="1" value={couponForm.maxUses} onChange={e=>setCouponForm({...couponForm,maxUses:e.target.value})}/></label><label><input type="checkbox" checked={couponForm.active} onChange={e=>setCouponForm({...couponForm,active:e.target.checked})}/>Ativo</label><label><input type="checkbox" checked={couponForm.allowManual} onChange={e=>setCouponForm({...couponForm,allowManual:e.target.checked})}/>Permitir combinar com desconto manual (desativado por padrão)</label><ActionButton>Salvar cupom</ActionButton><ActionButton type="button" onClick={()=>setCouponForm(null)}>Cancelar</ActionButton></fieldset></ValidatedForm>}</details>
+ const categories=[...new Set(catalog.map(productCategory).filter(Boolean))];
+ const filtered=catalog.filter(p=>(!category||productCategory(p)===category)&&`${p.name} ${p.sku??''}`.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'))),pages=Math.max(1,Math.ceil(filtered.length/20)),current=Math.min(page,pages);
+ const line = cart.items[lineIndex];
+ const selectedClient = clients.find(client=>client.id===cart.clientId);
+ const productImage = (product:any) => <span className="pdv-thumb" aria-hidden="true">
+  {product?.imageUrl ? <img src={product.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer"/> : <BrandIcon name="produtos"/>}
+ </span>;
+ const currentSession=sessions.find(session=>session.id===cart.sessionId && !session.financial_closed_at);
+ const totalText = preview ? money(total) : '—';
+ const paymentLabel = paymentId===null ? panelTitles.payment : payments.find(row=>row.id===paymentId)?.methodId==='pix' ? 'Receber por Pix' : 'Outro meio de pagamento';
+
+ return <main className="products-screen pdv" style={theme} data-global={showGlobal || undefined} aria-labelledby="pdv-stage-title">
+  <PdvIdentity step={step} showGlobal={showGlobal}
+   onBack={step===4?()=>{if(!busy){if(completed){setCompleted(null);goTo(0);}else goTo(3);}}:undefined}
+   onOptions={()=>{if(!busy){if(showGlobal)setShowGlobal(false);else openPanel('options');}}}/>
+  <AreaNav active="vendas" attentionHostId="pdv-attention-host"/>
+  <div ref={scroll} className="pdv-scroll" tabIndex={0} role="region" aria-label="Conteúdo da etapa">
+   <p className="pdv-message" role="status">{message}</p>
+   {!completed && <div className="pdv-row pdv-stage-heading">
+    <h1 id="pdv-stage-title" tabIndex={-1}><BrandIcon name={(['store','produtos','cart','card','orcamentos'] as const)[step]}/>{stepTitles[step]}</h1>
+    {step===2 && itemCount>0 && <ActionButton className="pdv-ghost pdv-clear" aria-label="Esvaziar carrinho" onClick={()=>{
+     if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();goTo(1);}
+    }}><BrandIcon name="trash"/></ActionButton>}
+   </div>}
+   {step===0 && <div className="pdv-stack">
+    <div className="pdv-card pdv-session-intro">
+     <span className="pdv-session-icon"><BrandIcon name="store"/></span>
+     <div><strong>{currentSession?'Sessão em andamento':'Iniciar sessão de venda'}</strong>
+      <p className="pdv-muted">{currentSession?.name ?? 'Organize suas vendas e acompanhe os pagamentos.'}</p></div>
+    </div>
+    {currentSession && <ActionButton className="pdv-primary" onClick={()=>goTo(1)}>Continuar venda</ActionButton>}
+    <ActionButton className={currentSession?'pdv-secondary':'pdv-primary'} onClick={()=>openSessions('open')}>▶ Nova sessão</ActionButton>
+    <ActionButton className="pdv-secondary" onClick={()=>openSessions('resume')}>↻ Retomar sessão</ActionButton>
+    {!currentSession && <ActionButton className="pdv-ghost" onClick={()=>goTo(1)}>Venda avulsa</ActionButton>}
+    <div className="pdv-card pdv-stack pdv-recent">
+     <div className="pdv-row"><h2>Sessões recentes</h2><ActionButton className="pdv-ghost pdv-inline" onClick={()=>openSessions('resume')}>Ver todas ›</ActionButton></div>
+     {!sessions.length && <p className="pdv-muted">Nenhuma sessão registrada.</p>}
+     {sessions.slice(0,3).map(session=><div className="pdv-row pdv-divider" key={session.id}>
+      <div><strong>{session.name}</strong><div className="pdv-muted">{session.date_on.split('-').reverse().join('/')} · {session.financial_closed_at?'Encerrada':'Aberta'}</div></div>
+      {!session.financial_closed_at && <ActionButton className="pdv-ghost pdv-inline" onClick={()=>{
+       setCart(old=>({...old,sessionId:session.id}));setTier(session.tier);goTo(1);
+      }}>Retomar ›</ActionButton>}
+     </div>)}
+    </div>
+   </div>}
+
+   {step===1 && <div className="pdv-stack">
+    <div className="pdv-row pdv-search-row">
+     <label>Buscar produto<input placeholder="Nome ou código" value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/></label>
+     <ActionButton className="pdv-secondary" aria-label={'Tabela de preços: '+labels[tier as keyof typeof labels]} onClick={()=>openPanel('tier')}>{labels[tier as keyof typeof labels]} ▾</ActionButton>
+    </div>
+    <div className="pdv-category-row">
+     <div className="pdv-category-chips" role="group" aria-label="Categorias do catálogo">
+      {['',...categories.slice(0,2)].map(name=><ActionButton key={name} className={category===name?'pdv-primary':'pdv-secondary'} aria-pressed={category===name}
+       onClick={()=>{setCategory(name);setPage(1);}}>{name||'Todos'}</ActionButton>)}
+      {categories.length>2 && <ActionButton className="pdv-secondary" onClick={()=>openPanel('categories')}>Mais ▾</ActionButton>}
+     </div>
+    </div>
+    <div className="pdv-catalog-grid">
+     {filtered.slice((current-1)*20,current*20).map(product=><article className="pdv-card pdv-product" key={product.kind+':'+product.id}>
+      {productImage(product)}
+      <strong title={product.name}>{product.name}</strong>
+      {product.kind==='consigned' && <span className="pdv-muted">Consignado</span>}
+      <div className="pdv-row">
+       <b>{product.prices[tier]==null?'Definir preço':money(product.prices[tier])}</b>
+       <ActionButton className="pdv-primary" disabled={busy} aria-label={'Adicionar '+product.name} onClick={()=>add(product)}>+</ActionButton>
+      </div>
+     </article>)}
+    </div>
+    {!filtered.length && <p className="pdv-muted">Nenhum produto encontrado.</p>}
+    {pages>1 && <div className="pdv-row">
+     <ActionButton disabled={current<=1} onClick={()=>setPage(current-1)}>Anterior</ActionButton>
+     <span>Página {current} de {pages}</span>
+     <ActionButton disabled={current>=pages} onClick={()=>setPage(current+1)}>Próxima</ActionButton>
+    </div>}
+   </div>}
+
+   {step===2 && <div className="pdv-stack">
+    <div className="pdv-row"><h2>Itens da venda</h2><ActionButton className="pdv-ghost" onClick={()=>goTo(1)}>+ Produtos</ActionButton></div>
+    {!cart.items.length && <p className="pdv-muted">Adicione produtos para começar a venda.</p>}
+    {cart.items.map((item,index)=>{
+     const product = productFor(item);
+     const name = product?.name ?? 'Produto';
+     const price = unitPrice(item);
+     return <article className="pdv-card pdv-item pdv-cart-item" key={index}>
+      {productImage(product)}
+      <div className="pdv-grow"><strong>{name}</strong><div className="pdv-muted">{price==null?'Preço a definir':money(price)+' / un.'}</div>
+       <ActionButton className="pdv-ghost pdv-inline" aria-label={'Editar preço de '+name} onClick={()=>{setLineIndex(index);openPanel('item');}}>Editar preço</ActionButton>
+      </div>
+      <div className="pdv-quantity">
+       <ActionButton aria-label={'Diminuir quantidade de '+name} onClick={()=>item.quantity===1?removeLine(index):changeLine(index,{quantity:item.quantity-1})}>−</ActionButton>
+       <strong aria-label={'Quantidade: '+item.quantity}>{item.quantity}</strong>
+       <ActionButton disabled={item.quantity>=1000000} aria-label={'Aumentar quantidade de '+name} onClick={()=>changeLine(index,{quantity:item.quantity+1})}>+</ActionButton>
+      </div>
+      <b className="pdv-line-total">{price==null?'—':money(preview?.lines[index]?.total??price*item.quantity)}</b>
+     </article>;
+    })}
+    <div className="pdv-card pdv-summary pdv-stack">
+     <div className="pdv-row"><span>Cliente</span><ActionButton className="pdv-ghost" onClick={()=>openPanel('client')}>{selectedClient?.name || selectedClient?.companyName || 'Selecionar (opcional)'} ✎</ActionButton></div>
+     <div className="pdv-row pdv-discount">
+      <span>Desconto</span>
+      <div className="pdv-toggle">
+       {(['percent','fixed'] as const).map(kind=><ActionButton key={kind} className={cart.discount?.kind===kind?'pdv-primary':'pdv-secondary'}
+        aria-label={kind==='percent'?'Desconto percentual':'Desconto em reais'} aria-pressed={cart.discount?.kind===kind}
+        onClick={()=>setCart(old=>({...old,discount:{kind,value:old.discount?.kind===kind?old.discount.value:0}}))}>{kind==='percent'?'%':'R$'}</ActionButton>)}
+      </div>
+      <input aria-label="Valor do desconto da venda" type="number" min="0" step="0.01" max={cart.discount?.kind==='fixed'?100000000:100}
+       value={cart.discount ? cart.discount.value/100 : ''} placeholder="0,00" onChange={e=>setCart(old=>({...old,
+        discount:e.target.value===''?null:{kind:old.discount?.kind??'percent',value:cents(e.target.value)}}))}/>
+     </div>
+     <div className="pdv-row"><span>Cupom</span><ActionButton className="pdv-ghost" onClick={()=>openPanel('coupon')}>{cart.couponCode || 'Adicionar cupom'}</ActionButton></div>
+     <div className="pdv-row pdv-divider"><span>Subtotal</span><strong>{preview?money(preview.subtotal):'—'}</strong></div>
+     {!!(preview?.itemDiscount || preview?.saleDiscount || preview?.couponDiscount) && <div className="pdv-row"><span>Descontos</span><strong className="pdv-accent-text">− {money(preview.itemDiscount+preview.saleDiscount+preview.couponDiscount)}</strong></div>}
+     <div className="pdv-row pdv-total-highlight"><strong>Total a pagar</strong><strong>{totalText}</strong></div>
+    </div>
+    {preview?.warnings.length>0 && <p className="pdv-hint">Há divergência no saldo registrado. A venda pode ser concluída e ficará registrada para conferência.</p>}
+    {preview?.lines.some((item:any)=>item.kind==='consigned'&&item.finalTotal<item.quantity*(item.repass??0)) && <p className="pdv-hint">O repasse fixo do fornecedor será preservado mesmo com o desconto.</p>}
+   </div>}
+
+   {step===3 && <div className="pdv-stack">
+    <div className="pdv-card pdv-payment-summary">
+     <div>Total da venda</div><strong className="pdv-total">{totalText}</strong>
+     <div className="pdv-row pdv-payment-totals"><span className="pdv-muted">Registrado: {money(received)}</span><strong className={remaining?'pdv-amber':'pdv-accent-text'}>Falta {money(remaining)}</strong></div>
+     {scheduled>0 && <p className="pdv-muted">Agendado: {money(scheduled)}</p>}
+     {change>0 && <p className="pdv-muted">Troco previsto: {money(change)}</p>}
+    </div>
+    <div className="pdv-payment-modes" aria-label="Modo de pagamento" role="group">
+     {(Object.entries(paymentModes) as [PaymentMode,string][]).map(([mode,label],index)=><ActionButton key={mode}
+      className={mode===paymentMode?'pdv-primary':'pdv-secondary'} aria-pressed={mode===paymentMode} onClick={()=>setPaymentMode(mode)}>
+      <BrandIcon name={(['card','clock','layers'] as const)[index]}/>{label}
+     </ActionButton>)}
+    </div>
+    {paymentMode==='partial' && <p className="pdv-muted">Informe quanto recebeu agora.</p>}
+    {paymentMode==='split' && <p className="pdv-muted">Adicione um lançamento para cada meio utilizado.</p>}
+    <h2>Forma de pagamento</h2>
+    <div className="pdv-card pdv-payment-methods" role="radiogroup" aria-label="Forma de pagamento">
+     {(Object.entries(paymentChoices) as [PaymentChoice,string][]).filter(([choice])=>choiceMethod(choice)).map(([choice,label],index)=><label key={choice}>
+      <BrandIcon name={(['pix','card','cash','menu'] as const)[index]}/>{label}
+      <input type="radio" name="pdv-payment-method" checked={choice===paymentChoice} onChange={()=>setPaymentChoice(choice)}/>
+     </label>)}
+    </div>
+    <ActionButton className="pdv-primary" disabled={!preview||!choiceMethod(paymentChoice)||!accounts.some(a=>a.active)||payments.length>=20} onClick={addPayment}>
+     {paymentChoice==='pix'?'Gerar pagamento Pix':'Adicionar pagamento'}
+    </ActionButton>
+    {!!payments.length && <h2>Recebimentos</h2>}
+    {payments.map(row=><article className="pdv-card pdv-row" key={row.id}>
+     <div className="pdv-grow"><strong>{paymentName(row)}</strong><div className="pdv-muted">{paymentStatus(row)}</div>
+      <ActionButton className="pdv-ghost pdv-inline" onClick={()=>editPayment(row)}>Editar</ActionButton>
+     </div>
+     <div className="pdv-end"><strong>{money(cents(row.amount)||0)}</strong><br/>
+      <ActionButton className="pdv-ghost pdv-inline" aria-label={'Remover pagamento em '+paymentName(row)} onClick={()=>setPayments(old=>old.filter(item=>item.id!==row.id))}>Remover</ActionButton>
+     </div>
+    </article>)}
+    {payments.some(row=>!row.saved) && <p className="pdv-hint">Salve ou remova os pagamentos em edição para revisar a venda.</p>}
+    {preview && nonCash>total && <p className="pdv-hint">Os pagamentos sem dinheiro superam o total da venda.</p>}
+    <p className="pdv-hint">Confira o recebimento do Pix antes de registrá-lo. A venda pode ficar com saldo pendente.</p>
+   </div>}
+
+   {step===4 && (completed ? <div className="pdv-stack">
+    <div className="pdv-success" role="status">
+     <span className="pdv-success-mark" aria-hidden="true">✓</span>
+     <h1 id="pdv-stage-title" tabIndex={-1}>Venda concluída!</h1>
+     <p>{completed.sessionName || 'Venda avulsa'} · Nº {completed.number}</p>
+    </div>
+    <div className="pdv-card pdv-completed">
+     <div className="pdv-row"><span>Total da venda</span><strong>{money(completed.total)}</strong></div>
+     <div className="pdv-row pdv-divider"><span>Pago agora</span><strong>{money(completed.received)}</strong></div>
+     {completed.scheduled>0 && <div className="pdv-row"><span>Agendado</span><strong>{money(completed.scheduled)}</strong></div>}
+     <div className="pdv-row pdv-total-highlight"><strong>Saldo a receber</strong><strong>{money(completed.remaining)}</strong></div>
+     {completed.change>0 && <p>Troco: {money(completed.change)}</p>}
+    </div>
+    <div className="pdv-stack pdv-receipt-actions">
+     <ActionButton className="pdv-primary" disabled={busy} onClick={()=>openReceipt(completed.id,true)}><BrandIcon name="share"/>Enviar comprovante</ActionButton>
+     <ActionButton className="pdv-secondary" disabled={busy} onClick={()=>openReceipt(completed.id,true)}><BrandIcon name="print"/>Imprimir</ActionButton>
+     <ActionButton className="pdv-secondary" disabled={busy} onClick={newSale}><BrandIcon name="cart"/>Nova venda</ActionButton>
+     {currentSession && <ActionButton className="pdv-secondary" disabled={busy} onClick={()=>openSessions('close')}>Fechar sessão</ActionButton>}
+    </div>
+    {!!completed.attentions.length && <p className="pdv-hint">Divergência registrada para conferência.</p>}
+   </div> : <div className="pdv-stack">
+    <h2>Revisão final</h2>
+    <div className="pdv-card pdv-stack">
+     <div className="pdv-row"><span>Itens</span><strong>{itemCount}</strong></div>
+     {preview?.lines.map((item:any,index:number)=><div className="pdv-row pdv-muted" key={index}><span>{item.quantity} × {item.name}</span><strong>{money(item.finalTotal)}</strong></div>)}
+     <div className="pdv-row"><span>Cliente</span><strong>{selectedClient?.name || selectedClient?.companyName || 'Não informado'}</strong></div>
+     <div className="pdv-row"><span>Total</span><strong className="pdv-total">{totalText}</strong></div>
+     {(preview?.itemDiscount>0 || preview?.saleDiscount>0 || preview?.couponDiscount>0) && <p className="pdv-muted">Descontos: {money(preview.itemDiscount+preview.saleDiscount)} · Cupom: {money(preview.couponDiscount)}</p>}
+     <div className="pdv-divider"/>
+     {entered.map(row=><div className="pdv-row" key={row.id}><span>{paymentName(row)} <small className="pdv-muted">· {paymentStatus(row)}</small></span><strong>{money(cents(row.amount))}</strong></div>)}
+     {change>0 && <div className="pdv-row"><span>Troco</span><strong>{money(change)}</strong></div>}
+     {scheduled>0 && <div className="pdv-row"><span>Agendado</span><strong>{money(scheduled)}</strong></div>}
+     <div className="pdv-row"><span>Saldo a receber</span><strong className={remaining?'pdv-amber':'pdv-accent-text'}>{money(remaining)}</strong></div>
+    </div>
+    {remaining>0 && <p className="pdv-hint">Confirme o saldo a receber ao concluir a venda.</p>}
+   </div>)}
+  </div>
+
+  {(step!==4||!completed) && <footer className="pdv-footer">
+   {step===0 && <nav className="pdv-nav" aria-label="Navegação do PDV">
+    <span aria-current="page"><BrandIcon name="vendas"/>PDV</span>
+    {viewEnabled('produtos') && <a href="?view=produtos"><BrandIcon name="produtos"/>Produtos</a>}
+    <ActionButton onClick={()=>openPanel('history')}><BrandIcon name="orcamentos"/>Vendas</ActionButton>
+    <ActionButton onClick={()=>openPanel('options')}><BrandIcon name="menu"/>Mais</ActionButton>
+   </nav>}
+   {step===1 && <ActionButton className="pdv-primary pdv-full" disabled={busy||!itemCount} onClick={()=>goTo(2)}>
+    <BrandIcon name="cart"/> {itemCount} {itemCount===1?'item':'itens'} · {money(preview?.subtotal??gross)} ›
+   </ActionButton>}
+   {step===2 && <ActionButton className="pdv-primary pdv-full" disabled={busy||!preview} onClick={()=>goTo(3)}>Avançar para pagamento</ActionButton>}
+   {step===3 && <div className="pdv-actions">
+    <ActionButton className="pdv-secondary" disabled={busy} onClick={()=>goTo(2)}>Voltar</ActionButton>
+    <ActionButton className="pdv-primary" disabled={busy||!paymentReady} onClick={()=>goTo(4)}>Revisar conclusão</ActionButton>
+   </div>}
+   {step===4 && <div className="pdv-actions">
+    <ActionButton className="pdv-secondary" disabled={busy} onClick={()=>goTo(3)}>Voltar</ActionButton>
+    <ActionButton className="pdv-primary" disabled={!paymentReady||busy} onClick={finalize}>Concluir venda</ActionButton>
+   </div>}
+  </footer>}
+
+  <dialog ref={dialog} className="pdv-sheet" aria-labelledby="pdv-sheet-title"
+   onCancel={event=>{event.preventDefault();closePanel();}}
+   onClick={event=>{if(event.target===event.currentTarget){const rect=event.currentTarget.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closePanel();}}}>
+   <div className="pdv-row pdv-sheet-head"><h2 id="pdv-sheet-title">{panel==='payment'?paymentLabel:panel?panelTitles[panel]:''}</h2>
+    <ActionButton className="pdv-close" aria-label="Fechar janela" onClick={closePanel}>×</ActionButton></div>
+   <p className="pdv-message" role="status">{panelMessage || ((panel==='coupons'||panel==='history')?message:'')}</p>
+   {panel==='options' && <div className="pdv-stack">
+    <ActionButton onClick={()=>{closePanel();setCompleted(null);goTo(0);}}>Início do PDV</ActionButton>
+    <ActionButton onClick={()=>openPanel('history')}>Vendas anteriores</ActionButton>
+    <ActionButton onClick={()=>openSessions()}>{cart.sessionId?'Sessão selecionada':'Sessão de venda'}</ActionButton>
+    <ActionButton onClick={()=>openPanel('coupons')}>Gerenciar cupons</ActionButton>
+    {itemCount>0 && <ActionButton onClick={()=>{if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();closePanel();goTo(0);}}}>Cancelar carrinho</ActionButton>}
+    <ActionButton onClick={()=>{closePanel();setShowGlobal(true);}}>Menu e conta do Artesão Digital</ActionButton>
+    <details><summary>Outras operações</summary>
+  <p><a href="?view=consignados">Cadastrar e receber consignados</a></p>
+  <p><a href="?view=pagamentos">Configurar contas e formas de pagamento</a></p>
+  {moduleEnabled('pedidos') && <p><a href="?view=pedidos">Pedido direto</a></p>}
+  {moduleEnabled('orcamentos') && <p><a href="?view=orcamentos">Orçamento</a></p>}
+ </details>
+   </div>}
+   {panel==='tier' && <div className="pdv-stack">{[...tiers].reverse().map(value=><ActionButton key={value} className={tier===value?'pdv-primary':'pdv-secondary'} aria-pressed={tier===value}
+    onClick={()=>{setTier(value);closePanel();}}>{labels[value]}</ActionButton>)}</div>}
+   {panel==='item' && line && <div className="pdv-stack">
+    <strong>{productFor(line)?.name??'Produto'}</strong>
+    <label>Quantidade<input type="number" min="1" max="1000000" step="1" value={line.quantity} onChange={e=>changeLine(lineIndex,{quantity:Number(e.target.value)})}/></label>
+    <label>Faixa do item<select aria-label="Faixa do item" value={line.priceKey} onChange={e=>changeLine(lineIndex,{priceKey:e.target.value as SaleLine['priceKey']})}>
+     {[...tiers,'custom' as const].map(value=><option key={value} value={value}>{labels[value]}{value!=='custom'&&productFor(line)?.prices[value]!=null?' · '+money(productFor(line).prices[value]):''}</option>)}
+    </select></label>
+    {line.priceKey==='custom' && <label>Preço personalizado unitário (R$)<input type="number" min="0" step="0.01" value={line.customPriceCents===null?'':line.customPriceCents/100}
+     onChange={e=>changeLine(lineIndex,{customPriceCents:e.target.value===''?null:cents(e.target.value)})}/></label>}
+    <span>Desconto do item (total da linha)</span>{discountFields(line.discount,value=>changeLine(lineIndex,{discount:value}))}
+    <ActionButton className="pdv-primary" onClick={closePanel}>Concluir ajuste</ActionButton>
+    <ActionButton className="pdv-ghost" onClick={()=>{removeLine(lineIndex);closePanel();}}>Remover item</ActionButton>
+   </div>}
+   {panel==='client' && <ClientPicker persistent context="sale" sessionId={cart.sessionId} selected={selectedClient??null} onSelect={client=>{
+    if(client)setClients(old=>old.some(item=>item.id===client.id)?old.map(item=>item.id===client.id?client:item):[...old,client]);
+    setCart(old=>({...old,clientId:client?.id??null}));
+   }}/>}
+   {panel==='categories' && <div className="pdv-stack">{categories.map(name=><ActionButton key={name} className={category===name?'pdv-primary':'pdv-secondary'}
+    onClick={()=>{setCategory(name);setPage(1);closePanel();}}>{name}</ActionButton>)}</div>}
+   {panel==='coupon' && <div className="pdv-stack">
+    <label>Código do cupom<input maxLength={40} value={cart.couponCode} onChange={e=>setCart(old=>({...old,couponCode:e.target.value,discountChoice:e.target.value?'coupon':'manual'}))}/></label>
+    {cart.couponCode && <label>Como aplicar descontos<select value={cart.discountChoice} onChange={e=>setCart(old=>({...old,discountChoice:e.target.value as Cart['discountChoice']}))}>
+     <option value="coupon">Usar somente cupom</option><option value="manual">Usar somente desconto manual</option><option value="combine">Combinar (somente se o cupom permitir)</option>
+    </select></label>}
+    <ActionButton className="pdv-primary" onClick={closePanel}>Aplicar cupom</ActionButton>
+   </div>}
+   {panel==='sessions' && <SalesSessions initialAction={sessionAction==='resume'?undefined:sessionAction} sessionId={cart.sessionId} catalog={catalog} onSelect={(id, selectedTier) => {
+    setCart(old => {
+     const next = {...old};
+     if (id) next.sessionId = id;
+     else delete next.sessionId;
+     return next;
+    });
+    if (selectedTier) setTier(selectedTier);
+    if(step===0&&(sessionAction==='open'||sessionAction==='resume')){closePanel();goTo(1);}
+   }} onDone={load}/>}
+   {panel==='history' && <div className="pdv-stack">{!sales.length && <p className="pdv-muted">Nenhuma venda confirmada.</p>}{sales.map(s=><p key={s.id}>Venda {s.number} · {s.registered_at} · {money(s.total_cents)} <ActionButton disabled={busy} onClick={()=>openReceipt(s.id)}>Consultar comprovante</ActionButton></p>)}{sales.length>=200&&<ActionButton disabled={busy} onClick={()=>{setBusy(true);return api('sales?before='+sales[sales.length-1].number).then(rows=>setSales(old=>[...old,...rows])).catch(e=>setMessage(e.message)).finally(()=>setBusy(false));}}>Carregar vendas anteriores</ActionButton>}</div>}
+   {panel==='coupons' && <div className="pdv-stack"><ActionButton disabled={busy} onClick={()=>setCouponForm({code:'',kind:'percent',value:'',startsOn:'',endsOn:'',maxUses:'',active:true,allowManual:false})}>Cadastrar cupom</ActionButton>{coupons.map(c=><p key={c.id}>{c.code} · {c.kind==='percent'?c.value/100+'%':money(c.value)} · Usos {c.uses}/{c.max_uses??'sem limite'} · {c.active?'Ativo':'Inativo'} <ActionButton disabled={busy} onClick={()=>setCouponForm({id:c.id,expectedRevision:c.revision,code:c.code,kind:c.kind,value:String(c.value/100),startsOn:c.starts_on??'',endsOn:c.ends_on??'',maxUses:c.max_uses===null?'':String(c.max_uses),active:!!c.active,allowManual:!!c.allow_manual})}>Editar cupom</ActionButton><ActionButton disabled={busy} onClick={()=>run(async()=>setCouponHistory(await api('sale-coupons/'+c.id+'/history')))}>Histórico de usos</ActionButton></p>)}{couponHistory&&<section><h3>Aplicações confirmadas</h3>{couponHistory.map(u=><p key={u.id}>Venda {u.number} · {u.registered_at} · Desconto {money(u.discount_cents)}</p>)}</section>}{couponForm&&<ValidatedForm onSubmit={e=>{e.preventDefault();const body={...couponForm,value:cents(couponForm.value),maxUses:couponForm.maxUses===''?null:Number(couponForm.maxUses)};return run(async()=>{await api('sale-coupons','POST',{...body,requestKey:key('coupon',body)});delete keys.current.coupon;setCouponForm(null);});}}><fieldset disabled={busy}><label>Código do cupom<input required minLength={3} maxLength={40} pattern="[A-Za-z0-9_-]+" value={couponForm.code} onChange={e=>setCouponForm({...couponForm,code:e.target.value})}/></label><label>Tipo<select value={couponForm.kind} onChange={e=>setCouponForm({...couponForm,kind:e.target.value})}><option value="percent">Percentual (%)</option><option value="fixed">Valor fixo (R$)</option></select></label><label>Valor do cupom<input required type="number" min="0" max={couponForm.kind==='percent'?'100':'100000000'} step="0.01" value={couponForm.value} onChange={e=>setCouponForm({...couponForm,value:e.target.value})}/></label><label>Início (opcional)<input type="date" value={couponForm.startsOn} onChange={e=>setCouponForm({...couponForm,startsOn:e.target.value})}/></label><label>Fim (opcional)<input type="date" value={couponForm.endsOn} onChange={e=>setCouponForm({...couponForm,endsOn:e.target.value})}/></label><label>Limite de usos (opcional)<input type="number" min="1" step="1" value={couponForm.maxUses} onChange={e=>setCouponForm({...couponForm,maxUses:e.target.value})}/></label><label><input type="checkbox" checked={couponForm.active} onChange={e=>setCouponForm({...couponForm,active:e.target.checked})}/>Ativo</label><label><input type="checkbox" checked={couponForm.allowManual} onChange={e=>setCouponForm({...couponForm,allowManual:e.target.checked})}/>Permitir combinar com desconto manual (desativado por padrão)</label><ActionButton>Salvar cupom</ActionButton><ActionButton type="button" onClick={()=>setCouponForm(null)}>Cancelar</ActionButton></fieldset></ValidatedForm>}</div>}
+   {panel==='receipt' && receipt && <div className="pdv-stack sales-receipt"><h3>Venda {receipt.number}</h3><pre className="stock-snapshot">{receiptText}</pre><ActionButton disabled={busy} onClick={()=>readReceiptAction(prepare)}>Preparar comprovante PDF</ActionButton>{file&&fileUrl&&<><p><a href={fileUrl} download={file.name}>Baixar PDF</a> · <a href={fileUrl} target="_blank" rel="noopener">Abrir para impressão</a></p>{navigator.canShare?.({files:[file]})&&<ActionButton onClick={()=>navigator.share({files:[file],title:'Comprovante não fiscal'}).catch(()=>setPanelMessage('Compartilhamento cancelado ou indisponível. Use Baixar PDF.'))}>Compartilhar PDF</ActionButton>}<a href={'https://wa.me/?text='+encodeURIComponent(receiptText)} target="_blank" rel="noopener">Abrir texto no WhatsApp</a><p>O WhatsApp abre com o texto; anexe o PDF baixado se desejar. Não há envio automático.</p></>}</div>}
+   {payments.map(row=><div key={row.id} hidden={panel!=='payment'||paymentId!==row.id}>
+    <ValidatedForm onSubmit={event=>{
+     event.preventDefault();
+     if(row.methodId==='pix'&&!row.settleNow&&!row.expectedOn){
+      setPanelMessage('Confirme o recebimento do Pix no banco ou informe uma data prevista.');
+      return;
+     }
+     changePayment(row.id,{saved:true});
+     closePanel();
+    }}>
+     <div className="pdv-stack">
+      {row.methodId==='pix' && <div className="pdv-row"><span>Valor a receber</span><strong className="pdv-total">{money(cents(row.amount)||0)}</strong></div>}
+      <label>Forma de pagamento<select aria-label="Forma de pagamento" value={row.methodId} onChange={e=>{
+       const method=methods.find(m=>m.id===e.target.value);
+       if(method)changePayment(row.id,{methodId:method.id,fee:'',expectedOn:'',settleNow:method.id!=='pix'&&method.delay_days===0});
+      }}>{methods.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
+      <label>Valor (R$)<input aria-label="Valor (R$)" required type="number" min="0.01" step="0.01" value={row.amount} onChange={e=>changePayment(row.id,{amount:e.target.value,...(row.methodId==='pix'?{settleNow:false}:{})})}/></label>
+      <label>Conta<select aria-label="Conta" required value={row.accountId} onChange={e=>changePayment(row.id,{accountId:e.target.value})}>{accounts.filter(a=>a.active).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+      {row.methodId==='pix' && Number.isFinite(cents(row.amount)) && cents(row.amount)>0 && <PixQr amountCents={cents(row.amount)} onPaid={()=>{
+       setPayments(old=>old.map(item=>item.id===row.id?{...item,settleNow:true}:item));
+      }}/>}
+      <details><summary>Taxa e prazo</summary>
+       <label>Taxa (R$; vazio usa padrão)<input type="number" min="0" step="0.01" value={row.fee} onChange={e=>changePayment(row.id,{fee:e.target.value})}/></label>
+       <label>Data prevista<input type="date" value={row.expectedOn} onChange={e=>changePayment(row.id,{expectedOn:e.target.value,settleNow:row.methodId!=='pix'&&!!e.target.value&&e.target.value<=new Date().toISOString().slice(0,10)})}/></label>
+      </details>
+      <label className="pdv-check"><input type="checkbox" checked={row.settleNow} onChange={e=>changePayment(row.id,{settleNow:e.target.checked})}/>
+       {row.methodId==='pix'?'Confirmei o recebimento no banco':'Liquidado na conta'}
+      </label>
+      <ActionButton className="pdv-primary" disabled={busy}>Salvar pagamento</ActionButton>
+     </div>
+    </ValidatedForm>
+   </div>)}
+  </dialog>
  </main>;
 }

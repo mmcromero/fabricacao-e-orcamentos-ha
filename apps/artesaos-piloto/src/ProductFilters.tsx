@@ -1,12 +1,12 @@
 import ValidatedForm from './FormValidation';
-import {useId,useRef,useState} from 'react';
+import {useId,useRef,useState,type ReactNode} from 'react';
 
 type Filters={origin:string;category:string};
-type Props={search:string;onSearch:(value:string)=>void;value:Filters;onChange:(value:Filters)=>void;categories:string[];total:number};
+type Props={search:string;onSearch:(value:string)=>void;value:Filters;onChange:(value:Filters)=>void;categories:string[];total:number;batchAction?:ReactNode;onOpenFilters?:()=>void};
 const originLabel=(value:string)=>value==='own'?'Próprios':'De cliente';
 const categoryLabel=(value:string)=>value==='__pending__'?'Categoria pendente':value;
 
-export default function ProductFilters({search,onSearch,value,onChange,categories,total}:Props){
+export default function ProductFilters({search,onSearch,value,onChange,categories,total,batchAction,onOpenFilters}:Props){
  const dialog=useRef<HTMLDialogElement>(null);
  const headingId=useId();
  const [draft,setDraft]=useState(value);
@@ -19,7 +19,7 @@ export default function ProductFilters({search,onSearch,value,onChange,categorie
   <div className="product-filter-toolbar">
    <label className="product-filter-search">Buscar produtos<input type="search" value={search} onChange={event=>onSearch(event.target.value)} placeholder="Nome ou código/SKU"/></label>
    <div className="product-filter-desktop">{controls(value,onChange)}</div>
-   <button type="button" className="product-filter-toggle" aria-haspopup="dialog" onClick={()=>{setDraft(value);dialog.current?.showModal();}}>Filtros{active>0?` (${active})`:''}</button>
+   <div className="product-filter-actions"><button type="button" className="product-filter-toggle" aria-haspopup="dialog" onClick={()=>{onOpenFilters?.();setDraft(value);dialog.current?.showModal();}}>Filtros{active>0?` (${active})`:''}</button>{batchAction}</div>
   </div>
   <div className="product-filter-status">
    <span role="status">{total} {total===1?'produto encontrado':'produtos encontrados'}</span>

@@ -204,3 +204,13 @@
 .shipping-panel input:not([type=checkbox]),.shipping-panel select{max-width:100%;box-sizing:border-box;width:100%}
 .shipping-panel p,.shipping-panel li{overflow-wrap:anywhere}
 .shipping-panel summary{cursor:pointer;font-weight:bold;min-height:2rem}
+
+/* PROD-UX-003: ações do catálogo próximas da busca. Sem alterar PDV, clientes ou orçamento. */
+.products-screen #product-batch-actions[hidden],.products-screen #product-batch-actions summary[hidden]{display:none!important}
+.products-screen #product-batch-actions:not([hidden]){margin-block:10px}
+.products-screen .product-filter-actions{display:flex;gap:8px;align-items:center}
+.products-screen .product-batch-toggle{margin:0;min-height:44px;padding:10px 12px;white-space:nowrap}
+.products-screen .product-batch-toggle[aria-expanded=true]{background:#eef4ef;color:#205e47;border:1px solid #789483}
+.products-screen .product-offline-group{margin:12px 0}
+.products-screen .product-offline-group>summary{cursor:pointer;min-height:44px;align-content:center}
+@media(max-width:600px){.products-screen .product-filter-toolbar:has(.product-batch-toggle){flex-wrap:wrap}.products-screen .product-filter-toolbar:has(.product-batch-toggle) .product-filter-search{flex:1 0 100%}.products-screen .product-filter-toolbar:has(.product-batch-toggle) .product-filter-actions{flex:1 0 100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.products-screen .product-filter-actions>button{min-width:0;margin:0;white-space:normal}}

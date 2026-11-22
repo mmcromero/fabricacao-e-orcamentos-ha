@@ -6,6 +6,7 @@ import SupportHub from './SupportHub';
 import CompanySettings from './CompanySettings';
 import AreaNav from './AreaNav';
 import Settings from './Settings';
+import {PdvColorSettings} from './pdv-theme';
 import {resolveSettingsGroup,settingsUrl,type SettingsGroup} from './settings-navigation';
 import './settings-navigation.css';
 
@@ -15,7 +16,7 @@ export default function PilotSettings(){
   {id:'geral',title:'Geral',description:'Dados da empresa e logotipo.',content:<><CompanySettings/><CompanyLogo/></>},
   {id:'preferencias',title:'Preferências',description:'Tela inicial e opções de acesso.',content:<OperationalPreferences/>},
   ...(moduleEnabled('fabricacao')?[{id:'custos' as const,title:'Custos e precificação',description:'Parâmetros de cálculo e planejamento.',content:<><p><a href="?view=fabricacao">Cadastrar produto e calcular preços</a> · <a href="?view=materiais">Gerenciar materiais da fabricação</a></p><p>Parâmetros de cálculo e anotações de planejamento. Despesas mensais estimadas não são contas pagas no Financeiro. Alterar sugestões não substitui preços comerciais já aplicados.</p><Settings area="fabricacao" embedded/></>}]:[]),
-  ...(moduleEnabled('vendas')?[{id:'vendas' as const,title:'Vendas e pagamentos',description:'Acesso aos parâmetros das operações de venda.',content:<><p>Contas, formas de pagamento, taxas e prazos são mantidos no Financeiro. Seus padrões são aplicados às novas operações; pagamentos históricos preservam os valores registrados.</p><p><a href={moduleEnabled('financeiro')?'?view=financeiro&tab=entries#finance-settings':'?view=pagamentos'}>Abrir contas e formas de pagamento</a></p><p><a href="?view=vendas">Cupons, locais e sessões de venda</a></p></>}]:[]),
+  ...(moduleEnabled('vendas')?[{id:'vendas' as const,title:'Vendas e pagamentos',description:'Acesso aos parâmetros das operações de venda.',content:<><PdvColorSettings/><p>Contas, formas de pagamento, taxas e prazos são mantidos no Financeiro. Seus padrões são aplicados às novas operações; pagamentos históricos preservam os valores registrados.</p><p><a href={moduleEnabled('financeiro')?'?view=financeiro&tab=entries#finance-settings':'?view=pagamentos'}>Abrir contas e formas de pagamento</a></p><p><a href="?view=vendas">Cupons, locais e sessões de venda</a></p></>}]:[]),
   ...(moduleEnabled('orcamentos')?[{id:'frete' as const,title:'Orçamentos e frete',description:'Preferências de orçamento e envio.',content:<><Settings area="orcamentos" embedded/><p>Caixas, proteção, dimensões e saldos são gerenciados no Estoque. A estimativa está no orçamento e no pedido; somente confirmar preparo real no pedido consome materiais.</p><a href={moduleEnabled('estoque')?'?view=estoque&section=materiais':'?view=materiais'}>Gerenciar embalagens e materiais de envio</a></>}]:[]),
   ...(moduleEnabled('catalogo')?[{id:'produtos' as const,title:'Produtos',description:'Categorias, importação e lista.',content:<div id="config-products"><Settings area="produtos" embedded/></div>}]:[]),
   ...(moduleEnabled('clientes')?[{id:'clientes' as const,title:'Clientes',description:'Lista e importação.',content:<div id="config-clients"><Settings area="clientes" embedded/></div>}]:[]),

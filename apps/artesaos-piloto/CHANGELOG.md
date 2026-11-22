@@ -1,3 +1,9 @@
+# 0.2.0-dev.31 — recuperação PDV (22/11/2026)
+
+- Restaura o último código preservado do PR #82; configurações gerais mantêm navegação UX e controle de cor do PDV.
+- Produtos: ações em lote acima do catálogo, controles Filtros e Ações em lote lado a lado em celular, consulta offline recolhível; preserva filtros e API.
+- Preserva ProductForm, ficha técnica, alterações UX-STD-001, contratos de venda, schema, dados, identidade da loja e Forja. Build e homologação real pendentes.
+
 # 0.2.0-dev.30 — identidade da loja HA (22/11/2026)
 
 - Nome de apresentação Fábrica de Softwares - Artesão Digital e PNGs oficiais do catálogo (icon.png e logo.png).
