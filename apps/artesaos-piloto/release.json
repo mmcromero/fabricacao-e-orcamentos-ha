@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0-dev.32",
+  "version": "0.2.0-dev.33",
   "stage": "offline-catalog",
   "distributions": [
     "home-assistant",
@@ -12,8 +12,8 @@
     "support": 2,
     "legal": 3
   },
-  "releaseVersion": "0.2.0-dev.32",
-  "sourceCommit": "390781e07e85eee262f9d7792c104f5de99397c1",
+  "releaseVersion": "0.2.0-dev.33",
+  "sourceCommit": "75697d56d8a838c704b1f1377a8fb657602b0dae",
   "distribution": "home-assistant",
   "packageKind": "source-addon",
   "architecture": "linux/arm64",
@@ -22,29 +22,28 @@
   "repositoryPath": "apps/artesaos-piloto",
   "baseVersion": "0.1.23",
   "metadataVersion": 1,
-  "preparedAt": "2026-11-22T20:13:28.243Z",
+  "preparedAt": "2026-11-23T01:39:40.704Z",
   "builtAt": null,
-  "businessSourceSha256": "4a157d806e3b721a47cc39cfcee1d697dcdd4be8a5e1932770a59cc68e052070",
+  "businessSourceSha256": "0348367ed380d1ed02422d73a0ec8eecf125dc398130af4e7d5ae0a8a5346b80",
   "validation": {
-    "sourceCommit": "390781e07e85eee262f9d7792c104f5de99397c1",
+    "sourceCommit": "75697d56d8a838c704b1f1377a8fb657602b0dae",
     "status": "pending-supervisor",
     "directedChecks": [
       {
-        "name": "reference-source-and-scope",
+        "name": "source-scope-review",
         "status": "passed",
-        "evidence": "Reference prototype a727594 verified; source static checks and 165 protected blobs unchanged before version bump. Not a visual or functional PASS."
+        "evidence": "Diff da candidata dev.33 revisado. Alterações restritas à interface PDV, identidade visual e apresentação do login Google; sem mudança de schema, dependências, endpoints OAuth, API de vendas, estoque, sessões, pagamentos ou contratos. server/pilot/entry.ts é template de apresentação pública; allowlist específica e teste de fixture adicionados ao exportador."
       },
       {
-        "name": "store-and-configuration",
+        "name": "store-identity-and-config",
         "status": "passed",
-        "evidence": "Config exact except version; official PNGs unchanged."
+        "evidence": "Nome oficial Fábrica de Softwares - Artesão Digital; slug artesaos_piloto; opções e volume preservados. icon.png/logo.png seguem os blobs oficiais do catálogo 8666d9ab6c2967985e5160afc4aaeedf145dba71."
       }
     ],
     "build": "not-performed",
     "physicalValidation": "not-performed",
     "browserJourneys": "pending",
-    "exception": "Explicit owner authorization 22/11/2026, PAIR-PROT-001 v2.2, candidate-only HA publication for manual visual validation before browser automation.",
-    "exportMethod": "GitHub API source delta, hash and blob verification; no local build or browser execution."
+    "exportMethod": "GitHub Git Data API: blobs da fonte congelada, transformação de Dockerfile/config, revisão de escopo e SHA256SUMS; script Python não executado em checkout local."
   },
   "schemaChecksums": {
     "tenant": [

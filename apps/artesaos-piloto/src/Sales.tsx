@@ -237,15 +237,16 @@ export default function Sales(){
  const totalText = preview ? money(total) : '—';
  const paymentLabel = paymentId===null ? panelTitles.payment : payments.find(row=>row.id===paymentId)?.methodId==='pix' ? 'Receber por Pix' : 'Outro meio de pagamento';
 
- return <main className="products-screen pdv ad-module-screen" style={theme} aria-labelledby="pdv-stage-title">
+ return <main className="products-screen pdv ad-module-screen" style={theme} aria-labelledby="pdv-stage-title" data-pdv-step={step}>
   <AreaNav active="vendas"/>
   <div ref={scroll} className="pdv-scroll">
-   <ModuleHeading id="pdv-stage-title" symbol={(['store','produtos','cart','card','orcamentos'] as const)[step]} title={completed?'Venda concluída!':stepTitles[step]} description={step===0?'Inicie um novo evento, retome um evento existente ou faça uma venda avulsa.':undefined}
+   <ModuleHeading id="pdv-stage-title" symbol={step>=1&&step<=3?'store':(['store','produtos','cart','card','orcamentos'] as const)[step]} title={completed?'Venda concluída!':step>=1&&step<=3?<><span className="pdv-title-desktop">Vendas</span><span className="pdv-title-mobile">{stepTitles[step]}</span></>:stepTitles[step]} description={step===0?'Inicie um novo evento, retome um evento existente ou faça uma venda avulsa.':undefined}
     action={step===0?<ActionButton className="pdv-secondary" disabled={busy} onClick={()=>openPanel('options')}>Opções do PDV</ActionButton>:<div className="pdv-context-actions">
       <ActionButton className="pdv-secondary" disabled={busy} aria-label="Voltar uma etapa" onClick={()=>{if(completed){setCompleted(null);goTo(0);}else goTo(Math.max(0,step-1) as Step);}}><BrandIcon name="back"/>Voltar</ActionButton>
       {step===2&&itemCount>0&&<ActionButton className="pdv-ghost pdv-clear" aria-label="Esvaziar carrinho" onClick={()=>{if(confirm('Cancelar este carrinho sem alterar estoque ou caixa?')){resetSale();goTo(1);}}}><BrandIcon name="trash"/></ActionButton>}
     </div>}/>
    <p className="pdv-message" role="status">{message}</p>
+   {step>=1&&step<=3&&!completed&&<div className="pdv-workspace-context"><strong>{currentSession?'Venda por sessão':'Venda rápida'}</strong>{currentSession?<><span>{currentSession.name}</span><span>{currentSession.date_on.split('-').reverse().join('/')}</span><span className="pdv-context-status">Sessão ativa</span></>:<span>Venda avulsa</span>}</div>}
    {step===0 && <div className="pdv-stack">
     <section className="pdv-entry-actions" aria-label="Iniciar venda">
      <ActionButton className="pdv-entry-action pdv-primary" aria-label={currentSession||itemCount?'Continuar venda':'Nova sessão'} aria-describedby="pdv-entry-first-description" disabled={busy} onClick={()=>currentSession||itemCount?goTo(1):openSessions('open')}>
@@ -266,7 +267,7 @@ export default function Sales(){
     </div>
    </div>}
 
-   {step===1 && <div className="pdv-stack">
+   {step>=1&&step<=3&&!completed&&<div className="pdv-desktop-workspace"><section className="pdv-desktop-panel pdv-panel-catalog" data-mobile-active={step===1}><div className="pdv-stack">
     <div className="pdv-row pdv-search-row">
      <label>Buscar produto<input placeholder="Nome ou código" value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}/></label>
      <ActionButton className="pdv-secondary" aria-label={'Tabela de preços: '+labels[tier as keyof typeof labels]} onClick={()=>openPanel('tier')}>{labels[tier as keyof typeof labels]} ▾</ActionButton>
@@ -282,6 +283,7 @@ export default function Sales(){
      {filtered.slice((current-1)*20,current*20).map(product=><article className="pdv-card pdv-product" key={product.kind+':'+product.id}>
       {productImage(product)}
       <strong title={product.name}>{product.name}</strong>
+      {product.sku&&<span className="pdv-muted">SKU: {product.sku}</span>}
       {product.kind==='consigned' && <span className="pdv-muted">Consignado</span>}
       <div className="pdv-row">
        <b>{product.prices[tier]==null?'Definir preço':money(product.prices[tier])}</b>
@@ -295,9 +297,9 @@ export default function Sales(){
      <span>Página {current} de {pages}</span>
      <ActionButton disabled={current>=pages} onClick={()=>setPage(current+1)}>Próxima</ActionButton>
     </div>}
-   </div>}
+   </div></section>
 
-   {step===2 && <div className="pdv-stack">
+   <section className="pdv-desktop-panel pdv-panel-cart" data-mobile-active={step===2}><div className="pdv-stack">
     <div className="pdv-row"><h2>Itens da venda</h2><ActionButton className="pdv-ghost" onClick={()=>goTo(1)}>+ Produtos</ActionButton></div>
     {!cart.items.length && <p className="pdv-muted">Adicione produtos para começar a venda.</p>}
     {cart.items.map((item,index)=>{
@@ -306,7 +308,7 @@ export default function Sales(){
      const price = unitPrice(item);
      return <article className="pdv-card pdv-item pdv-cart-item" key={index}>
       {productImage(product)}
-      <div className="pdv-grow"><strong>{name}</strong><div className="pdv-muted">{price==null?'Preço a definir':money(price)+' / un.'}</div>
+      <div className="pdv-grow"><strong>{name}</strong><div className="pdv-muted">{product?.sku?'SKU: '+product.sku+' · ':''}{item.kind==='consigned'?'Consignado':'Próprio'}</div><div className="pdv-muted">{price==null?'Preço a definir':money(price)+' / un.'}</div>
        <ActionButton className="pdv-ghost pdv-inline" aria-label={'Editar preço de '+name} onClick={()=>{setLineIndex(index);openPanel('item');}}>Editar preço</ActionButton>
       </div>
       <div className="pdv-quantity">
@@ -315,6 +317,7 @@ export default function Sales(){
        <ActionButton disabled={item.quantity>=1000000} aria-label={'Aumentar quantidade de '+name} onClick={()=>changeLine(index,{quantity:item.quantity+1})}>+</ActionButton>
       </div>
       <b className="pdv-line-total">{price==null?'—':money(preview?.lines[index]?.total??price*item.quantity)}</b>
+      <ActionButton className="pdv-ghost pdv-inline" aria-label={'Remover '+name+' do carrinho'} onClick={()=>removeLine(index)}><BrandIcon name="trash"/></ActionButton>
      </article>;
     })}
     <div className="pdv-card pdv-summary pdv-stack">
@@ -337,9 +340,9 @@ export default function Sales(){
     </div>
     {preview?.warnings.length>0 && <p className="pdv-hint">Há divergência no saldo registrado. A venda pode ser concluída e ficará registrada para conferência.</p>}
     {preview?.lines.some((item:any)=>item.kind==='consigned'&&item.finalTotal<item.quantity*(item.repass??0)) && <p className="pdv-hint">O repasse fixo do fornecedor será preservado mesmo com o desconto.</p>}
-   </div>}
+   </div></section>
 
-   {step===3 && <div className="pdv-stack">
+   <section className="pdv-desktop-panel pdv-panel-payment" data-mobile-active={step===3}><div className="pdv-stack">
     <div className="pdv-card pdv-payment-summary">
      <div>Total da venda</div><strong className="pdv-total">{totalText}</strong>
      <div className="pdv-row pdv-payment-totals"><span className="pdv-muted">Registrado: {money(received)}</span><strong className={remaining?'pdv-amber':'pdv-accent-text'}>Falta {money(remaining)}</strong></div>
@@ -376,7 +379,8 @@ export default function Sales(){
     {payments.some(row=>!row.saved) && <p className="pdv-hint">Salve ou remova os pagamentos em edição para revisar a venda.</p>}
     {preview && nonCash>total && <p className="pdv-hint">Os pagamentos sem dinheiro superam o total da venda.</p>}
     <p className="pdv-hint">Confira o recebimento do Pix antes de registrá-lo. A venda pode ficar com saldo pendente.</p>
-   </div>}
+    <ActionButton className="pdv-primary pdv-full pdv-desktop-review" disabled={!paymentReady||busy} onClick={()=>goTo(4)}>Revisar conclusão</ActionButton>
+   </div></section></div>}
 
    {step===4 && (completed ? <div className="pdv-stack">
     <div className="pdv-success" role="status">

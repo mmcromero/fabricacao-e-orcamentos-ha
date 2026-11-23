@@ -228,9 +228,9 @@ html body.pilot-session-active:has(.ad-module-screen) #pilot-build-info{position
 @media(min-width:768px){.products-screen .ad-module-heading h1.ad-module-title{font-size:30px}.products-screen .ad-module-heading p.ad-module-description{font-size:16px}.ad-module-heading-row{margin-bottom:24px}}
 @media(max-width:575px){.ad-module-heading-row{flex-direction:column;align-items:stretch}.ad-module-heading-action{align-self:flex-start}}
 
-/* Business identity uses the same account row across modules, without duplicating header or alert host. */
-:root #pilot-shell .pilot-account-title:has(>.ad-company-identity)>:not(.ad-company-identity){display:none!important}
+/* Original PDV logo condition: hide the official identity only after the registered client image loads. */
+:root #pilot-shell .pilot-account-title:has(>.ad-company-identity[data-ready="true"])>:not(.ad-company-identity){display:none!important}
+:root #pilot-shell .ad-company-identity[data-ready="false"]{position:absolute;visibility:hidden;width:0;height:0;min-height:0;overflow:hidden}
 :root #pilot-shell .ad-company-identity{display:flex;align-items:center;min-width:0;max-width:min(38vw,240px);min-height:44px}
 :root #pilot-shell .ad-company-identity img{display:block;width:auto!important;min-width:0!important;max-width:100%;max-height:72px;height:auto;object-fit:contain}
-:root #pilot-shell .ad-company-identity strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit}
 @media(max-width:700px){:root #pilot-shell .ad-company-identity img{max-height:56px}}

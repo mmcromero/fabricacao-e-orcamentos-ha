@@ -1,3 +1,10 @@
+# 0.2.0-dev.33 — recuperação integrada do PDV (22/11/2026)
+
+- Reintegra a evolução visual do PDV: cabeçalho contextual compartilhado, contexto da sessão, painel de catálogo/carrinho/pagamento em desktop e etapas operacionais no mobile.
+- Preserva a navegação geral, a identidade oficial do Artesão Digital quando não há logo do negócio, o catálogo de venda separado do cadastro de Produtos e o rodapé no fluxo.
+- Atualiza o roteiro de verificação visual para desktop e mobile, incluindo identidade, geometria, painéis, carrinho e navegação.
+- Sem alteração intencional de schema, dependências, API, autenticação, contratos de venda ou dados. Testes automatizados, build no Supervisor e homologação visual/funcional permanecem pendentes.
+
 # 0.2.0-dev.32 — recuperação de UX de 13/11 (22/11/2026)
 
 - PDV e Produtos compartilham cabeçalho e menu geral; largura normal no desktop, catálogo interno separado, sem barra inferior na entrada do PDV e rodapé fluido.

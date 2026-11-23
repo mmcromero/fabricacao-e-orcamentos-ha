@@ -178,3 +178,58 @@
 .products-screen.pdv .pdv-message:empty{display:none}
 .products-screen.pdv .pdv-nav button{min-width:0}
 .products-screen.pdv .pdv-footer button{max-width:100%}
+
+
+/* AD-UX-PDV-LOTE-001: desktop uses the original three-area sales composition.
+   Mobile keeps the existing step flow and its normal-flow footer. */
+.pdv-title-desktop{display:none}
+.pdv-title-mobile{display:inline}
+.pdv-workspace-context{display:none}
+.pdv-desktop-review{display:none}
+.pdv-desktop-workspace{display:block;min-width:0}
+.pdv-desktop-panel{display:none;min-width:0}
+.pdv-desktop-panel[data-mobile-active="true"]{display:block}
+
+@media(min-width:1180px){
+ .pdv-title-desktop{display:inline}
+ .pdv-title-mobile{display:none}
+ .pdv-workspace-context{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:8px 12px;background:#edf3ee;border:1px solid var(--pdv-border);border-radius:10px;color:var(--pdv-text);font-size:13px}
+ .pdv-context-status{padding:3px 8px;border-radius:99px;background:#d9f0dc;color:#155b2c;font-weight:700}
+ .pdv-desktop-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) minmax(280px,.9fr);gap:12px;align-items:start}
+ .pdv-desktop-panel,.pdv-desktop-panel[data-mobile-active="false"]{display:block;padding:12px;border:1px solid var(--pdv-border);border-radius:14px;background:var(--pdv-card);min-height:100%}
+ .pdv-desktop-panel>.pdv-stack{gap:10px}
+ .pdv-desktop-panel .pdv-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .pdv-desktop-panel .pdv-product>strong{font-size:13px}
+ .pdv-desktop-panel .pdv-product .pdv-row b{font-size:12px}
+ .pdv-desktop-panel .pdv-cart-item{flex-wrap:wrap;gap:7px}
+ .pdv-desktop-panel .pdv-cart-item .pdv-grow{flex:1 1 125px}
+ .pdv-desktop-panel .pdv-quantity{gap:3px}
+ .pdv-desktop-panel .pdv-line-total{margin-left:auto}
+ .pdv-desktop-panel .pdv-payment-modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pdv-desktop-panel .pdv-payment-modes button{font-size:12px}
+ .pdv-desktop-panel .pdv-payment-methods label{font-size:13px}
+ .pdv-desktop-panel .pdv-summary{padding:10px}
+ .pdv-desktop-panel .pdv-discount{flex-wrap:wrap}
+ .pdv-desktop-panel .pdv-discount>span{flex:1}
+ .pdv-desktop-panel .pdv-discount input{max-width:100px}
+ .pdv-desktop-panel .pdv-desktop-review{display:block;margin-top:8px}
+ .pdv-context-actions{display:none}
+ main:has(.pdv-desktop-workspace) .pdv-footer,
+ main:has(.pdv-desktop-workspace) .pdv-nav{display:none}
+}
+
+
+/* Original desktop palette: dark catalog against warm cart and checkout surfaces. */
+@media(min-width:1180px){
+ body:has(.pdv-desktop-workspace){background:#0b160f!important}
+ .products-screen.pdv:has(.pdv-desktop-workspace){--pdv-text:#f8f2e4;--pdv-card:#f5edda;--pdv-border:#d2c5a6;color:var(--pdv-text)}
+ .pdv-desktop-panel{color:#1b2b20}
+ .products-screen.pdv .pdv-desktop-panel.pdv-panel-catalog{background:#102719;color:#f8f2e4;border-color:#526d59}
+ .products-screen.pdv .pdv-panel-catalog .pdv-card{background:#1a3023;color:#f8f2e4;border-color:#526d59}
+ .pdv-panel-catalog .pdv-muted{color:#d1dbd2}
+ .products-screen.pdv .pdv-panel-catalog .pdv-secondary{background:#203a2a;color:#f8f2e4;border-color:#728a77}
+ .products-screen.pdv .pdv-panel-catalog label{color:#f8f2e4}
+ .products-screen.pdv .pdv-panel-catalog input:not([type=checkbox]):not([type=radio]),
+ .products-screen.pdv .pdv-panel-catalog select{background:#f5edda;color:#1b2b20;border-color:#c9bea4}
+ .pdv-workspace-context{background:#142b1d;border-color:#526d59;color:#f8f2e4}
+}

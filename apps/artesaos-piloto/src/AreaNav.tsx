@@ -25,6 +25,6 @@ function NormalAreaNav({active,attentionHostId}:{attentionHostId?:string;active?
   <button ref={toggle} type="button" className="pilot-menu-toggle" aria-expanded={open} aria-controls="pilot-area-links" onClick={()=>setOpen(!open)}><BrandIcon name={open?'close':'menu'}/>{open?'Fechar menu':'Menu'}</button>
   <nav id="pilot-area-links" aria-label="Áreas">{pilotItems.filter(viewEnabled).map(item=><a key={item} href={`?view=${item}`} aria-current={active===item?'page':undefined}><BrandIcon name={item==='vendas'?'store':item}/>{item==='vendas'?'PDV':item==='configuracoes'?'Configurações':item==='ajuda'?'Ajuda':areaNames[item]}</a>)}</nav>
  </div>:<nav aria-label="Áreas">{(Object.keys(areaNames).filter(area=>area!=='estoque'&&area!=='pedidos'&&area!=='financeiro'&&area!=='vendas') as Area[]).map(area=><a key={area} href={`?view=${area}`} aria-current={active===area?'page':undefined} style={{fontWeight:active===area?750:400,marginRight:16}}>{areaNames[area]}</a>)}</nav>;
- return <>{host?createPortal(navigation,host):navigation}{pilot&&<><PdvIdentity/><AttentionBell hostId={attentionHostId}/></>}</>;
+ return <>{host?createPortal(navigation,host):navigation}{pilot&&<>{active==='vendas'&&<PdvIdentity/>}<AttentionBell hostId={attentionHostId}/></>}</>;
 }
 export function SettingsLink({area}:{area:Area}){return appName==='Artesão Digital'?null:<a className="area-settings-link" href={`?view=configuracoes&area=${area}`}>Configurações</a>;}
